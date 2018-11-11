@@ -987,6 +987,7 @@ N:	James Hilliard <james.hilliard1@gmail.com>
 F:	package/python-aiodns/
 F:	package/python-aiohttp/
 F:	package/python-async-timeout/
+F:	package/python-cchardet/
 F:	package/python-multidict/
 F:	package/python-yarl/
 
