@@ -65,18 +65,7 @@ ifeq ($(BR2_PACKAGE_LIBCURL_OPENSSL),y)
 LIBCURL_DEPENDENCIES += openssl
 LIBCURL_CONF_OPTS += --with-openssl=$(STAGING_DIR)/usr \
 	--with-ca-path=/etc/ssl/certs
-else
-LIBCURL_CONF_OPTS += --without-openssl
-endif
-
-ifeq ($(BR2_PACKAGE_LIBCURL_BEARSSL),y)
-LIBCURL_CONF_OPTS += --with-bearssl=$(STAGING_DIR)/usr
-LIBCURL_DEPENDENCIES += bearssl
-else
-LIBCURL_CONF_OPTS += --without-bearssl
-endif
-
-ifeq ($(BR2_PACKAGE_LIBCURL_GNUTLS),y)
+else ifeq ($(BR2_PACKAGE_GNUTLS),y)
 LIBCURL_CONF_OPTS += --with-gnutls=$(STAGING_DIR)/usr \
 	--with-ca-fallback
 LIBCURL_DEPENDENCIES += gnutls
