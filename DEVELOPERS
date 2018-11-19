@@ -1354,6 +1354,7 @@ F:	support/testing/tests/package/test_python_scipy.py
 
 N:	James Hilliard <james.hilliard1@gmail.com>
 F:	package/python-aiodns/
+F:	package/python-aiohttp/
 F:	package/python-async-timeout/
 F:	package/python-bidict/
 F:	package/python-brotli/
