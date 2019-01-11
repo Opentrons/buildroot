@@ -1270,4 +1270,7 @@ include docs/manual/manual.mk
 
 .PHONY: $(noconfig_targets)
 
+.PHONY: opentrons
+opentrons: clean opentronsot2_defconfig world
+
 endif #umask / $(CURDIR) / $(O)
