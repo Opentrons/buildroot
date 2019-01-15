@@ -5,7 +5,10 @@ The documentation can be found in docs/manual. You can generate a text
 document with 'make manual-text' and read output/docs/manual/manual.text.
 Online documentation can be found at http://buildroot.org/docs.html
 
-To build and use the buildroot stuff, do the following:
+To run the opentrons-specific buildroot build, run ./opentrons-build.sh
+to build and run make in a docker container; or run make opentrons.
+
+To build and use the general buildroot stuff, do the following:
 
 1) run 'make menuconfig'
 2) select the target architecture and the packages you wish to compile
