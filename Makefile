@@ -1257,20 +1257,21 @@ check-flake8:
 	| xargs -- python3 -m flake8 --statistics
 
 check-package:
-	$(Q)./utils/check-package `git ls-tree -r --name-only HEAD` \
-		--ignore-list=$(TOPDIR)/.checkpackageignore
+	find $(TOPDIR) -type f \( -name '*.mk' -o -name '*.hash' -o -name 'Config.*' \) \
+		-exec ./utils/check-package {} +
 
-.PHONY: .checkpackageignore
-.checkpackageignore:
-	$(Q)./utils/check-package --failed-only `git ls-tree -r --name-only HEAD` \
-		> .checkpackageignore
+.PHONY: packages
+packages: $(PACKAGES)
+
+.PHONY: .gitlab-ci.yml
+.gitlab-ci.yml: .gitlab-ci.yml.in
+	cp $< $@
+	(cd configs; LC_ALL=C ls -1 *_defconfig) | sed 's/$$/: *defconfig/' >> $@
+	set -o pipefail; ./support/testing/run-tests -l 2>&1 | sed -r -e '/^test_run \((.*)\).*/!d; s//\1: *runtime_test/' | LC_ALL=C sort >> $@
 
 include docs/manual/manual.mk
 -include $(foreach dir,$(BR2_EXTERNAL_DIRS),$(sort $(wildcard $(dir)/docs/*/*.mk)))
 
 .PHONY: $(noconfig_targets)
-
-.PHONY: opentrons
-opentrons: clean opentronsot2_defconfig world
 
 endif #umask / $(CURDIR) / $(O)

@@ -12,13 +12,32 @@
 # ./opentrons-build.sh -ti --entrypoint /bin/bash ""
 # The final empty quote marks are necessary for the script to correctly parse
 # the arguments.
-set -e -o pipefail
+
+# Note also that if there are no arguments, the script will do the proper
+# sequence of invocations to build buildroot from a fresh clone (e.g. two
+# make invocations, one for defconfig and one for build); when arguments
+# are provided, it will run the docker container once with the arguments
+set -e -x -o pipefail
 
 DOCKER_BIND="--mount type=bind,source=$(pwd),destination=/buildroot"
 heads=${@:1:$(($# - 1))}
 tail=${@:$#}
 
+if [ -n "$CI" ]
+   then
+   filter_arg="--build-arg filter_output=true"
+fi
+
 imgname=opentrons-buildroot-$(git describe --all --dirty --always)
 
-echo "docker build -t ${imgname}" && docker build -t ${imgname} .
-echo "docker run ${heads}${DOCKER_BIND} ${imgname} ${tail}" && docker run ${heads} ${DOCKER_BIND} ${imgname} ${tail}
+docker build ${filter_arg} -t ${imgname} .
+
+case $# in
+    0)
+        docker run ${DOCKER_BIND} ${imgname} ot2_defconfig
+        docker run ${DOCKER_BIND} ${imgname} all
+        ;;
+    *)
+        docker run ${heads} ${DOCKER_BIND} ${imgname} ${tail}
+        ;;
+esac
