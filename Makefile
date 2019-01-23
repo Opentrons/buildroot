@@ -1153,6 +1153,9 @@ check-package:
 	find $(TOPDIR) -type f \( -name '*.mk' -o -name '*.hash' -o -name 'Config.*' \) \
 		-exec ./utils/check-package {} +
 
+.PHONY: packages
+packages: $(PACKAGES)
+
 .PHONY: .gitlab-ci.yml
 .gitlab-ci.yml: .gitlab-ci.yml.in
 	cp $< $@
@@ -1163,8 +1166,5 @@ include docs/manual/manual.mk
 -include $(foreach dir,$(BR2_EXTERNAL_DIRS),$(sort $(wildcard $(dir)/docs/*/*.mk)))
 
 .PHONY: $(noconfig_targets)
-
-.PHONY: opentrons
-opentrons: clean opentronsot2_defconfig world
 
 endif #umask / $(CURDIR) / $(O)
