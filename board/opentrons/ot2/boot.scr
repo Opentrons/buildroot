@@ -1,0 +1,63 @@
+# U-boot boot script for the OT2
+# The job of this script is
+# - Figure out which partition is active
+# - Point uboot at that partition
+# - Boot it
+
+# See if we have an env var for which partition to boot from (this might be
+# edited from the booted system, but also might not be present)
+if test -z "$ot2part"
+then
+    echo "No saved ot2part, defaulting to 2"
+    setenv ot2part "2"
+    saveenv
+fi
+
+if test "$ot2part" = "2"
+then
+    ot2old="3"
+elif test "$ot2part" = "3"
+then
+    ot2old="2"
+else
+    echo "Bad ot2part $ot2part, defaulting to 2"
+    setenv ot2part "2"
+    saveenv
+    ot2old="3"
+fi
+
+echo "Try booting from partition $ot2part with fallback to partition $ot2old"
+
+# The raspi second stage bootloader (start.elf) puts the boot args in the
+# flattened device tree. The boot args contain the partition the kernel
+# will boot off of, so we have to pull the boot args, parse them, and then
+# (later) edit them and resave them
+fdt addr $fdt_addr
+fdt get value fdtargs /chosen bootargs
+# Iterate through bootargs and save everything but the boot partition
+newargs=""
+for arg in $fdtargs; do
+    if test "root=/dev/mmcblk0p2" = $arg
+    then
+        echo "Found bootpart"
+        bootpart=$arg
+    else
+        newargs="$newargs $arg"
+    fi
+done
+
+while true
+do
+    echo "Try booting from partition $ot2part"
+
+    to_boot="$newargs root=/dev/mmcblk0p$ot2part"
+    fdt set /chosen bootargs "$to_boot"
+    ext4load mmc 0:$ot2part $kernel_addr_r /boot/zImage
+    bootz $kernel_addr_r - $fdt_addr
+
+    echo "Boot failed! Switching"
+    tmp=$otpart
+    setenv ot2part $ot2old
+    saveenv
+    ot2old=$tmp
+done
