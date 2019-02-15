@@ -46,8 +46,7 @@ for arg in $fdtargs; do
     fi
 done
 
-while true
-do
+while true; do
     echo "Try booting from partition $ot2part"
 
     to_boot="$newargs root=/dev/mmcblk0p$ot2part"
