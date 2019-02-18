@@ -1,0 +1,2 @@
+# This file makes git keep around the dir that will store NetworkManager
+# connection files on the robot.

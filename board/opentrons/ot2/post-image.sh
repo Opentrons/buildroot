@@ -49,6 +49,9 @@ __EOF__
 
 done
 
+rm -rf "${TARGET_DIR}/var"
+mv "${GENIMAGE_TMP}/var" "${TARGET_DIR}/"
+
 rm -rf "${GENIMAGE_TMP}"
 
 genimage                           \

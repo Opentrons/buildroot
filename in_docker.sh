@@ -34,5 +34,3 @@ else
     echo "Filtered make"
     (make -C /buildroot $@ 2>/buildroot/warnings.txt | awk '/^make/;{print $0 >>"/buildroot/buildlog.txt"}') || cat warnings.txt
 fi
-chmod -R a+rwX /buildroot/dl || true
-chmod -R a+rwX /buildroot/output || true
