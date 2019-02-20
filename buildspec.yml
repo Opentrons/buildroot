@@ -3,11 +3,11 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - "docker build -t opentrons-buildroot"
+      - "sudo docker build -t opentrons-buildroot"
   build:
     commands:
-      - "docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot ot2_defconfig"
-      - "docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot all"
+      - "sudo docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot ot2_defconfig"
+      - "sudo docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot all"
 artifacts:
   files:
     - output/images/sdcard.img
