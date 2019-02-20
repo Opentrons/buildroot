@@ -14,8 +14,8 @@ fi
 
 # Write an fstab that will do our /var and bind mounts
 cat <<EOF > ${TARGET_DIR}/etc/fstab
-/dev/root / auto ro 0 1
-/dev/mmcblk0p4 /var auto rw 0 2
+/dev/root / auto ro 0 0
+/dev/mmcblk0p4 /var auto rw,x-systemd.growfs 0 2
 /var/data /data none defaults,bind 0 0
 /var/home /home none defaults,bind 0 0
 /var/mnt /mnt none defaults,bind 0 0
