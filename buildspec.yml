@@ -1,11 +1,9 @@
 version: 0.2
 
 phases:
-  pre_build:
-    commands:
-      - "sudo docker build -t opentrons-buildroot"
   build:
     commands:
+      - "sudo docker build -t opentrons-buildroot"
       - "sudo docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot ot2_defconfig"
       - "sudo docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot all"
 artifacts:
