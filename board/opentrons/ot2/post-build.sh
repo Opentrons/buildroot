@@ -31,3 +31,7 @@ cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
 
 # rewrite config.txt to boot u-boot
 sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.txt
+
+# write common pubkey to authorized keys
+# TODO: DO NOT DO THIS IN RELEASE BUILDS
+echo ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys
