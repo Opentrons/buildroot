@@ -21,4 +21,11 @@ define PYTHON_SIMPLEGENERIC_EXTRACT_CMDS
 	rmdir $(@D)/simplegeneric-$(PYTHON_SIMPLEGENERIC_VERSION)
 endef
 
+define HOST_PYTHON_SIMPLEGENERIC_EXTRACT_CMDS
+	unzip $(HOST_PYTHON_SIMPLEGENERIC_DL_DIR)/$(PYTHON_SIMPLEGENERIC_SOURCE) -d $(@D)
+	mv $(@D)/simplegeneric-$(PYTHON_SIMPLEGENERIC_VERSION)/* $(@D)
+	rmdir $(@D)/simplegeneric-$(PYTHON_SIMPLEGENERIC_VERSION)
+endef
+
 $(eval $(python-package))
+$(eval $(host-python-package))

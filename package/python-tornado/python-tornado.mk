@@ -12,3 +12,4 @@ PYTHON_TORNADO_LICENSE_FILES = LICENSE
 PYTHON_TORNADO_SETUP_TYPE = setuptools
 
 $(eval $(python-package))
+$(eval $(host-python-package))

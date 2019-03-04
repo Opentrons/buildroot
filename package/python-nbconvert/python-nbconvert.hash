@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/nbconvert/json
+md5	ba0771afb941a68af885232967f6ff9f  nbconvert-5.4.1.tar.gz
+sha256	302554a2e219bc0fc84f3edd3e79953f3767b46ab67626fdec16e38ba3f7efe4  nbconvert-5.4.1.tar.gz
+# Locally computed sha256 checksums
+sha256	aa93a54b783ec3c2eafe5969d1b7947f427a7813846551ae65a52e1fa5489f42  LICENSE
