@@ -17,7 +17,7 @@ cat <<EOF > ${TARGET_DIR}/etc/fstab
 /dev/root / auto ro 0 0
 /dev/mmcblk0p4 /var auto rw,x-systemd.growfs 0 2
 /var/data /data none defaults,bind 0 0
-/var/home /home none defaults,bind 0 0
+/var/home /root none defaults,bind 0 0
 /var/mnt /mnt none defaults,bind 0 0
 EOF
 
@@ -34,4 +34,4 @@ sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.tx
 
 # write common pubkey to authorized keys
 # TODO: DO NOT DO THIS IN RELEASE BUILDS
-echo ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys
+cat ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys

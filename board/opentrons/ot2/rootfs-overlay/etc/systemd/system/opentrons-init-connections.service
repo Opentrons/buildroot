@@ -8,7 +8,9 @@ After=local-fs.target
 Type=oneshot
 RemainAfterExit=true
 StandardOutput=journal
-ExecStart=mkdir -p /var/lib/NetworkManager/system-connections; cp /usr/share/default-connections/* /var/lib/NetworkManager/system-connections/
+ExecStart=/bin/mkdir -p /var/lib/NetworkManager/system-connections
+ExecStart=/bin/sh -c "cp /usr/share/default-connections/* /var/lib/NetworkManager/system-connections/"
+ExecStart=/bin/sh -c "chmod 600 /var/lib/NetworkManager/system-connections/*"
 
 [Install]
 WantedBy=NetworkManager.service

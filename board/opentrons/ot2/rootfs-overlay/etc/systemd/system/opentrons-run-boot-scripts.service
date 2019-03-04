@@ -9,4 +9,4 @@ StandardOutput=journal
 ExecStart=/bin/run-parts /var/data/boot.d/
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=opentrons.target
