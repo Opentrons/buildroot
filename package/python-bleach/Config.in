@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_BLEACH
+	bool "python-bleach"
+	select BR2_PACKAGE_PYTHON_SIX # runtime
+	select BR2_PACKAGE_PYTHON_WEBENCODINGS # runtime
+	help
+	  An easy safelist-based HTML-sanitizing tool.
+
+	  https://github.com/mozilla/bleach

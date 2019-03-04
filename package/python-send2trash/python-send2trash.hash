@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/Send2Trash/json
+md5	eccc3563a305b8cb10001ffd1aa92fa0  Send2Trash-1.5.0.tar.gz
+sha256	60001cc07d707fe247c94f74ca6ac0d3255aabcb930529690897ca2a39db28b2  Send2Trash-1.5.0.tar.gz
+# Locally computed sha256 checksums
+sha256	009bb8c8b927ef0bbf4b943179cc27c04345e558236e8b9faf4230333b445123  LICENSE

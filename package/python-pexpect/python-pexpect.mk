@@ -21,4 +21,8 @@ endef
 PYTHON_PEXPECT_POST_PATCH_HOOKS += PYTHON_PEXPECT_REMOVE_ASYNC_PY
 endif
 
+HOST_PYTHON_PEXPECT_DEPENDENCIES = host-python-ptyprocess
+PYTHON_PEXPECT_DEPENDENCIES = python-ptyprocess
+
 $(eval $(python-package))
+$(eval $(host-python-package))

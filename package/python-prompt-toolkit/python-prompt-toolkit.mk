@@ -11,4 +11,8 @@ PYTHON_PROMPT_TOOLKIT_SETUP_TYPE = setuptools
 PYTHON_PROMPT_TOOLKIT_LICENSE = BSD-3-Clause
 PYTHON_PROMPT_TOOLKIT_LICENSE_FILES = LICENSE
 
+HOST_PYTHON_PROMPT_TOOLKIT_DEPENDENCIES = host-python-wcwidth host-python-six
+PYTHON_PROMPT_TOOLKIT_DEPENDENCIES = python-wcwidth python-six
+
 $(eval $(python-package))
+$(eval $(host-python-package))
