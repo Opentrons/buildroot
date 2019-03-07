@@ -1,7 +1,7 @@
 [Unit]
 Description=Opentrons: Run user-supplied boot scripts
-Requires=local-fs.target
-After=local-fs.target
+Requires=basic.target
+After=basic.target
 
 [Service]
 Type=oneshot

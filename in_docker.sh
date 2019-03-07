@@ -29,8 +29,8 @@ fi
 if [ -z $filter ]
 then
     echo "Unfiltered make"
-    make -C /buildroot $@
+    BR2_EXTERNAL=/opentrons make -C /buildroot $@
 else
     echo "Filtered make"
-    (make -C /buildroot $@ 2>/buildroot/warnings.txt | awk '/^make/;{print $0 >>"/buildroot/buildlog.txt"}') || cat warnings.txt
+    (BR2_EXTERNAL=/opentrons make -C /buildroot $@ 2>/buildroot/warnings.txt | awk '/^make/;{print $0 >>"/buildroot/buildlog.txt"}') || cat warnings.txt
 fi
