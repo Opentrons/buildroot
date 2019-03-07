@@ -1,8 +1,8 @@
 [Unit]
 Description=Opentrons: Ensure system wired connections
 Before=NetworkManager.service
-Requires=local-fs.target
-After=local-fs.target
+Requires=basic.target
+After=basic.target
 
 [Service]
 Type=oneshot

@@ -1,1 +1,1 @@
-/etc/systemd/system/jupyter-notebook.service
+../jupyter-notebook.service

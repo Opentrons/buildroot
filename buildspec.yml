@@ -6,11 +6,11 @@ phases:
       - "docker build -t opentrons-buildroot ."
   build:
     commands:
-      - "docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot ot2_defconfig"
-      - "docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot all"
+      - ./opentrons-build.sh
 artifacts:
   files:
-    - output/images/sdcard.img
-    - output/images/rootfs.tar.gz
-    - output/images/rootfs.ext4
+    - output/images/ot2-system.zip
+    - output/images/ot2-fullimage.zip
+    - output/images/VERSION.json
+  name: ot2-system
   discard-paths: yes
