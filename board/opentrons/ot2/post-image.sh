@@ -7,6 +7,8 @@ BOARD_NAME="$(basename ${BOARD_DIR})"
 GENIMAGE_CFG="${BOARD_DIR}/genimage-${BOARD_NAME}.cfg"
 GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
 
+sed -i -e 's/console=ttyAMA0,115200//' "${BINARIES_DIR}/rpi-firmware/cmdline.txt"
+
 for arg in "$@"
 do
 	case "${arg}" in
@@ -60,5 +62,11 @@ genimage                           \
 	--inputpath "${BINARIES_DIR}"  \
 	--outputpath "${BINARIES_DIR}" \
 	--config "${GENIMAGE_CFG}"
+
+rm -f ${BINARIES_DIR}/ot2-system.zip
+zip -j ${BINARIES_DIR}/ot2-system.zip ${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/VERSION.json
+rm -f ${BINARIES_DIR}/ot2-fullimage.zip
+zip -j ${BINARIES_DIR}/ot2-fullimage.zip ${BINARIES_DIR}/sdcard.img ${BINARIES_DIR}/VERSION.json
+
 
 exit $?

@@ -35,3 +35,9 @@ sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.tx
 # write common pubkey to authorized keys
 # TODO: DO NOT DO THIS IN RELEASE BUILDS
 cat ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys
+
+# Load the out-of-container env to get stuff from codebuild
+export $(cat /buildroot/.env | xargs)
+
+python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/VERSION.json
+cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json

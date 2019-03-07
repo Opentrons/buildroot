@@ -19,7 +19,11 @@
 # are provided, it will run the docker container once with the arguments
 set -e -x -o pipefail
 
-DOCKER_BIND="--mount type=bind,source=$(pwd),destination=/buildroot"
+DOCKER_BR_BIND_DIR="/buildroot"
+DOCKER_OT_BIND_DIR="/opentrons"
+DOCKER_BIND_BR="--mount type=bind,source=$(pwd),destination=${DOCKER_BR_BIND_DIR}"
+DOCKER_BIND_OT="--mount type=bind,source=$(pwd)/../opentrons,destination=${DOCKER_OT_BIND_DIR}"
+DOCKER_BIND="${DOCKER_BIND_BR} ${DOCKER_BIND_OT}"
 heads=${@:1:$(($# - 1))}
 tail=${@:$#}
 
@@ -31,6 +35,9 @@ fi
 imgname=opentrons-buildroot-$(git describe --all --dirty --always)
 
 docker build ${filter_arg} -t ${imgname} .
+
+# Save codebuild-relevant env vars to get them inside docker
+env | grep 'CODEBUILD\|AWS' >.env
 
 case $# in
     0)
