@@ -127,7 +127,7 @@ c.NotebookApp.allow_root = False
 #  completely without authentication. These services can disable all
 #  authentication and security checks, with the full knowledge of what that
 #  implies.
-#c.NotebookApp.disable_check_xsrf = False
+c.NotebookApp.disable_check_xsrf = True
 
 ## Whether to enable MathJax for typesetting math/TeX
 #
@@ -234,7 +234,7 @@ c.NotebookApp.open_browser = False
 #
 #  In such a case, server the notebook server on localhost is not secure since
 #  any user can connect to the notebook server via ssh.
-#c.NotebookApp.password_required = False
+c.NotebookApp.password_required = False
 
 ## The port the notebook server will listen on.
 c.NotebookApp.port = 48888
