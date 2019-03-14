@@ -6,8 +6,7 @@ phases:
       - "docker build -t opentrons-buildroot ."
   build:
     commands:
-      - "docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot ot2_defconfig"
-      - "docker run --mount type=bind,source=$(pwd),destination=/buildroot opentrons-buildroot all"
+      - ./opentrons-build.sh
 artifacts:
   files:
     - output/images/sdcard.img
