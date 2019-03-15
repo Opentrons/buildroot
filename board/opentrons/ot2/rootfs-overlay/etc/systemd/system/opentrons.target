@@ -1,0 +1,4 @@
+[Unit]
+Description=Opentrons System
+Requires=multi-user.target
+Conflicts=emergency.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=Opentrons: Ensure system wired connections
+Before=NetworkManager.service
+Requires=local-fs.target
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+StandardOutput=journal
+ExecStart=/bin/mkdir -p /var/lib/NetworkManager/system-connections
+ExecStart=/bin/sh -c "cp /usr/share/default-connections/* /var/lib/NetworkManager/system-connections/"
+ExecStart=/bin/sh -c "chmod 600 /var/lib/NetworkManager/system-connections/*"
+
+[Install]
+WantedBy=NetworkManager.service

@@ -1,0 +1,29 @@
+# wired default network. This configuration is meant to try a very few times for
+# an IP address through dhcp and then stop autoretrying if it fails so the
+# fallback can take over. This connection shouldn't be edited if you want to
+# configure other things about the connection since it's in part for detecting
+# the network layout; if you know what kind of network you want to connect to,
+# just create a new connection with autoconnect-priority>=2. This file will be
+# overwritten on boot.
+
+[connection]
+id=wired
+type=ethernet
+autoconnect-priority=1
+autoconnect-retries=1
+interface-name=eth0
+permissions=
+
+[ethernet]
+mac-address-blacklist=
+
+[ipv4]
+dhcp-timeout=30
+dns-search=
+method=auto
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
+method=auto
+may-fail=true
