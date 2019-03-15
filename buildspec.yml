@@ -9,7 +9,12 @@ phases:
       - ./opentrons-build.sh
 artifacts:
   files:
-    - output/images/sdcard.img
-    - output/images/rootfs.tar.gz
     - output/images/rootfs.ext4
+  name: ot2-system-$CODEBUILD_BUILD_ID
   discard-paths: yes
+  secondary-artifacts:
+    fullImage:
+      files:
+        - output/images/sdcard.img
+      name: ot2-fullimage-$CODEBUILD_BUILD_ID
+      discard-paths: yes
