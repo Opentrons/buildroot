@@ -1,0 +1,25 @@
+# linklocal fallback wired network configs.
+# This configuration is meant to take over after dhcp fails and get a linklocal
+# connection. This connection shouldn't be edited if you want to
+# configure other things about the connection since it's in part for detecting
+# the network layout; if you know what kind of network you want to connect to,
+# just create a new connection with autoconnect-priority=2 (or higher). This
+# file will be overwritten on boot.
+
+[connection]
+id=wired-linklocal
+type=ethernet
+interface-name=eth0
+permissions=
+
+[ethernet]
+mac-address-blacklist=
+
+[ipv4]
+dns-search=
+method=link-local
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
+method=link-local
