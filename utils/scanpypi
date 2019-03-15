@@ -316,13 +316,9 @@ class BuildrootPackage():
         current_dir = os.getcwd()
         os.chdir(self.tmp_extract)
         sys.path.append(self.tmp_extract)
-        print("FINDING SETUP WITH PATH {}".format(sys.path))
         old_sm = copy.copy(sys.modules)
         s_file, s_path, s_desc = imp.find_module('setup', [self.tmp_extract])
-        try:
-            setup = imp.load_module('setup', s_file, s_path, s_desc)
-        except ImportError:
-            import pdb; pdb.set_trace()
+        setup = imp.load_module('setup', s_file, s_path, s_desc)
 
         self.setup_metadata = self.find_metadata(setup, self.tmp_extract)
         # Here we must remove the module the hard way.
@@ -356,7 +352,6 @@ class BuildrootPackage():
             self.pkg_req = None
             return set()
         self.pkg_req = self.setup_metadata['install_requires']
-        print("pkg_req original: {}".format(self.pkg_req))
         # Pull possible python version requirements specified as e.g.
         # ’functools32;python<3’ by transforming the list of requires
         # into a list of tuples of (pkg, python-requirement-or-none)
@@ -369,7 +364,6 @@ class BuildrootPackage():
                 if not python_required:
                     to_ret.append(pkg)
                 else:
-                    print("Check {}".format(python_required))
                     args = re.match("python_version([<>=]+)'?([\d.]+)'?", python_required)
                     if None is args:
                         to_ret.append(pkg)
@@ -383,11 +377,9 @@ class BuildrootPackage():
                         to_ret.append(pkg)
             return to_ret
         self.pkg_req = parse_pyreqs(possible_pyreqs)
-        print("pkg_req after regex: {}".format(self.pkg_req))
         # get rid of commented lines and also strip the package strings
         self.pkg_req = [item.strip() for item in self.pkg_req
                         if len(item) > 0 and item[0] != '#']
-        print("pkg_req after comment strip: {}".format(self.pkg_req))
         req_not_found = self.pkg_req
         self.pkg_req = list(map(pkg_buildroot_name, self.pkg_req))
         pkg_tuples = list(zip(req_not_found, self.pkg_req))
@@ -704,8 +696,6 @@ def main():
     try:
         for real_pkg_name in packages:
             package = BuildrootPackage(real_pkg_name, pkg_folder)
-            print('buildroot package name for {}:'.format(package.real_name),
-                  package.buildroot_name)
             # First we download the package
             # Most of the info we need can only be found inside the package
             print('Package:', package.buildroot_name)
