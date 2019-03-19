@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_PANDOCFILTERS
+	bool "python-pandocfilters"
+	help
+	  Utilities for writing pandoc filters in python.
+
+	  http://github.com/jgm/pandocfilters

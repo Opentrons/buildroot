@@ -16,3 +16,4 @@ PYTHON_TORNADO_SETUP_TYPE = setuptools
 PYTHON_TORNADO_IGNORE_CVES += CVE-2023-28370
 
 $(eval $(python-package))
+$(eval $(host-python-package))

@@ -12,3 +12,4 @@ PYTHON_DATEUTIL_LICENSE_FILES = LICENSE
 PYTHON_DATEUTIL_DEPENDENCIES = host-python-setuptools-scm
 
 $(eval $(python-package))
+$(eval $(host-python-package))

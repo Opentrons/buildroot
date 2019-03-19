@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_SEND2TRASH
+	bool "python-send2trash"
+	help
+	  Send file to trash natively under Mac OS X, Windows and
+	  Linux.
+
+	  https://github.com/hsoft/send2trash

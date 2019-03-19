@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/pandocfilters/json
+md5	dc391791ef54c7de1572d7b46b63361f  pandocfilters-1.4.2.tar.gz
+sha256	b3dd70e169bb5449e6bc6ff96aea89c5eea8c5f6ab5e207fc2f521a2cf4a0da9  pandocfilters-1.4.2.tar.gz
+# Locally computed sha256 checksums
+sha256	56766ce9972a533fcf67330f1abbeb414e153c7e58c27dc54441bc0fafa81492  LICENSE

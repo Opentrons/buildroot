@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_PROMETHEUS_CLIENT
+	bool "python-prometheus_client"
+	help
+	  Python client for the Prometheus monitoring system.
+
+	  https://github.com/prometheus/client_python

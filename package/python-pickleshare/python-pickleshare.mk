@@ -12,3 +12,4 @@ PYTHON_PICKLESHARE_LICENSE_FILES = LICENSE
 PYTHON_PICKLESHARE_SETUP_TYPE = setuptools
 
 $(eval $(python-package))
+$(eval $(host-python-package))

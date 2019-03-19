@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_TERMINADO
+	bool "python-terminado"
+	select BR2_PACKAGE_PYTHON_TORNADO # runtime
+	help
+	  Terminals served to xterm.js using Tornado websockets.
+
+	  https://github.com/jupyter/terminado

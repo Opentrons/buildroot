@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_TESTPATH
+	bool "python-testpath"
+	help
+	  Test utilities for code working with files and commands.
+
+	  https://github.com/jupyter/testpath

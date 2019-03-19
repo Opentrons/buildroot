@@ -27,3 +27,4 @@ PYTHON_PYZMQ_BUILD_OPTS += --enable-drafts
 endif
 
 $(eval $(python-package))
+$(eval $(host-python-package))
