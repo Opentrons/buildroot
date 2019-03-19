@@ -1,0 +1,3 @@
+# md5, sha256 from https://pypi.org/pypi/jupyter_client/json
+md5	130d0171368a2bedd2c3903fddd410af  jupyter_client-5.2.4.tar.gz
+sha256	b5f9cb06105c1d2d30719db5ffb3ea67da60919fb68deaefa583deccd8813551  jupyter_client-5.2.4.tar.gz

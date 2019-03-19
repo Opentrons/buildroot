@@ -23,3 +23,4 @@ endef
 PYTHON_PYZMQ_POST_PATCH_HOOKS += PYTHON_PYZMQ_PATCH_ZEROMQ_VERSION
 
 $(eval $(python-package))
+$(eval $(host-python-package))

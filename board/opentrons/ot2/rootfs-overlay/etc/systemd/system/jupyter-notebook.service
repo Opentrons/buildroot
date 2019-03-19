@@ -1,0 +1,15 @@
+[Unit]
+Description=Jupyter notebook server
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c "jupyter notebook --config=%E/jupyter/jupyter_notebook_config.py --notebook-dir=%S/jupyter/notebooks 2>&1"
+PIDFile=%t/jupyter/jupyter.pid
+User=jupyter
+Group=jupyter
+StateDirectory=jupyter jupyter/notebooks jupyter/data jupyter/config ipython
+RuntimeDirectory=jupyter
+Environment=JUPYTER_RUNTIME_DIR=%t/jupyter JUPYTER_CONFIG_DIR=%S/jupyter/config JUPYTER_DATA_DIR=%S/jupyter/data IPYTHONDIR=%S/ipython
+
+[Install]
+WantedBy=opentrons.target

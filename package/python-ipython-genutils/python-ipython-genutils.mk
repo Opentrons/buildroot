@@ -12,3 +12,4 @@ PYTHON_IPYTHON_GENUTILS_LICENSE_FILES = COPYING.md
 PYTHON_IPYTHON_GENUTILS_SETUP_TYPE = distutils
 
 $(eval $(python-package))
+$(eval $(host-python-package))

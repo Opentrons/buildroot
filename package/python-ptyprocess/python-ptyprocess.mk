@@ -12,3 +12,4 @@ PYTHON_PTYPROCESS_LICENSE_FILES = LICENSE
 PYTHON_PTYPROCESS_SETUP_TYPE = distutils
 
 $(eval $(python-package))
+$(eval $(host-python-package))

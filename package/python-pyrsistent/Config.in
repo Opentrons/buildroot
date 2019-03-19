@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_PYRSISTENT
+	bool "python-pyrsistent"
+	select BR2_PACKAGE_PYTHON_SIX # runtime
+	help
+	  Persistent/Functional/Immutable data structures.
+
+	  http://github.com/tobgu/pyrsistent/
