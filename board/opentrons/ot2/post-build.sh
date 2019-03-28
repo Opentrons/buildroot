@@ -41,3 +41,9 @@ export $(cat /buildroot/.env | xargs)
 
 python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/VERSION.json
 cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
+
+# Make the symlink for /etc/dropbear->/var/run/dropbear in code because it
+# needs to be absolute to trigger logic in the dropbear systemfile, but when
+# checked in absolute symlinks are rewritten by aws codebuild
+rm -rf ${TARGET_DIR}/etc/dropbear
+ln -s /var/run/dropbear ${TARGET_DIR}/etc/dropbear
