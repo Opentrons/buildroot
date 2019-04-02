@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+set -e
+
+function finish {
+    umount /mnt/boot || 0
+    rmdir /mnt/boot
+    exit $?
+}
+
+trap finish EXIT
+
+mkdir -p /mnt/boot
+mount /dev/mmcblk0p1 /mnt/boot
+cur=$(fw_printenv -n ot2part) || true
+if [ "$cur" = "2" ]
+then
+    new=3
+else
+    new=2
+fi
+echo $new
