@@ -61,6 +61,11 @@ mv "${GENIMAGE_TMP}/var" "${TARGET_DIR}/"
 
 rm -rf "${GENIMAGE_TMP}"
 
+cp ${TARGET_DIR}/etc/hostname ${TARGET_DIR}/var/hostname
+cp ${TARGET_DIR}/etc/machine-info ${TARGET_DIR}/var/machine-info
+
+mkdir -p ${TARGET_DIR}/padding
+
 genimage                           \
 	--rootpath "${TARGET_DIR}"     \
 	--tmppath "${GENIMAGE_TMP}"    \
@@ -70,6 +75,9 @@ genimage                           \
 
 echo "Generating hash for rootfs.ext4..."
 shasum -a 256 ${BINARIES_DIR}/rootfs.ext4 | grep -oh "^.\+ " > ${BINARIES_DIR}/rootfs.ext4.hash
+
+echo "Generating hash for boot.vfat..."
+shasum -a 256 ${BINARIES_DIR}/boot.vfat | grep -oh "^.\+ " > ${BINARIES_DIR}/boot.vfat.hash
 
 if [ ${OT_BUILD_TYPE} = "release" ]; then
     echo "Build type is RELEASE"
@@ -83,11 +91,13 @@ fi
 
 echo "Zipping system image..."
 rm -f ${BINARIES_DIR}/ot2-system.zip
-zip -j ${BINARIES_DIR}/ot2-system.zip ${system_files}
+zip -j ${BINARIES_DIR}/ot2-system.zip ${system_files} ${BINARIES_DIR}/VERSION.json
 
 echo "Zipping full sd card image..."
 rm -f ${BINARIES_DIR}/ot2-fullimage.zip
 zip -j ${BINARIES_DIR}/ot2-fullimage.zip ${BINARIES_DIR}/sdcard.img ${BINARIES_DIR}/VERSION.json
 
-
+echo "Zipping migration image..."
+rm -f ${BINARIES_DIR}/ot2-migration.zip
+zip -j ${BINARIES_DIR}/ot2-migration.zip ${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/boot.vfat ${BINARIES_DIR}/boot.vfat.hash ${BINARIES_DIR}/VERSION.json
 exit $?
