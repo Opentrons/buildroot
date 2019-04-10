@@ -3,6 +3,9 @@
 set -u
 set -e
 
+# Load the out-of-container env to get stuff from codebuild
+export $(cat /buildroot/.env | xargs)
+
 GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
 
 # Add a console on tty1
@@ -32,12 +35,21 @@ cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
 # rewrite config.txt to boot u-boot
 sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.txt
 
-# write common pubkey to authorized keys
-# TODO: DO NOT DO THIS IN RELEASE BUILDS
-cat ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys
+if [ ${OT_BUILD_TYPE} != "release" ]; then
+    echo "Build type is NOT RELEASE, adding default ssh key and removing signing"
+    # write common pubkey to authorized keys
+    cat ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys
+    # remove code signing cert (allows unsigned updates)
+    rm ${TARGET_DIR}/etc/opentrons-robot-signing-key.crt
+else
+    echo "Build type is RELEASE"
+fi
 
-# Load the out-of-container env to get stuff from codebuild
-export $(cat /buildroot/.env | xargs)
-
-python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/VERSION.json
+python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/opentrons-update-server-version.json ${BINARIES_DIR}/VERSION.json
 cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
+
+# manually make a softlink for /etc/dropbear because it needs to be absolute
+# due to the logic in the dropbear system file, but if it was checked in it
+# would be rewritten by aws
+rm -f ${TARGET_DIR}/etc/dropbear
+ln -sf /var/run/dropbear ${TARGET_DIR}/etc/dropbear

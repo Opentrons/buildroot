@@ -2,6 +2,9 @@
 
 set -e
 
+# Load the out-of-container env to get stuff from codebuild
+export $(cat /buildroot/.env | xargs)
+
 BOARD_DIR="$(dirname $0)"
 BOARD_NAME="$(basename ${BOARD_DIR})"
 GENIMAGE_CFG="${BOARD_DIR}/genimage-${BOARD_NAME}.cfg"
@@ -51,6 +54,8 @@ __EOF__
 
 done
 
+echo "Generating fs and sd card images..."
+
 rm -rf "${TARGET_DIR}/var"
 mv "${GENIMAGE_TMP}/var" "${TARGET_DIR}/"
 
@@ -63,8 +68,24 @@ genimage                           \
 	--outputpath "${BINARIES_DIR}" \
 	--config "${GENIMAGE_CFG}"
 
+echo "Generating hash for rootfs.ext4..."
+shasum -a 256 ${BINARIES_DIR}/rootfs.ext4 | grep -oh "^.\+ " > ${BINARIES_DIR}/rootfs.ext4.hash
+
+if [ ${OT_BUILD_TYPE} = "release" ]; then
+    echo "Build type is RELEASE"
+    echo "Signing rootfs hash"
+    openssl dgst -sha256 -sign .signing-key -out ${BINARIES_DIR}/rootfs.ext4.hash.sig ${BINARIES_DIR}/rootfs.ext4.hash
+    system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/rootfs.ext4.hash.sig"
+else
+    echo "Build type is NOT RELEASE"
+    system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json"
+fi
+
+echo "Zipping system image..."
 rm -f ${BINARIES_DIR}/ot2-system.zip
-zip -j ${BINARIES_DIR}/ot2-system.zip ${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/VERSION.json
+zip -j ${BINARIES_DIR}/ot2-system.zip ${system_files}
+
+echo "Zipping full sd card image..."
 rm -f ${BINARIES_DIR}/ot2-fullimage.zip
 zip -j ${BINARIES_DIR}/ot2-fullimage.zip ${BINARIES_DIR}/sdcard.img ${BINARIES_DIR}/VERSION.json
 
