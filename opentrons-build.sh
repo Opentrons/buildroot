@@ -17,7 +17,14 @@
 # sequence of invocations to build buildroot from a fresh clone (e.g. two
 # make invocations, one for defconfig and one for build); when arguments
 # are provided, it will run the docker container once with the arguments
-set -e -x -o pipefail
+set -e -o pipefail
+
+function finish {
+    rm -f .signing-key
+    exit $?
+}
+
+trap finish EXIT
 
 DOCKER_BR_BIND_DIR="/buildroot"
 DOCKER_OT_BIND_DIR="/opentrons"
@@ -38,6 +45,8 @@ docker build ${filter_arg} -t ${imgname} .
 
 # Save codebuild-relevant env vars to get them inside docker
 env | grep 'CODEBUILD\|AWS' >.env
+echo "OT_BUILD_TYPE=${OT_BUILD_TYPE-dev}">>.env
+echo "${SIGNING_KEY}" > .signing-key
 
 case $# in
     0)
