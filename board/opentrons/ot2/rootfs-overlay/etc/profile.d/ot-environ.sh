@@ -1,0 +1,2 @@
+export RUNNING_ON_PI=1
+export OT_SMOOTHIE_ID=AMA
