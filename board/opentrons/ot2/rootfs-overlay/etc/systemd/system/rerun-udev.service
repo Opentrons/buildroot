@@ -1,0 +1,12 @@
+[Unit]
+Description=Rerun udev for block devices
+Requires=basic.target
+After=basic.target
+
+[Service]
+Type=oneshot
+StandardOutput=journal
+ExecStart=/bin/udevadm trigger --action=add --subsystem-match=block
+
+[Install]
+WantedBy=opentrons.target
