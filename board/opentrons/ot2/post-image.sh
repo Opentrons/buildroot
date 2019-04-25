@@ -54,6 +54,10 @@ __EOF__
 
 done
 
+cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
+dtparam=audio=on
+__EOF__
+
 echo "Generating fs and sd card images..."
 
 rm -rf "${TARGET_DIR}/var"
