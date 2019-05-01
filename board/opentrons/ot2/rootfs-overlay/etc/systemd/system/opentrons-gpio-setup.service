@@ -1,0 +1,13 @@
+[Unit]
+Description=Opentrons: Setup GPIO and blink
+Before=systemd-growfs@var.service
+DefaultDependencies=no
+Conflicts=shutdown.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ot-blinkenlights
+
+
+[Install]
+WantedBy=basic.target
