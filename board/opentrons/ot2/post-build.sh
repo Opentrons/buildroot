@@ -3,9 +3,6 @@
 set -u
 set -e
 
-# Load the out-of-container env to get stuff from codebuild
-export $(cat /buildroot/.env | xargs)
-
 GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
 
 # Add a console on tty1
@@ -71,3 +68,13 @@ cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
 # would be rewritten by aws
 rm -f ${TARGET_DIR}/etc/dropbear
 ln -sf /var/run/dropbear ${TARGET_DIR}/etc/dropbear
+
+
+# Syslog-ng extra setup:
+# - install the datadog api key
+
+echo "@define datadog_api_key \"${DATADOG_API_KEY}\"" > ${TARGET_DIR}/etc/syslog-ng/api_key.conf
+mkdir -p ${TARGET_DIR}/etc/syslog-ng/certs.d/
+rm -rf ${TARGET_DIR}/etc/syslog-ng/certs.d/*
+curl https://docs.datadoghq.com/resources/crt/FULL_intake.logs.datadoghq.com.crt > ${TARGET_DIR}/etc/syslog-ng/certs.d/datadoghq.com.crt
+

@@ -5,6 +5,7 @@ env:
     OT_BUILD_TYPE: dev
   parameter-store:
     SIGNING_KEY: /buildroot-codebuild/signing-key
+    DATADOG_API_KEY: /buildroot-codebuild/datadog-api
 
 phases:
   pre_build:
