@@ -35,8 +35,13 @@ heads=${@:1:$(($# - 1))}
 tail=${@:$#}
 
 if [ -n "$CI" ]
-   then
+then
    filter_arg="--build-arg filter_output=true"
+fi
+
+if [ -n "$DATADOG_API_KEY"]
+then
+    export DATADOG_API_KEY=$(./get_parameter.py /buildroot-codebuild/datadog-api -)
 fi
 
 imgname=opentrons-buildroot-$(git describe --all --dirty --always)
@@ -44,14 +49,14 @@ imgname=opentrons-buildroot-$(git describe --all --dirty --always)
 docker build ${filter_arg} -t ${imgname} .
 
 # Save codebuild-relevant env vars to get them inside docker
-env | grep 'CODEBUILD\|AWS' >.env
+env | grep 'CODEBUILD\|AWS\|DATADOG' >.env
 echo "OT_BUILD_TYPE=${OT_BUILD_TYPE-dev}">>.env
 echo "${SIGNING_KEY}" > .signing-key
 
 case $# in
     0)
         docker run ${DOCKER_BIND} ${imgname} ot2_defconfig
-        docker run ${DOCKER_BIND} ${imgname} all
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
         ;;
     *)
         docker run ${heads} ${DOCKER_BIND} ${imgname} ${tail}

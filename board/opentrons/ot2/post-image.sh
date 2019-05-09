@@ -2,9 +2,6 @@
 
 set -e
 
-# Load the out-of-container env to get stuff from codebuild
-export $(cat /buildroot/.env | xargs)
-
 BOARD_DIR="$(dirname $0)"
 BOARD_NAME="$(basename ${BOARD_DIR})"
 GENIMAGE_CFG="${BOARD_DIR}/genimage-${BOARD_NAME}.cfg"
