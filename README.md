@@ -10,6 +10,8 @@ This fork requires the [opentrons repo](https://github.com/Opentrons/opentrons) 
 
 To build, make sure ``docker`` and ``git`` are installed, and the monorepo is checked out as a neighbor, and run ``./opentrons_build.sh``. This will build the docker container and run a build in it.
 
+The API key for our log aggregator, datadog, can be provided either by specifying it in the ``DATADOG_API_KEY`` env var or by having aws creds available to pull it (and python3 and boto3 installed). If not specified, the build will run and work, but that robot will be unable to upload logs to datadog.
+
 You can build other Buildroot makefile targets using this script by putting them in the last argument. The arguments are split so that the last argument is passed to the makefile and the first arguments are passed to docker. That means if you want to build the targets ``python-opentrons-api`` and ``all`` (``all`` is how you get images out) you would do ``./opentrons-build.sh "python-opentrons-api all"``. If you wanted to run menuconfig, you would run ``./opentrons-build.sh -ti menuconfig``, so docker gave you a terminal and the makefile runs menuconfig
 
 You can control the release type with the ``OT2_BUILD_TYPE`` environment variable. If you set this to ``release``, the system will try and sign the output using a private key in the ``SIGNING_KEY`` environment variable.
