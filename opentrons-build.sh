@@ -55,10 +55,10 @@ echo "${SIGNING_KEY}" > .signing-key
 
 case $# in
     0)
-        docker run ${DOCKER_BIND} ${imgname} ot2_defconfig
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_defconfig
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
         ;;
     *)
-        docker run ${heads} ${DOCKER_BIND} ${imgname} ${tail}
+        docker run --env-file ./.env ${heads} ${DOCKER_BIND} ${imgname} ${tail}
         ;;
 esac
