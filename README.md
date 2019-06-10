@@ -40,7 +40,7 @@ The repo is built automatically
 - When new commits are pushed to a branch of the monorepo that has a matching branch in this repo (non-release)
 - When a tag is pushed to the monorepo (release), using the latest github release in this repo
 
-When builds complete, they are uploaded to an s3 bucket prefixed by the codebuild build id (see the buildspec file). If the build was a release build, the manifest `releases.json` in the root of the bucket is updated so that the key path `/production/{monorepo-version}` contains a dict mapping `system'` to the path of the update file zip, `'fullImage'` to the path of the provisioning zip,  `'migration'` to the path of the migration zip, and `'version'` to the path of the version file. For instance, the manifest might look like
+When builds complete, they are uploaded to an s3 bucket prefixed by the codebuild build id (see the buildspec file). If the build was a release build, the manifest `releases.json` in the root of the bucket is updated so that the key path `/production/{monorepo-version}` contains a dict mapping `system'` to the path of the update file zip, `'fullImage'` to the path of the provisioning zip, and `'version'` to the path of the version file. For instance, the manifest might look like
 
 ```json
 {
@@ -48,8 +48,7 @@ When builds complete, they are uploaded to an s3 bucket prefixed by the codebuil
     "3.8.3": {
       "fullImage": "https://opentrons-buildroot-ci.s3.amazonaws.com/ebc9f421-04db-4ec8-87bd-f990c69bbd80/opentrons-buildroot/ot2-fullimage.zip",
       "system": "https://opentrons-buildroot-ci.s3.amazonaws.com/ebc9f421-04db-4ec8-87bd-f990c69bbd80/opentrons-buildroot/ot2-system.zip",
-      "version": "https://opentrons-buildroot-ci.s3.amazonaws.com/ebc9f421-04db-4ec8-87bd-f990c69bbd80/opentrons-buildroot/VERSION.json",
-      "migration": "https://opentrons-buildroot-ci.s3.amazonaws.com/ebc9f421-04db-4ec8-87bd-f990c69bbd80/opentrons-buildroot/ot2-migration.zip"
+      "version": "https://opentrons-buildroot-ci.s3.amazonaws.com/ebc9f421-04db-4ec8-87bd-f990c69bbd80/opentrons-buildroot/VERSION.json"
     }
   }
 }
