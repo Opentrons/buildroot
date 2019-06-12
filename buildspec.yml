@@ -19,6 +19,5 @@ artifacts:
     - output/images/ot2-system.zip
     - output/images/ot2-fullimage.zip
     - output/images/VERSION.json
-    - output/images/ot2-migration.zip
   name: ot2-system
   discard-paths: yes
