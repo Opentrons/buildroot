@@ -80,14 +80,16 @@ shasum -a 256 ${BINARIES_DIR}/rootfs.ext4 | grep -oh "^.\+ " > ${BINARIES_DIR}/r
 echo "Generating hash for boot.vfat..."
 shasum -a 256 ${BINARIES_DIR}/boot.vfat | grep -oh "^.\+ " > ${BINARIES_DIR}/boot.vfat.hash
 
+boot_files="${BINARIES_DIR}/boot.vfat ${BINARIES_DIR}/boot.vfat.hash"
+
 if [ ${OT_BUILD_TYPE} = "release" ]; then
     echo "Build type is RELEASE"
     echo "Signing rootfs hash"
     openssl dgst -sha256 -sign .signing-key -out ${BINARIES_DIR}/rootfs.ext4.hash.sig ${BINARIES_DIR}/rootfs.ext4.hash
-    system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/rootfs.ext4.hash.sig"
+    system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/rootfs.ext4.hash.sig ${boot_files}"
 else
     echo "Build type is NOT RELEASE"
-    system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json"
+    system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json ${boot_files}"
 fi
 
 echo "Zipping system image..."
@@ -97,8 +99,4 @@ zip -j ${BINARIES_DIR}/ot2-system.zip ${system_files} ${BINARIES_DIR}/VERSION.js
 echo "Zipping full sd card image..."
 rm -f ${BINARIES_DIR}/ot2-fullimage.zip
 zip -j ${BINARIES_DIR}/ot2-fullimage.zip ${BINARIES_DIR}/sdcard.img ${BINARIES_DIR}/VERSION.json
-
-echo "Zipping migration image..."
-rm -f ${BINARIES_DIR}/ot2-migration.zip
-zip -j ${BINARIES_DIR}/ot2-migration.zip ${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/boot.vfat ${BINARIES_DIR}/boot.vfat.hash ${BINARIES_DIR}/VERSION.json
 exit $?
