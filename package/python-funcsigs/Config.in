@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_FUNCSIGS
+	bool "python-funcsigs"
+	help
+	  Python function signatures from PEP362 for Python 2.6, 2.7
+	  and 3.2+.
+
+	  http://funcsigs.readthedocs.org
