@@ -1,0 +1,9 @@
+config BR2_PACKAGE_PYTHON_JSONRPCCLIENT
+	bool "python-jsonrpcclient"
+	select BR2_PACKAGE_PYTHON_APPLY_DEFAULTS # runtime
+	select BR2_PACKAGE_PYTHON_CLICK # runtime
+	select BR2_PACKAGE_PYTHON_JSONSCHEMA # runtime
+	help
+	  Send JSON-RPC requests.
+
+	  https://github.com/bcb/jsonrpcclient
