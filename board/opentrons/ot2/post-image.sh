@@ -94,9 +94,9 @@ fi
 
 echo "Zipping system image..."
 rm -f ${BINARIES_DIR}/ot2-system.zip
-zip -j ${BINARIES_DIR}/ot2-system.zip ${system_files} ${BINARIES_DIR}/VERSION.json
+zip -j ${BINARIES_DIR}/ot2-system.zip ${system_files} ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/release-notes.md
 
 echo "Zipping full sd card image..."
 rm -f ${BINARIES_DIR}/ot2-fullimage.zip
-zip -j ${BINARIES_DIR}/ot2-fullimage.zip ${BINARIES_DIR}/sdcard.img ${BINARIES_DIR}/VERSION.json
+zip -j ${BINARIES_DIR}/ot2-fullimage.zip ${BINARIES_DIR}/sdcard.img ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/release-notes.md
 exit $?
