@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/funcsigs/json
+md5	7e583285b1fb8a76305d6d68f4ccc14e  funcsigs-1.0.2.tar.gz
+sha256	a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50  funcsigs-1.0.2.tar.gz
+# Locally computed sha256 checksums
+sha256	559229b4b693d80fe087d517f7c79d4857c965add18031512d0981efc28755f0  LICENSE
