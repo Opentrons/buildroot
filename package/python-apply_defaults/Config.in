@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_APPLY_DEFAULTS
+	bool "python-apply_defaults"
+	help
+	  Apply values to optional params.
+
+	  https://github.com/bcb/apply_defaults
