@@ -22,3 +22,7 @@ artifacts:
     - output/images/release-notes.md
   name: ot2-system
   discard-paths: yes
+
+cache:
+  paths:
+    - dl/
