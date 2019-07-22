@@ -1,9 +1,8 @@
 import json
 import os
-import sys
 import subprocess
 import argparse
-
+print("Getting git data from cwd %s" % os.getcwd())
 try:
     br_version = subprocess.check_output(
         ['git', 'describe', '--tags', '--always'],
@@ -29,7 +28,7 @@ try:
 except subprocess.CalledProcessError as cpe:
     print("{}: {}: {}".format(cpe.cmd, cpe.returncode, cpe.stdout))
     print("Defaulting to (unknown)")
-    br_branch = 'unknown'
+    br_branch_from_git = 'unknown'
 
 br_branch = os.getenv('CODEBUILD_SOURCE_VERSION', br_branch_from_git)
 build_id = os.getenv('CODEBUILD_BUILD_ID', 'dev')
