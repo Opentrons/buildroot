@@ -3,10 +3,8 @@ Description=Jupyter notebook server
 
 [Service]
 Type=simple
-ExecStart=/bin/sh -c "jupyter notebook --config=%E/jupyter/jupyter_notebook_config.py --notebook-dir=%S/jupyter/notebooks 2>&1"
+ExecStart=/bin/sh -c "jupyter notebook --allow-root --config=%E/jupyter/jupyter_notebook_config.py --notebook-dir=%S/jupyter/notebooks 2>&1"
 PIDFile=%t/jupyter/jupyter.pid
-User=jupyter
-Group=jupyter
 SupplementaryGroups=dialout
 StateDirectory=jupyter jupyter/notebooks jupyter/data jupyter/config ipython
 RuntimeDirectory=jupyter
