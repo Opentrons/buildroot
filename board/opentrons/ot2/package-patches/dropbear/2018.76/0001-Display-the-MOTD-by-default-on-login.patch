@@ -1,0 +1,25 @@
+From ea4b04465b3f5f9921355063667a21f83c03fc1b Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Tue, 27 Aug 2019 12:02:34 -0400
+Subject: [PATCH] Display the MOTD by default on login
+
+---
+ default_options.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/default_options.h b/default_options.h
+index 3b75eb8..f4fcd90 100644
+--- a/default_options.h
++++ b/default_options.h
+@@ -174,7 +174,7 @@ group1 in Dropbear server too */
+ #define DO_HOST_LOOKUP 0
+ 
+ /* Whether to print the message of the day (MOTD). */
+-#define DO_MOTD 0
++#define DO_MOTD 1
+ #define MOTD_FILENAME "/etc/motd"
+ 
+ /* Authentication Types - at least one required.
+-- 
+2.19.1
+
