@@ -8,7 +8,7 @@ PIDFile=%t/jupyter/jupyter.pid
 SupplementaryGroups=dialout
 StateDirectory=jupyter jupyter/notebooks jupyter/data jupyter/config ipython
 RuntimeDirectory=jupyter
-Environment=JUPYTER_RUNTIME_DIR=%t/jupyter JUPYTER_CONFIG_DIR=%S/jupyter/config JUPYTER_DATA_DIR=%S/jupyter/data IPYTHONDIR=%S/ipython OT_SMOOTHIE_ID=AMA RUNNING_ON_PI=true
+Environment=JUPYTER_RUNTIME_DIR=%t/jupyter JUPYTER_CONFIG_DIR=%S/jupyter/config JUPYTER_DATA_DIR=%S/jupyter/data IPYTHONDIR=%S/ipython JUPYTER_NOTEBOOK_DIR=%S/jupyter/notebooks OT_SMOOTHIE_ID=AMA RUNNING_ON_PI=true
 
 [Install]
 WantedBy=opentrons.target
