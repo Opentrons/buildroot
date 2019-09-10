@@ -9,30 +9,45 @@ if [ ! -d /var/resin-data ] ; then
     exit 0
 fi
 
-NOTEBOOK_DIR="${STATE_DIRECTORY}/jupyter/notebooks"
+function migrate_notebook_dir {
+    # Migrate an old notebook dir to a new one. Anything at the top level of
+    # the notebook dir with a name that exists in the new directory will be
+    # renamed with a numerical suffix
+    _from=$1
+    _to=$2
+    echo "Migrating ${_from} to ${_to}"
+    for _bn in $(ls "${_from}"); do
+        _dest="${_to}/${_bn}"
+        if [ -e "${_dest}" ]; then
+            if [ -f "${_dest}" ]; then
+               _fname="${_bn%.*}"
+               _fext="${_bn##*.}"
+               _fsuffix=1
+               while [ -e "${_dest}" ]; do
+                   echo "${_dest} exists"
+                   _dest="${_to}/${_fname}-${_fsuffix}.${_fext}"
+                   _fsuffix=$(( _fsuffix + 1 ))
+               done;
+            else
+                _dsuffix=1
+                while [ -e "${_dest}" ]; do
+                    echo "${_dest} exists"
+                    _dest="${_to}/${_bn}-${_dsuffix}"
+                    _dsuffix=$(( _dsuffix + 1 ))
+                done;
+            fi
+        fi
+        echo "${_from}/${_bn} -> ${_dest}"
+        mv "${_from}/${_bn}" "${_dest}"
+    done;
+}
 
-# get any notebooks saved in the old notebook directories. we have to use find
-# -name here because this is the old balena /data root, which invisibly to the
-# old containers actually had the application id in the path; we lost that id
-# after migration, so we have to search all of them.
-notebooks=$(find /var/resin-data -name *.ipynb | grep -v '.*ipynb_checkpoints.*')
+# Find any and all old notebook directories
+notebook_dirs=$(find /var/resin-data \
+                     -name jupyter \
+                     -type d \
+                     -path "*/user_storage/opentrons_data/*")
 
-for nb in $notebooks; do
-    _filename=$(basename "$nb")
-    _basename=$(basename "$_filename" ".ipynb")
-    if [ -e "${NOTEBOOK_DIR}/${_filename}" ]; then
-        echo "${NOTEBOOK_DIR}/${_filename} exists"
-        _suffix=1
-        while [ -e "${NOTEBOOK_DIR}/${_basename}-${_suffix}.ipynb" ]; do
-            echo "${NOTEBOOK_DIR}/${_basename}-${_suffix}.ipynb exists"
-            ++_suffix
-        done;
-        _newname="${_basename}-${_suffix}.ipynb"
-        echo "${NOTEBOOK_DIR}/${_newname} OK"
-    else
-        _newname=$_filename
-    fi
-    echo "${nb} -> ${NOTEBOOK_DIR}/${_newname}"
-    mv "${nb}" "${NOTEBOOK_DIR}/${_newname}"
+for nb in $notebook_dirs; do
+    migrate_notebook_dir "${nb}" "${JUPYTER_NOTEBOOK_DIR}"
 done
-
