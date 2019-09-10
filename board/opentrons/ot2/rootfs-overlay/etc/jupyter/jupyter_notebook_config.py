@@ -631,7 +631,7 @@ c.NotebookApp.token = ''
 ## If True (default), deleting files will send them to the platform's
 #  trash/recycle bin, where they can be recovered. If False, deleting files
 #  really deletes them.
-c.FileContentsManager.delete_to_trash = True
+c.FileContentsManager.delete_to_trash = False
 
 ## Python callable or importstring thereof
 #
