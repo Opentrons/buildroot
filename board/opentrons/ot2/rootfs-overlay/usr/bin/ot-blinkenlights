@@ -4,6 +4,8 @@ import importlib
 import os
 import sys
 import time
+import atexit
+import signal
 
 ot = importlib.find_loader('opentrons')
 ot_root = os.path.dirname(ot.get_filename())
@@ -26,6 +28,11 @@ gpio.set_low(gpio.OUTPUT_PINS['RESET'])
 time.sleep(0.25)
 gpio.set_high(gpio.OUTPUT_PINS['RESET'])
 time.sleep(0.25)
+
+def handleTerm(signal_number, frame):
+    raise KeyboardInterrupt
+signal.signal(signal.SIGTERM, handleTerm)
+atexit.register(lambda: gpio.set_button_light(blue=True))
 
 # Start blinking button blue
 while True:
