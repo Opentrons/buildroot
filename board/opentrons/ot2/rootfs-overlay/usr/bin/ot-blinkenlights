@@ -30,6 +30,7 @@ time.sleep(0.25)
 
 def handleSignal(signal_number, frame):
     gpio.set_button_light(blue=True)
+    os._exit()
 
 signal.signal(signal.SIGTERM, handleSignal)
 signal.signal(signal.SIGINT, handleSignal)
