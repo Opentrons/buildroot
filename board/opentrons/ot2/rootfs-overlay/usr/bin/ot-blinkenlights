@@ -4,6 +4,7 @@ import importlib
 import os
 import sys
 import time
+import signal
 
 ot = importlib.find_loader('opentrons')
 ot_root = os.path.dirname(ot.get_filename())
@@ -26,6 +27,13 @@ gpio.set_low(gpio.OUTPUT_PINS['RESET'])
 time.sleep(0.25)
 gpio.set_high(gpio.OUTPUT_PINS['RESET'])
 time.sleep(0.25)
+
+def handleSignal(signal_number, frame):
+    gpio.set_button_light(blue=True)
+    os._exit(0)
+
+signal.signal(signal.SIGTERM, handleSignal)
+signal.signal(signal.SIGINT, handleSignal)
 
 # Start blinking button blue
 while True:
