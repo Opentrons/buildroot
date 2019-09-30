@@ -13,6 +13,7 @@ interface-name=eth0
 permissions=
 
 [ethernet]
+cloned-mac-address=permanent
 mac-address-blacklist=
 
 [ipv4]
