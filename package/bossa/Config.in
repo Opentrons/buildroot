@@ -1,0 +1,8 @@
+config BR2_PACKAGE_BOSSA
+	bool "bossa"
+	depends on BR2_INSTALL_LIBSTDCPP # c++
+	help
+	  BOSSA is a flash programming utility for the Atmel SAM family of flash-based
+	  ARM microcontrollers.
+
+	  https://github.com/shumatech/BOSSA
