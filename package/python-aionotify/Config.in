@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_AIONOTIFY
+	bool "python-aionotify"
+	depends on BR2_PACKAGE_PYTHON3
+	help
+	  asyncio interface to inotify.
+
+	  https://github.com/rbarrois/aionotify
+
