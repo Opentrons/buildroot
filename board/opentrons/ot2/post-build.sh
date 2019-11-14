@@ -39,8 +39,6 @@ if [ ${OT_BUILD_TYPE} != "release" ]; then
     echo "Build type is NOT RELEASE, adding default ssh key and removing signing"
     # write common pubkey to authorized keys
     cat ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys
-    # remove code signing cert (allows unsigned updates)
-    rm ${TARGET_DIR}/etc/opentrons-robot-signing-key.crt
     deployment_to_write="development"
 
 else
@@ -48,6 +46,11 @@ else
     deployment_to_write="production"
 fi
 
+if [ ! -e .signing-key ]; then
+    echo "No signing key present, removing cert"
+    # remove code signing cert (allows unsigned updates)
+    rm ${TARGET_DIR}/etc/opentrons-robot-signing-key.crt
+fi
 
 cat <<EOF >> "${TARGET_DIR}/etc/machine-info"
 PRETTY_HOSTNAME=${hostname_to_write}
