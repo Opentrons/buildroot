@@ -1,9 +1,0 @@
-#!/bin/sh
-
-env > /var/env_test
-
-test $ID_MODEL_ID = "ed12" && test $ID_VENDOR_ID = "04d8" || exit 0
-
-rm -f "/dev/modules/thermocycler_bootloader_volume"
-
-exit 0
