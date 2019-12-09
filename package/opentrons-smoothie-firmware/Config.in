@@ -1,0 +1,10 @@
+config BR2_PACKAGE_OPENTRONS_SMOOTHIE_FIRMWARE
+	bool "opentrons-smoothie-firmware"
+	help
+		Opentrons Smoothie Firmware
+
+		Pre-combined binaries of the current smoothie board
+		firmware for an Opentrons OT-2
+
+		https://github.com/opentrons/smoothiewareot
+
