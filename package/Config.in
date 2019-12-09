@@ -383,6 +383,7 @@ menu "Firmware"
 	source "package/wilc1000-firmware/Config.in"
 	source "package/wilink-bt-firmware/Config.in"
 	source "package/zd1211-firmware/Config.in"
+  source "package/opentrons-smoothie-firmware/Config.in"
 endmenu
 	source "package/18xx-ti-utils/Config.in"
 	source "package/a10disp/Config.in"
