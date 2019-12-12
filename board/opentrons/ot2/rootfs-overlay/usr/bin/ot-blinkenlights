@@ -14,19 +14,7 @@ sys.path.insert(0, gpio_path)
 
 import gpio
 
-gpio.initialize()
-
-# audio-enable pin can stay HIGH always, unless there is noise coming
-# from the amplifier, then we can set to LOW to disable the amplifier
-gpio.set_high(gpio.OUTPUT_PINS['AUDIO_ENABLE'])
-
-# smoothieware programming pins, must be in a known state (HIGH)
-gpio.set_high(gpio.OUTPUT_PINS['HALT'])
-gpio.set_high(gpio.OUTPUT_PINS['ISP'])
-gpio.set_low(gpio.OUTPUT_PINS['RESET'])
-time.sleep(0.25)
-gpio.set_high(gpio.OUTPUT_PINS['RESET'])
-time.sleep(0.25)
+gpio.robot_startup_sequence()
 
 def handleSignal(signal_number, frame):
     gpio.set_button_light(blue=True)
