@@ -1,0 +1,4 @@
+# This is only present to ensure the directory is created when the
+# repo is checked out, so the directory is added to the rootfs, so
+# there's something to bind mount (see post-build.sh for where the
+# bind mounts are added to /etc/fstab)
