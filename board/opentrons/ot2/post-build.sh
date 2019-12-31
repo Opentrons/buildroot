@@ -19,7 +19,6 @@ cat <<EOF > ${TARGET_DIR}/etc/fstab
 /var/data /data none defaults,bind 0 0
 /var/home /root none defaults,bind 0 0
 /var/mnt /mnt none defaults,bind 0 0
-/var/dropbear /etc/dropbear none defaults,bind,nofail 0 0
 /var/hostname /etc/hostname none defaults,bind,nofail 0 0
 /var/machine-info /etc/machine-info none defaults,bind,nofail 0 0
 EOF
@@ -66,6 +65,12 @@ fi
 
 python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/opentrons-update-server-version.json ${BINARIES_DIR}/VERSION.json
 cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
+
+# manually make a softlink for /etc/dropbear because it needs to be absolute
+# due to the logic in the dropbear system file, but if it was checked in it
+# would be rewritten by aws
+rm -f ${TARGET_DIR}/etc/dropbear
+ln -sf /var/run/dropbear ${TARGET_DIR}/etc/dropbear
 
 
 # Syslog-ng extra setup:
