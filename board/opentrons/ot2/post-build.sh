@@ -66,11 +66,10 @@ fi
 python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/opentrons-update-server-version.json ${BINARIES_DIR}/VERSION.json
 cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
 
-
 # Dropbear stores its host keys in /etc/dropbear, and the stock Buildroot
 # scripts make that a symlink to /var/run/dropbear.  Replace that with a link
-# to /var/dropbear, on our RW partition, so the host keys persist across reboots
-# and upgrades.
+# to /var/lib/dropbear, on our RW partition, so the host keys persist across
+# reboots and upgrades.
 # 
 # See also: rootfs-overlay/etc/systemd/system/dropbear.service.d/create-host-key-directory.conf.
 # 
