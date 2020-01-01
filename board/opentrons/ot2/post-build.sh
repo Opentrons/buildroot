@@ -66,11 +66,18 @@ fi
 python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/opentrons-update-server-version.json ${BINARIES_DIR}/VERSION.json
 cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
 
-# manually make a softlink for /etc/dropbear because it needs to be absolute
-# due to the logic in the dropbear system file, but if it was checked in it
-# would be rewritten by aws
+
+# Dropbear stores its host keys in /etc/dropbear, and the stock Buildroot
+# scripts make that a symlink to /var/run/dropbear.  Replace that with a link
+# to /var/dropbear, on our RW partition, so the host keys persist across reboots
+# and upgrades.
+# 
+# See also: rootfs-overlay/etc/systemd/system/dropbear.service.d/create-host-key-directory.conf.
+# 
+# Also, create the link manually in this script, rather than putting it in the
+# rootfs overlay, so that AWS CodeBuild doesn't rewrite it to be relative.
 rm -f ${TARGET_DIR}/etc/dropbear
-ln -sf /var/run/dropbear ${TARGET_DIR}/etc/dropbear
+ln -s /var/lib/dropbear ${TARGET_DIR}/etc/dropbear
 
 
 # Syslog-ng extra setup:
