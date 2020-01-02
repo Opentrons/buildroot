@@ -28,8 +28,8 @@ trap finish EXIT
 
 DOCKER_BR_BIND_DIR="/buildroot"
 DOCKER_OT_BIND_DIR="/opentrons"
-DOCKER_BIND_BR="--mount type=bind,source=$(pwd),destination=${DOCKER_BR_BIND_DIR}"
-DOCKER_BIND_OT="--mount type=bind,source=$(pwd)/../opentrons,destination=${DOCKER_OT_BIND_DIR}"
+DOCKER_BIND_BR="--mount type=bind,source=$(pwd),destination=${DOCKER_BR_BIND_DIR},consistency=delegated"
+DOCKER_BIND_OT="--mount type=bind,source=$(pwd)/../opentrons,destination=${DOCKER_OT_BIND_DIR},consistency=delegated"
 DOCKER_BIND="${DOCKER_BIND_BR} ${DOCKER_BIND_OT}"
 heads=${@:1:$(($# - 1))}
 tail=${@:$#}
