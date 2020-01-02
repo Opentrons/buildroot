@@ -52,7 +52,9 @@ docker build ${filter_arg} -t ${imgname} .
 env | grep 'CODEBUILD\|AWS\|DATADOG' >.env
 echo "OT_BUILD_TYPE=${OT_BUILD_TYPE-dev}">>.env
 echo "FORCE_UNSAFE_CONFIGURE=1">>.env
-echo "${SIGNING_KEY}" > .signing-key
+if [ "${SIGNING_KEY}" ]; then
+    echo "${SIGNING_KEY}" > .signing-key
+fi
 
 case $# in
     0)
