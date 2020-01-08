@@ -1,0 +1,4 @@
+# Disable SSH password logins.  We only use public key authentication.
+# This prevents a confusing password prompt from showing up when someone
+# tries to log in with a missing or wrong key.
+DROPBEAR_ARGS=-s
