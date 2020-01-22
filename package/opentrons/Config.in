@@ -1,2 +1,3 @@
 source "package/opentrons/opentrons-smoothie-firmware/Config.in"
 source "package/opentrons/opentrons-magnetic-module-firmware/Config.in"
+source "package/opentrons/opentrons-temperature-module-firmware/Config.in"

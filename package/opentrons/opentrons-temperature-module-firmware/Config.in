@@ -1,0 +1,10 @@
+config BR2_PACKAGE_OPENTRONS_TEMPERATURE_MODULE_FIRMWARE
+	bool "opentrons-temperature-module-firmware"
+	help
+		Opentrons Temperature Module Firmware
+
+		Hex file of the current board firmware
+		for an Opentrons Temperature Module
+
+		https://github.com/opentrons/opentrons-modules
+
