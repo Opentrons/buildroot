@@ -1,0 +1,10 @@
+config BR2_PACKAGE_OPENTRONS_MAGNETIC_MODULE_FIRMWARE
+	bool "opentrons-magnetic-module-firmware"
+	help
+		Opentrons Magnetic Module Firmware
+
+		Hex file of the current board firmware
+		for an Opentrons Magnetic Module
+
+		https://github.com/opentrons/opentrons-modules
+
