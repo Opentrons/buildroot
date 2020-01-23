@@ -16,6 +16,12 @@ You can build other Buildroot makefile targets using this script by putting them
 
 You can control the release type with the ``OT2_BUILD_TYPE`` environment variable. If you set this to ``release``, the system will try and sign the output using a private key in the ``SIGNING_KEY`` environment variable.
 
+## Adding Commits
+
+As a fork of the buildroot project, commits and their messages should stick to the conventions outlined in the buildroot manual. Changes to the build configuration should be documented in a commit message in the form of "config/ot2_defconfig: select lib-foo". Changes to available build packages should receive a commit message in the form of "package-name: (new,remove,update, etc.) package".
+
+Submitted pull requests should be made up of commits with messages that are suitable to be placed directly onto the head of `opentrons-develop`. Unlike the opentrons monorepo, we merge pull requests into this repository with a rebase merge instead of a squash merge. This means all commits will appear in the master branch once the PR is reviewed and accepted.
+
 ## Outputs
 
 The outputs of the build are
