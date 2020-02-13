@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_STARLETTE
+	bool "python-starlette"
+	depends on BR2_PACKAGE_PYTHON3	
+	help
+	  The little ASGI library that shines.
+
+	  https://github.com/encode/starlette
