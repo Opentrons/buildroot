@@ -1,0 +1,12 @@
+config BR2_PACKAGE_PYTHON_UVICORN
+	bool "python-uvicorn"
+	depends on BR2_PACKAGE_PYTHON3
+	select BR2_PACKAGE_PYTHON_CLICK # runtime
+	select BR2_PACKAGE_PYTHON_H11 # runtime
+	select BR2_PACKAGE_PYTHON_WEBSOCKETS # runtime
+	select BR2_PACKAGE_PYTHON_HTTPTOOLS # runtime
+	select BR2_PACKAGE_PYTHON_UVLOOP # runtime
+	help
+	  The lightning-fast ASGI server.
+
+	  https://github.com/encode/uvicorn
