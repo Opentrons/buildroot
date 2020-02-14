@@ -1,0 +1,3 @@
+# md5, sha256 from https://pypi.org/pypi/uvicorn/json
+md5	da4bc6a966c559e5f03dbd2d486ad855  uvicorn-0.11.2.tar.gz
+sha256	11f397855c7f35dc034a3d288883382a4c16afdfe6675b70896f55bd6051da64  uvicorn-0.11.2.tar.gz
