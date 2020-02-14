@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_HTTPTOOLS
+	bool "python-httptools"
+	depends on BR2_PACKAGE_PYTHON3
+	help
+	  A collection of framework independent HTTP protocol utils.
+
+	  https://github.com/MagicStack/httptools
