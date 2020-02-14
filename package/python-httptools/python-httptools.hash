@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/httptools/json
+md5	063a9b6f8c79cf5f11592e7a49715275  httptools-0.1.1.tar.gz
+sha256	41b573cf33f64a8f8f3400d0a7faf48e1888582b6f6e02b82b9bd4f0bf7497ce  httptools-0.1.1.tar.gz
+# Locally computed sha256 checksums
+sha256	f4573e7cb7676745fb5b8d36fa548aa93e391cfb6872ddacd65130c45ea6a92d  LICENSE
