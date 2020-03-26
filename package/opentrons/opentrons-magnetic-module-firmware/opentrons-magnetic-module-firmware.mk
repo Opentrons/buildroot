@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-OPENTRONS_MAGNETIC_MODULE_FIRMWARE_VERSION=v1.0.2
+OPENTRONS_MAGNETIC_MODULE_FIRMWARE_VERSION=v2.0.0
 OPENTRONS_MAGNETIC_MODULE_FIRMWARE_SOURCE=mag-deck-arduino.ino.hex
 OPENTRONS_MAGNETIC_MODULE_FIRMWARE_SITE=https://opentrons-modules-builds.s3.us-east-2.amazonaws.com/magnetic-module/$(OPENTRONS_MAGNETIC_MODULE_FIRMWARE_VERSION)
 OPENTRONS_MAGNETIC_MODULE_FIRMWARE_LICENSE=Apache-2.0
