@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/python-dotenv/json
+md5	ceb3d2f459044d3c85c266d184ab1e58  python-dotenv-0.12.0.tar.gz
+sha256	92b3123fb2d58a284f76cc92bfe4ee6c502c32ded73e8b051c4f6afc8b6751ed  python-dotenv-0.12.0.tar.gz
+# Locally computed sha256 checksums
+sha256	d27209ab3d162782a8f8e3872b9b353c49e092c9aa467a64522883407d8d1030  LICENSE
