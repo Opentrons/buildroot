@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_DOTENV
+	bool "python-dotenv"
+	select BR2_PACKAGE_PYTHON_TYPING # runtime
+	help
+	  Add .env support to your django/flask apps in development
+	  and deployments.
+
+	  http://github.com/theskumar/python-dotenv
