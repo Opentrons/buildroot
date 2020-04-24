@@ -55,6 +55,11 @@ cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
 dtparam=audio=on
 __EOF__
 
+dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/gpio-revision-bits.dtbo" "${BOARD_DIR}/gpio-revision-bits.dts"
+cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
+dtoverlay=gpio-revision-bits
+__EOF__
+
 echo "Generating fs and sd card images..."
 
 rm -rf "${TARGET_DIR}/var"
