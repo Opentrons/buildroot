@@ -8,9 +8,9 @@
         target = <&gpio>;
         __overlay__ {
             pinctrl-names = "default";
-            pinctrl-0 = <&my_pins>;
+            pinctrl-0 = <&gpio_rev_bit_pins>;
 
-            my_pins: my_pins {
+            gpio_rev_bit_pins: gpio_rev_bit_pins {
                 brcm,pins = <17 27>;     /* GPIO7 */
                 brcm,function = <0 0>; /* Output */
                 brcm,pull = <2 2>;
