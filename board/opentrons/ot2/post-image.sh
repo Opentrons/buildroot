@@ -9,16 +9,17 @@ GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
 
 sed -i -e 's/console=ttyAMA0,115200//' "${BINARIES_DIR}/rpi-firmware/cmdline.txt"
 
-overlays_to_add="dtoverlay="
-
 for arg in "$@"
 do
 	case "${arg}" in
 		--add-pi3-miniuart-bt-overlay)
 		if ! grep -qE '^dtoverlay=' "${BINARIES_DIR}/rpi-firmware/config.txt"; then
 			echo "Adding 'dtoverlay=pi3-miniuart-bt' to config.txt (fixes ttyAMA0 serial console)."
-			overlays_to_add="${overlays_to_add}pi3-miniuart-bt"
+			cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
 
+# fixes rpi3 ttyAMA0 serial console
+dtoverlay=pi3-miniuart-bt
+__EOF__
 		fi
 		;;
 		--aarch64)
@@ -50,16 +51,13 @@ __EOF__
 
 done
 
-# add gpio-revision-bits overlay
-dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/gpio-revision-bits.dtbo" "${BOARD_DIR}/gpio-revision-bits.dts"
-overlays_to_add="${overlays_to_add},gpio-revision-bits"
-
-cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-${overlays_to_add}
-__EOF__
-
 cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
 dtparam=audio=on
+__EOF__
+
+dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/gpio-revision-bits.dtbo" "${BOARD_DIR}/gpio-revision-bits.dts"
+cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
+dtoverlay=gpio-revision-bits
 __EOF__
 
 echo "Generating fs and sd card images..."
