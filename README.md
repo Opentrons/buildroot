@@ -26,7 +26,7 @@ Submitted pull requests should be made up of commits with messages that are suit
 
 The outputs of the build are
 
-- A system image, ``output/images/ot2-system.zip``, good for doing a software update
+- A system image, ``output/images/ot2-system.zip``, good for doing a software update. (If your build is unsigned you will need to disable signature checking in the robot's update server config (``/var/lib/otupdate/config.json``) and restart it ```systemctl restart opentrons-update-server```.)
 - A full sd card image, ``output/images/ot2-fullimage.zip``, good for burning a blank SD card
 - a version file, ``output/images/VERSION.json``, good for looking at the versions in the build
 
