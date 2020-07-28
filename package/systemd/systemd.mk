@@ -507,7 +507,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_SYSTEMD_NETWORKD),y)
 SYSTEMD_CONF_OPTS += -Dnetworkd=true
-SYSTEMD_NETWORKD_USER = systemd-network -1 systemd-network -1 * - - - systemd Network Management
+SYSTEMD_NETWORKD_USER = systemd-network -1 systemd-network -1 * - - - Network Manager
 SYSTEMD_NETWORKD_DHCP_IFACE = $(call qstrip,$(BR2_SYSTEM_DHCP))
 ifneq ($(SYSTEMD_NETWORKD_DHCP_IFACE),)
 define SYSTEMD_INSTALL_NETWORK_CONFS
@@ -525,26 +525,8 @@ define SYSTEMD_INSTALL_RESOLVCONF_HOOK
 	ln -sf ../run/systemd/resolve/resolv.conf \
 		$(TARGET_DIR)/etc/resolv.conf
 endef
-SYSTEMD_CONF_OPTS += -Dnss-resolve=true -Dresolve=true
-SYSTEMD_RESOLVED_USER = systemd-resolve -1 systemd-resolve -1 * - - - systemd Resolver
-else
-SYSTEMD_CONF_OPTS += -Dnss-resolve=false -Dresolve=false
-endif
-
-ifeq ($(BR2_PACKAGE_LIBOPENSSL),y)
-SYSTEMD_CONF_OPTS += \
-	-Dgnutls=false \
-	-Dopenssl=true \
-	-Ddns-over-tls=openssl \
-	-Ddefault-dns-over-tls=opportunistic
-SYSTEMD_DEPENDENCIES += openssl
-else ifeq ($(BR2_PACKAGE_GNUTLS),y)
-SYSTEMD_CONF_OPTS += \
-	-Dgnutls=true \
-	-Dopenssl=false \
-	-Ddns-over-tls=gnutls \
-	-Ddefault-dns-over-tls=opportunistic
-SYSTEMD_DEPENDENCIES += gnutls
+SYSTEMD_CONF_OPTS += -Dresolve=true
+SYSTEMD_RESOLVED_USER = systemd-resolve -1 systemd-resolve -1 * - - - Network Name Resolution Manager
 else
 SYSTEMD_CONF_OPTS += \
 	-Dgnutls=false \
