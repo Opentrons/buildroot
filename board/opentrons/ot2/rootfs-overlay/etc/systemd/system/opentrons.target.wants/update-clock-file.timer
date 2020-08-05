@@ -1,1 +1,1 @@
-board/opentrons/ot2/rootfs-overlay/etc/systemd/system/update-clock-file.timer
+../update-clock-file.timer
