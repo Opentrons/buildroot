@@ -1,0 +1,9 @@
+[Unit]
+Description=Run 120 seconds after boot and every minute afterwards
+
+[Timer]
+OnBootSec=120
+OnUnitActiveSec=60
+
+[Install]
+WantedBy=opentrons.target

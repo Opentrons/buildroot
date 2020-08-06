@@ -1,0 +1,8 @@
+[Unit]
+Description=Run clock file update script
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Service]
+Type=oneshot
+ExecStart=/etc/update_clock_file.sh
