@@ -1,0 +1,9 @@
+[Unit]
+Description=USB Bluetooth Adapter setup (on boot)
+Requires=bluetooth.service
+After=bluetooth.service
+[Service]
+Type=simple
+ExecStart=/usr/bin/btusbstart
+[Install]
+WantedBy=opentrons.target

@@ -1,0 +1,2 @@
+# Bluetooth module hotpluggable support, attempting to support any USB BT adapter
+SUBSYSTEMS=="usb", KERNEL=="hci[0-9]*", ACTION=="add", ENV{SYSTEMD_WANTS}+="btusbstarter@%k.service"
