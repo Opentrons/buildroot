@@ -1,0 +1,13 @@
+[Unit]
+Description=Configure Bluetooth Modems connected by UART
+ConditionFileNotEmpty=/proc/device-tree/soc/gpio@7e200000/bt_pins/brcm,pins
+Requires=dev-ttyS0.device
+After=dev-ttyS0.device
+
+[Service]
+Type=forking
+ExecStart= 
+ExecStart=/usr/bin/btuart
+
+[Install]
+WantedBy=multi-user.target
