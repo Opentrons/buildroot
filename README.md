@@ -68,10 +68,21 @@ Buildroot caches build intermediates aggressively, but sometimes you need to run
 
 The outputs of the build are
 
-- A system image, `output/images/ot2-system.zip`, good for doing a software update
+- `output/images/ot2-system.zip`,
+  - System image file for doing a software update
+  - Contains a rootfs image that will be written to the unused root partition block device, and therefore can only change things mounted in on-disk directories other than `/var`
+  - If your build is signed, there will also be signature files in `output/images`
   - If your build is unsigned you will need to disable signature checking in the robot's update server config (`/var/lib/otupdate/config.json`) and restart it (`systemctl restart opentrons-update-server`).
-- A full sd card image, `output/images/ot2-fullimage.zip`, good for burning a blank SD card
-- A version file, `output/images/VERSION.json`, good for looking at the versions in the build
+- `output/images/ot2-fullimage.zip`
+  - Full image file for burning to a blank SD card
+  - Contrasted to `ot2-system.zip`, the full image has a disk image file that contains:
+    - The boot parittion
+    - Two copies of the root partition
+    - A small varfs partition
+    - A partition table that carves out extra space for varfs
+  - When a freshly-flashed SD card boots, a `systemd` unit runs to expand the varfs partition to take all available space on the SD card, which can take a long time
+- `output/images/VERSION.json`
+  - Version file for looking at the versions in the build
 
 ### Other Makefile Targets
 
@@ -90,7 +101,7 @@ Certain tasks require terminal input and output. For those tasks, you should run
 
 ### Production Builds
 
-You can control the release type with the `OT_BUILD_TYPE` environment variable. If you set this to `release`, the system will try and sign the output using a private key in the `SIGNING_KEY` environment variable. Generally, you should never be running production builds locally expect for build pipeline testing; the CI is where production builds happen.
+You can control the release type with the `OT_BUILD_TYPE` environment variable. If you set this to `release`, the system will try and sign the output using a private key in the `SIGNING_KEY` environment variable. Generally, you should never be running production builds locally expect for build pipeline testing; the CI is where production builds happen. If you provide your own `SIGNING_KEY` to the build, production robots will refuse the update if the signing key does not match the Opentrons public key.
 
 ```shell
 # development build (default)
@@ -146,6 +157,8 @@ Once built, the file `output/images/ot2-fullimage.zip` can be flashed to a micro
 3. Select your SD card writer
 4. Click "Flash!"
 5. When done, insert the SD card into your Raspberry Pi and boot your OT-2
+   - Due to how the filesystem is set up, the first boot can take a long time - on the order of half an hour
+   - The button light will flash while the filesystem is being prepared
 
 To gain SSH access to the device, connect the Pi to your computer via an Ethernet cable and:
 
