@@ -101,7 +101,7 @@ Certain tasks require terminal input and output. For those tasks, you should run
 
 ### Production Builds
 
-You can control the release type with the `OT_BUILD_TYPE` environment variable. If you set this to `release`, the system will try and sign the output using a private key in the `SIGNING_KEY` environment variable. Generally, you should never be running production builds locally expect for build pipeline testing; the CI is where production builds happen. If you provide your own `SIGNING_KEY` to the build, production robots will refuse the update if the signing key does not match the Opentrons public key.
+You can control the release type with the `OT_BUILD_TYPE` environment variable. If you set this to `release`, the system will try and sign the output using a private key in the `SIGNING_KEY` environment variable. Opentrons production builds are _never_ run locally; the CI is where production builds happen, and you will not have access to the production Opentrons signing key on your own machine. If you provide a `SIGNING_KEY` to the build, Opentrons OT-2 robots will refuse the update because the signature does not match the Opentrons public key.
 
 ```shell
 # development build (default)
