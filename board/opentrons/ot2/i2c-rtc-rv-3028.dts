@@ -1,0 +1,22 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2708";
+
+    fragment@0 {
+        target = <&i2c_arm>;
+        __overlay__ {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            status = "okay";
+
+            rv3028@52 {
+                compatible = "microcrystal,rv3028";
+                reg = <0x52>;
+                trickle-resistor-ohms = <11000>;
+                status = "okay";
+            };
+        };
+    };
+};
