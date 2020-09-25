@@ -1,0 +1,532 @@
+From 897065f8bafa604e3440829f371593fb58759e33 Mon Sep 17 00:00:00 2001
+From: Sanniti <sanniti.p@nyu.edu>
+Date: Fri, 25 Sep 2020 16:41:27 -0400
+Subject: [PATCH 4/4] update driver dependencies
+
+---
+ drivers/rtc/nvmem.c            |  60 +++++++--------
+ drivers/rtc/rtc-core.h         |   8 --
+ include/linux/nvmem-provider.h |  88 ++++++++++++++++++++--
+ include/linux/rtc.h            | 133 +++++++++++++++++++++++----------
+ 4 files changed, 201 insertions(+), 88 deletions(-)
+
+diff --git a/drivers/rtc/nvmem.c b/drivers/rtc/nvmem.c
+index 8567b4ed9ac6..4312096c7738 100644
+--- a/drivers/rtc/nvmem.c
++++ b/drivers/rtc/nvmem.c
+@@ -1,21 +1,17 @@
++// SPDX-License-Identifier: GPL-2.0
+ /*
+  * RTC subsystem, nvmem interface
+  *
+  * Copyright (C) 2017 Alexandre Belloni
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+  */
+ 
+ #include <linux/err.h>
+ #include <linux/types.h>
+ #include <linux/nvmem-consumer.h>
+ #include <linux/rtc.h>
++#include <linux/slab.h>
+ #include <linux/sysfs.h>
+ 
+-#include "rtc-core.h"
+-
+ /*
+  * Deprecated ABI compatibility, this should be removed at some point
+  */
+@@ -27,11 +23,9 @@ rtc_nvram_read(struct file *filp, struct kobject *kobj,
+ 	       struct bin_attribute *attr,
+ 	       char *buf, loff_t off, size_t count)
+ {
+-	struct rtc_device *rtc = attr->private;
+-
+ 	dev_warn_once(kobj_to_dev(kobj), nvram_warning);
+ 
+-	return nvmem_device_read(rtc->nvmem, off, count, buf);
++	return nvmem_device_read(attr->private, off, count, buf);
+ }
+ 
+ static ssize_t
+@@ -39,37 +33,34 @@ rtc_nvram_write(struct file *filp, struct kobject *kobj,
+ 		struct bin_attribute *attr,
+ 		char *buf, loff_t off, size_t count)
+ {
+-	struct rtc_device *rtc = attr->private;
+-
+ 	dev_warn_once(kobj_to_dev(kobj), nvram_warning);
+ 
+-	return nvmem_device_write(rtc->nvmem, off, count, buf);
++	return nvmem_device_write(attr->private, off, count, buf);
+ }
+ 
+-static int rtc_nvram_register(struct rtc_device *rtc)
++static int rtc_nvram_register(struct rtc_device *rtc,
++			      struct nvmem_device *nvmem, size_t size)
+ {
+ 	int err;
+ 
+-	rtc->nvram = devm_kzalloc(rtc->dev.parent,
+-				sizeof(struct bin_attribute),
+-				GFP_KERNEL);
++	rtc->nvram = kzalloc(sizeof(*rtc->nvram), GFP_KERNEL);
+ 	if (!rtc->nvram)
+ 		return -ENOMEM;
+ 
+ 	rtc->nvram->attr.name = "nvram";
+ 	rtc->nvram->attr.mode = 0644;
+-	rtc->nvram->private = rtc;
++	rtc->nvram->private = nvmem;
+ 
+ 	sysfs_bin_attr_init(rtc->nvram);
+ 
+ 	rtc->nvram->read = rtc_nvram_read;
+ 	rtc->nvram->write = rtc_nvram_write;
+-	rtc->nvram->size = rtc->nvmem_config->size;
++	rtc->nvram->size = size;
+ 
+ 	err = sysfs_create_bin_file(&rtc->dev.parent->kobj,
+ 				    rtc->nvram);
+ 	if (err) {
+-		devm_kfree(rtc->dev.parent, rtc->nvram);
++		kfree(rtc->nvram);
+ 		rtc->nvram = NULL;
+ 	}
+ 
+@@ -79,35 +70,38 @@ static int rtc_nvram_register(struct rtc_device *rtc)
+ static void rtc_nvram_unregister(struct rtc_device *rtc)
+ {
+ 	sysfs_remove_bin_file(&rtc->dev.parent->kobj, rtc->nvram);
++	kfree(rtc->nvram);
++	rtc->nvram = NULL;
+ }
+ 
+ /*
+  * New ABI, uses nvmem
+  */
+-void rtc_nvmem_register(struct rtc_device *rtc)
++int rtc_nvmem_register(struct rtc_device *rtc,
++		       struct nvmem_config *nvmem_config)
+ {
+-	if (!rtc->nvmem_config)
+-		return;
++	struct nvmem_device *nvmem;
+ 
+-	rtc->nvmem_config->dev = &rtc->dev;
+-	rtc->nvmem_config->owner = rtc->owner;
+-	rtc->nvmem = nvmem_register(rtc->nvmem_config);
+-	if (IS_ERR_OR_NULL(rtc->nvmem))
+-		return;
++	if (!nvmem_config)
++		return -ENODEV;
++
++	nvmem_config->dev = rtc->dev.parent;
++	nvmem_config->owner = rtc->owner;
++	nvmem = devm_nvmem_register(rtc->dev.parent, nvmem_config);
++	if (IS_ERR(nvmem))
++		return PTR_ERR(nvmem);
+ 
+ 	/* Register the old ABI */
+ 	if (rtc->nvram_old_abi)
+-		rtc_nvram_register(rtc);
++		rtc_nvram_register(rtc, nvmem, nvmem_config->size);
++
++	return 0;
+ }
++EXPORT_SYMBOL_GPL(rtc_nvmem_register);
+ 
+ void rtc_nvmem_unregister(struct rtc_device *rtc)
+ {
+-	if (IS_ERR_OR_NULL(rtc->nvmem))
+-		return;
+-
+ 	/* unregister the old ABI */
+ 	if (rtc->nvram)
+ 		rtc_nvram_unregister(rtc);
+-
+-	nvmem_unregister(rtc->nvmem);
+ }
+diff --git a/drivers/rtc/rtc-core.h b/drivers/rtc/rtc-core.h
+index 513b9bedd2c8..0abf98983e13 100644
+--- a/drivers/rtc/rtc-core.h
++++ b/drivers/rtc/rtc-core.h
+@@ -46,11 +46,3 @@ static inline const struct attribute_group **rtc_get_dev_attribute_groups(void)
+ 	return NULL;
+ }
+ #endif
+-
+-#ifdef CONFIG_RTC_NVMEM
+-void rtc_nvmem_register(struct rtc_device *rtc);
+-void rtc_nvmem_unregister(struct rtc_device *rtc);
+-#else
+-static inline void rtc_nvmem_register(struct rtc_device *rtc) {}
+-static inline void rtc_nvmem_unregister(struct rtc_device *rtc) {}
+-#endif
+diff --git a/include/linux/nvmem-provider.h b/include/linux/nvmem-provider.h
+index 497706f5adca..fe051323be0a 100644
+--- a/include/linux/nvmem-provider.h
++++ b/include/linux/nvmem-provider.h
+@@ -1,12 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ /*
+  * nvmem framework provider.
+  *
+  * Copyright (C) 2015 Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+  * Copyright (C) 2013 Maxime Ripard <maxime.ripard@free-electrons.com>
+- *
+- * This file is licensed under the terms of the GNU General Public
+- * License version 2.  This program is licensed "as is" without any
+- * warranty of any kind, whether express or implied.
+  */
+ 
+ #ifndef _LINUX_NVMEM_PROVIDER_H
+@@ -22,6 +19,40 @@ typedef int (*nvmem_reg_read_t)(void *priv, unsigned int offset,
+ typedef int (*nvmem_reg_write_t)(void *priv, unsigned int offset,
+ 				 void *val, size_t bytes);
+ 
++enum nvmem_type {
++	NVMEM_TYPE_UNKNOWN = 0,
++	NVMEM_TYPE_EEPROM,
++	NVMEM_TYPE_OTP,
++	NVMEM_TYPE_BATTERY_BACKED,
++};
++
++/**
++ * struct nvmem_config - NVMEM device configuration
++ *
++ * @dev:	Parent device.
++ * @name:	Optional name.
++ * @id:		Optional device ID used in full name. Ignored if name is NULL.
++ * @owner:	Pointer to exporter module. Used for refcounting.
++ * @cells:	Optional array of pre-defined NVMEM cells.
++ * @ncells:	Number of elements in cells.
++ * @type:	Type of the nvmem storage
++ * @read_only:	Device is read-only.
++ * @root_only:	Device is accessibly to root only.
++ * @no_of_node:	Device should not use the parent's of_node even if it's !NULL.
++ * @reg_read:	Callback to read data.
++ * @reg_write:	Callback to write data.
++ * @size:	Device size.
++ * @word_size:	Minimum read/write access granularity.
++ * @stride:	Minimum read/write access stride.
++ * @priv:	User context passed to read/write callbacks.
++ *
++ * Note: A default "nvmem<id>" name will be assigned to the device if
++ * no name is specified in its configuration. In such case "<id>" is
++ * generated with ida_simple_get() and provided id field is ignored.
++ *
++ * Note: Specifying name and setting id to -1 implies a unique device
++ * whose name is provided as-is (kept unaltered).
++ */
+ struct nvmem_config {
+ 	struct device		*dev;
+ 	const char		*name;
+@@ -29,8 +60,10 @@ struct nvmem_config {
+ 	struct module		*owner;
+ 	const struct nvmem_cell_info	*cells;
+ 	int			ncells;
++	enum nvmem_type		type;
+ 	bool			read_only;
+ 	bool			root_only;
++	bool			no_of_node;
+ 	nvmem_reg_read_t	reg_read;
+ 	nvmem_reg_write_t	reg_write;
+ 	int	size;
+@@ -42,22 +75,61 @@ struct nvmem_config {
+ 	struct device		*base_dev;
+ };
+ 
++/**
++ * struct nvmem_cell_table - NVMEM cell definitions for given provider
++ *
++ * @nvmem_name:		Provider name.
++ * @cells:		Array of cell definitions.
++ * @ncells:		Number of cell definitions in the array.
++ * @node:		List node.
++ *
++ * This structure together with related helper functions is provided for users
++ * that don't can't access the nvmem provided structure but wish to register
++ * cell definitions for it e.g. board files registering an EEPROM device.
++ */
++struct nvmem_cell_table {
++	const char		*nvmem_name;
++	const struct nvmem_cell_info	*cells;
++	size_t			ncells;
++	struct list_head	node;
++};
++
+ #if IS_ENABLED(CONFIG_NVMEM)
+ 
+ struct nvmem_device *nvmem_register(const struct nvmem_config *cfg);
+-int nvmem_unregister(struct nvmem_device *nvmem);
++void nvmem_unregister(struct nvmem_device *nvmem);
++
++struct nvmem_device *devm_nvmem_register(struct device *dev,
++					 const struct nvmem_config *cfg);
++
++int devm_nvmem_unregister(struct device *dev, struct nvmem_device *nvmem);
++
++void nvmem_add_cell_table(struct nvmem_cell_table *table);
++void nvmem_del_cell_table(struct nvmem_cell_table *table);
+ 
+ #else
+ 
+ static inline struct nvmem_device *nvmem_register(const struct nvmem_config *c)
+ {
+-	return ERR_PTR(-ENOSYS);
++	return ERR_PTR(-EOPNOTSUPP);
+ }
+ 
+-static inline int nvmem_unregister(struct nvmem_device *nvmem)
++static inline void nvmem_unregister(struct nvmem_device *nvmem) {}
++
++static inline struct nvmem_device *
++devm_nvmem_register(struct device *dev, const struct nvmem_config *c)
+ {
+-	return -ENOSYS;
++	return nvmem_register(c);
+ }
+ 
++static inline int
++devm_nvmem_unregister(struct device *dev, struct nvmem_device *nvmem)
++{
++	return -EOPNOTSUPP;
++}
++
++static inline void nvmem_add_cell_table(struct nvmem_cell_table *table) {}
++static inline void nvmem_del_cell_table(struct nvmem_cell_table *table) {}
++
+ #endif /* CONFIG_NVMEM */
+ #endif  /* ifndef _LINUX_NVMEM_PROVIDER_H */
+diff --git a/include/linux/rtc.h b/include/linux/rtc.h
+index f6d7ee98d93c..df666cf29ef1 100644
+--- a/include/linux/rtc.h
++++ b/include/linux/rtc.h
+@@ -67,7 +67,7 @@ extern struct class *rtc_class;
+  *
+  * The (current) exceptions are mostly filesystem hooks:
+  *   - the proc() hook for procfs
+- *   - non-ioctl() chardev hooks:  open(), release(), read_callback()
++ *   - non-ioctl() chardev hooks:  open(), release()
+  *
+  * REVISIT those periodic irq calls *do* have ops_lock when they're
+  * issued through ioctl() ...
+@@ -79,29 +79,21 @@ struct rtc_class_ops {
+ 	int (*read_alarm)(struct device *, struct rtc_wkalrm *);
+ 	int (*set_alarm)(struct device *, struct rtc_wkalrm *);
+ 	int (*proc)(struct device *, struct seq_file *);
+-	int (*set_mmss64)(struct device *, time64_t secs);
+-	int (*set_mmss)(struct device *, unsigned long secs);
+-	int (*read_callback)(struct device *, int data);
+ 	int (*alarm_irq_enable)(struct device *, unsigned int enabled);
+ 	int (*read_offset)(struct device *, long *offset);
+ 	int (*set_offset)(struct device *, long offset);
+ };
+ 
+-#define RTC_DEVICE_NAME_SIZE 20
+-typedef struct rtc_task {
+-	void (*func)(void *private_data);
+-	void *private_data;
+-} rtc_task_t;
+-
++struct rtc_device;
+ 
+ struct rtc_timer {
+-	struct rtc_task	task;
+ 	struct timerqueue_node node;
+ 	ktime_t period;
++	void (*func)(struct rtc_device *rtc);
++	struct rtc_device *rtc;
+ 	int enabled;
+ };
+ 
+-
+ /* flags */
+ #define RTC_DEV_BUSY 0
+ 
+@@ -122,8 +114,6 @@ struct rtc_device {
+ 	wait_queue_head_t irq_queue;
+ 	struct fasync_struct *async_queue;
+ 
+-	struct rtc_task *irq_task;
+-	spinlock_t irq_task_lock;
+ 	int irq_freq;
+ 	int max_user_freq;
+ 
+@@ -136,14 +126,26 @@ struct rtc_device {
+ 	/* Some hardware can't support UIE mode */
+ 	int uie_unsupported;
+ 
++	/* Number of nsec it takes to set the RTC clock. This influences when
++	 * the set ops are called. An offset:
++	 *   - of 0.5 s will call RTC set for wall clock time 10.0 s at 9.5 s
++	 *   - of 1.5 s will call RTC set for wall clock time 10.0 s at 8.5 s
++	 *   - of -0.5 s will call RTC set for wall clock time 10.0 s at 10.5 s
++	 */
++	long set_offset_nsec;
++
+ 	bool registered;
+ 
+-	struct nvmem_config *nvmem_config;
+-	struct nvmem_device *nvmem;
+ 	/* Old ABI support */
+ 	bool nvram_old_abi;
+ 	struct bin_attribute *nvram;
+ 
++	time64_t range_min;
++	timeu64_t range_max;
++	time64_t start_secs;
++	time64_t offset_secs;
++	bool set_start_time;
++
+ #ifdef CONFIG_RTC_INTF_DEV_UIE_EMUL
+ 	struct work_struct uie_task;
+ 	struct timer_list uie_timer;
+@@ -157,23 +159,23 @@ struct rtc_device {
+ };
+ #define to_rtc_device(d) container_of(d, struct rtc_device, dev)
+ 
+-extern struct rtc_device *rtc_device_register(const char *name,
+-					struct device *dev,
+-					const struct rtc_class_ops *ops,
+-					struct module *owner);
++/* useful timestamps */
++#define RTC_TIMESTAMP_BEGIN_1900	-2208988800LL /* 1900-01-01 00:00:00 */
++#define RTC_TIMESTAMP_BEGIN_2000	946684800LL /* 2000-01-01 00:00:00 */
++#define RTC_TIMESTAMP_END_2063		2966371199LL /* 2063-12-31 23:59:59 */
++#define RTC_TIMESTAMP_END_2099		4102444799LL /* 2099-12-31 23:59:59 */
++#define RTC_TIMESTAMP_END_9999		253402300799LL /* 9999-12-31 23:59:59 */
++
+ extern struct rtc_device *devm_rtc_device_register(struct device *dev,
+ 					const char *name,
+ 					const struct rtc_class_ops *ops,
+ 					struct module *owner);
+ struct rtc_device *devm_rtc_allocate_device(struct device *dev);
+ int __rtc_register_device(struct module *owner, struct rtc_device *rtc);
+-extern void rtc_device_unregister(struct rtc_device *rtc);
+-extern void devm_rtc_device_unregister(struct device *dev,
+-					struct rtc_device *rtc);
+ 
+ extern int rtc_read_time(struct rtc_device *rtc, struct rtc_time *tm);
+ extern int rtc_set_time(struct rtc_device *rtc, struct rtc_time *tm);
+-extern int rtc_set_ntp_time(struct timespec64 now);
++extern int rtc_set_ntp_time(struct timespec64 now, unsigned long *target_nsec);
+ int __rtc_read_alarm(struct rtc_device *rtc, struct rtc_wkalrm *alarm);
+ extern int rtc_read_alarm(struct rtc_device *rtc,
+ 			struct rtc_wkalrm *alrm);
+@@ -187,29 +189,20 @@ extern void rtc_update_irq(struct rtc_device *rtc,
+ extern struct rtc_device *rtc_class_open(const char *name);
+ extern void rtc_class_close(struct rtc_device *rtc);
+ 
+-extern int rtc_irq_register(struct rtc_device *rtc,
+-				struct rtc_task *task);
+-extern void rtc_irq_unregister(struct rtc_device *rtc,
+-				struct rtc_task *task);
+-extern int rtc_irq_set_state(struct rtc_device *rtc,
+-				struct rtc_task *task, int enabled);
+-extern int rtc_irq_set_freq(struct rtc_device *rtc,
+-				struct rtc_task *task, int freq);
++extern int rtc_irq_set_state(struct rtc_device *rtc, int enabled);
++extern int rtc_irq_set_freq(struct rtc_device *rtc, int freq);
+ extern int rtc_update_irq_enable(struct rtc_device *rtc, unsigned int enabled);
+ extern int rtc_alarm_irq_enable(struct rtc_device *rtc, unsigned int enabled);
+ extern int rtc_dev_update_irq_enable_emul(struct rtc_device *rtc,
+ 						unsigned int enabled);
+ 
+ void rtc_handle_legacy_irq(struct rtc_device *rtc, int num, int mode);
+-void rtc_aie_update_irq(void *private);
+-void rtc_uie_update_irq(void *private);
++void rtc_aie_update_irq(struct rtc_device *rtc);
++void rtc_uie_update_irq(struct rtc_device *rtc);
+ enum hrtimer_restart rtc_pie_update_irq(struct hrtimer *timer);
+ 
+-int rtc_register(rtc_task_t *task);
+-int rtc_unregister(rtc_task_t *task);
+-int rtc_control(rtc_task_t *t, unsigned int cmd, unsigned long arg);
+-
+-void rtc_timer_init(struct rtc_timer *timer, void (*f)(void *p), void *data);
++void rtc_timer_init(struct rtc_timer *timer, void (*f)(struct rtc_device *r),
++		    struct rtc_device *rtc);
+ int rtc_timer_start(struct rtc_device *rtc, struct rtc_timer *timer,
+ 		    ktime_t expires, ktime_t period);
+ void rtc_timer_cancel(struct rtc_device *rtc, struct rtc_timer *timer);
+@@ -222,6 +215,39 @@ static inline bool is_leap_year(unsigned int year)
+ 	return (!(year % 4) && (year % 100)) || !(year % 400);
+ }
+ 
++/* Determine if we can call to driver to set the time. Drivers can only be
++ * called to set a second aligned time value, and the field set_offset_nsec
++ * specifies how far away from the second aligned time to call the driver.
++ *
++ * This also computes 'to_set' which is the time we are trying to set, and has
++ * a zero in tv_nsecs, such that:
++ *    to_set - set_delay_nsec == now +/- FUZZ
++ *
++ */
++static inline bool rtc_tv_nsec_ok(s64 set_offset_nsec,
++				  struct timespec64 *to_set,
++				  const struct timespec64 *now)
++{
++	/* Allowed error in tv_nsec, arbitarily set to 5 jiffies in ns. */
++	const unsigned long TIME_SET_NSEC_FUZZ = TICK_NSEC * 5;
++	struct timespec64 delay = {.tv_sec = 0,
++				   .tv_nsec = set_offset_nsec};
++
++	*to_set = timespec64_add(*now, delay);
++
++	if (to_set->tv_nsec < TIME_SET_NSEC_FUZZ) {
++		to_set->tv_nsec = 0;
++		return true;
++	}
++
++	if (to_set->tv_nsec > NSEC_PER_SEC - TIME_SET_NSEC_FUZZ) {
++		to_set->tv_sec++;
++		to_set->tv_nsec = 0;
++		return true;
++	}
++	return false;
++}
++
+ #define rtc_register_device(device) \
+ 	__rtc_register_device(THIS_MODULE, device)
+ 
+@@ -231,4 +257,33 @@ extern int rtc_hctosys_ret;
+ #define rtc_hctosys_ret -ENODEV
+ #endif
+ 
++#ifdef CONFIG_RTC_NVMEM
++int rtc_nvmem_register(struct rtc_device *rtc,
++		       struct nvmem_config *nvmem_config);
++void rtc_nvmem_unregister(struct rtc_device *rtc);
++#else
++static inline int rtc_nvmem_register(struct rtc_device *rtc,
++				     struct nvmem_config *nvmem_config)
++{
++	return 0;
++}
++static inline void rtc_nvmem_unregister(struct rtc_device *rtc) {}
++#endif
++
++#ifdef CONFIG_RTC_INTF_SYSFS
++int rtc_add_group(struct rtc_device *rtc, const struct attribute_group *grp);
++int rtc_add_groups(struct rtc_device *rtc, const struct attribute_group **grps);
++#else
++static inline
++int rtc_add_group(struct rtc_device *rtc, const struct attribute_group *grp)
++{
++	return 0;
++}
++
++static inline
++int rtc_add_groups(struct rtc_device *rtc, const struct attribute_group **grps)
++{
++	return 0;
++}
++#endif
+ #endif /* _LINUX_RTC_H_ */
+-- 
+2.17.0
+
