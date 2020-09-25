@@ -1,0 +1,46 @@
+From 24bb2872ea6d118ca8999fc7a38ea69b19b5e78f Mon Sep 17 00:00:00 2001
+From: Sanniti <sanniti.p@nyu.edu>
+Date: Mon, 21 Sep 2020 20:07:46 -0400
+Subject: [PATCH 2/2] add kconfig & makefile entries
+
+---
+ drivers/rtc/Kconfig  | 10 ++++++++++
+ drivers/rtc/Makefile |  1 +
+ 2 files changed, 11 insertions(+)
+
+diff --git a/drivers/rtc/Kconfig b/drivers/rtc/Kconfig
+index e0e58f3b1420..8572638dea58 100644
+--- a/drivers/rtc/Kconfig
++++ b/drivers/rtc/Kconfig
+@@ -611,6 +611,16 @@ config RTC_DRV_EM3027
+ 	  This driver can also be built as a module. If so, the module
+ 	  will be called rtc-em3027.
+ 
++config RTC_DRV_RV3028
++	tristate "Micro Crystal RV3028"
++	select REGMAP_I2C
++	help
++	  If you say yes here you get support for the Micro Crystal
++	  RV3028.
++
++	  This driver can also be built as a module. If so, the module
++	  will be called rtc-rv3028.
++
+ config RTC_DRV_RV8803
+ 	tristate "Micro Crystal RV8803, Epson RX8900"
+ 	help
+diff --git a/drivers/rtc/Makefile b/drivers/rtc/Makefile
+index 0bf1fc02b82c..9faa647e0ffd 100644
+--- a/drivers/rtc/Makefile
++++ b/drivers/rtc/Makefile
+@@ -133,6 +133,7 @@ obj-$(CONFIG_RTC_DRV_RS5C313)	+= rtc-rs5c313.o
+ obj-$(CONFIG_RTC_DRV_RS5C348)	+= rtc-rs5c348.o
+ obj-$(CONFIG_RTC_DRV_RS5C372)	+= rtc-rs5c372.o
+ obj-$(CONFIG_RTC_DRV_RTD119X)	+= rtc-rtd119x.o
++obj-$(CONFIG_RTC_DRV_RV3028)	+= rtc-rv3028.o
+ obj-$(CONFIG_RTC_DRV_RV3029C2)	+= rtc-rv3029c2.o
+ obj-$(CONFIG_RTC_DRV_RV8803)	+= rtc-rv8803.o
+ obj-$(CONFIG_RTC_DRV_RX4581)	+= rtc-rx4581.o
+-- 
+2.17.0
+
