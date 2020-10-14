@@ -12,3 +12,4 @@ PYTHON_PYZMQ_LICENSE = FIXME: please specify the exact BSD version, GNU Library 
 PYTHON_PYZMQ_LICENSE_FILES = bundled/zeromq/COPYING examples/LICENSE
 
 $(eval $(python-package))
+$(eval $(host-python-package))
