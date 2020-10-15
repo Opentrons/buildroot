@@ -60,14 +60,6 @@ cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
 dtoverlay=gpio-revision-bits
 __EOF__
 
-cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-dtoverlay=i2c-rtc,rv3028,backup-switchover-mode=1
-__EOF__
-
-cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-dtparam=i2c_arm=on
-__EOF__
-
 echo "Generating fs and sd card images..."
 
 rm -rf "${TARGET_DIR}/var"
