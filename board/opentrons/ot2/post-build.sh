@@ -28,8 +28,11 @@ mkdir -p ${TARGET_DIR}/boot
 cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/zImage
 mkdir -p ${TARGET_DIR}/boot/overlays
 mkdir -p ${TARGET_DIR}/mnt/bootpart
+mv ${BINARIES_DIR}/i2c-rtc-overlay.dtb ${BINARIES_DIR}/rpi-firmware/overlays/i2c-rtc.dtbo
 cp -r ${BINARIES_DIR}/rpi-firmware/overlays ${TARGET_DIR}/boot/overlays
 cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
+rm -f ${BINARIES_DIR}/i2c-rtc-overlay.dtb
+rm -f ${TARGET_DIR}/boot/i2c-rtc-overlay.dtb
 
 # rewrite config.txt to boot u-boot
 sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.txt
