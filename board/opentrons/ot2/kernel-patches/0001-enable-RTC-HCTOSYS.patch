@@ -1,0 +1,25 @@
+From 30c9e7565a24d1ae343d15cdfcea3542503f875e Mon Sep 17 00:00:00 2001
+From: Sanniti <sanniti.p@nyu.edu>
+Date: Tue, 20 Oct 2020 00:05:11 -0400
+Subject: [PATCH] enable RTC HCTOSYS
+
+---
+ arch/arm/configs/bcm2709_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/configs/bcm2709_defconfig b/arch/arm/configs/bcm2709_defconfig
+index 53557cce7584..6dab7a27380c 100644
+--- a/arch/arm/configs/bcm2709_defconfig
++++ b/arch/arm/configs/bcm2709_defconfig
+@@ -1218,7 +1218,7 @@ CONFIG_LEDS_TRIGGER_PANIC=y
+ CONFIG_LEDS_TRIGGER_NETDEV=m
+ CONFIG_LEDS_TRIGGER_ACTPWR=y
+ CONFIG_RTC_CLASS=y
+-# CONFIG_RTC_HCTOSYS is not set
++CONFIG_RTC_HCTOSYS=y
+ CONFIG_RTC_DRV_ABX80X=m
+ CONFIG_RTC_DRV_DS1307=m
+ CONFIG_RTC_DRV_DS1374=m
+-- 
+2.17.0
+
