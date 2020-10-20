@@ -1,0 +1,34 @@
+From 9750da7317397959b14d1ab83a4a21421acc4e00 Mon Sep 17 00:00:00 2001
+From: Sanniti <sanniti.p@nyu.edu>
+Date: Tue, 20 Oct 2020 00:05:11 -0400
+Subject: [PATCH] static-compile rv3028 driver & enable RTC hctosys
+
+---
+ arch/arm/configs/bcm2709_defconfig | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/configs/bcm2709_defconfig b/arch/arm/configs/bcm2709_defconfig
+index 53557cce7584..f701fc7695f7 100644
+--- a/arch/arm/configs/bcm2709_defconfig
++++ b/arch/arm/configs/bcm2709_defconfig
+@@ -1218,7 +1218,7 @@ CONFIG_LEDS_TRIGGER_PANIC=y
+ CONFIG_LEDS_TRIGGER_NETDEV=m
+ CONFIG_LEDS_TRIGGER_ACTPWR=y
+ CONFIG_RTC_CLASS=y
+-# CONFIG_RTC_HCTOSYS is not set
++CONFIG_RTC_HCTOSYS=y
+ CONFIG_RTC_DRV_ABX80X=m
+ CONFIG_RTC_DRV_DS1307=m
+ CONFIG_RTC_DRV_DS1374=m
+@@ -1239,7 +1239,7 @@ CONFIG_RTC_DRV_FM3130=m
+ CONFIG_RTC_DRV_RX8581=m
+ CONFIG_RTC_DRV_RX8025=m
+ CONFIG_RTC_DRV_EM3027=m
+-CONFIG_RTC_DRV_RV3028=m
++CONFIG_RTC_DRV_RV3028=y
+ CONFIG_RTC_DRV_M41T93=m
+ CONFIG_RTC_DRV_M41T94=m
+ CONFIG_RTC_DRV_DS1302=m
+-- 
+2.17.0
+
