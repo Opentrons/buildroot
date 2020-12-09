@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+
+# Monitor system status and update LEDs accordingly
+# D2 ) Ethernet LED  : STATUS_LED_1  => Pin15    => bcm22
+# D3 ) Wifi LED      : STATUS_LED_2  => Pin27    => bcm00
+# D4 ) Heartbeat LED : STATUS_LED_3  => Pin22    => bcm25
+# D5 ) UNDEFINED_LED : STATUS_LED_4  => Pin28    => bcm01
+
+import gpiod
+import enum
+import asyncio
+from opentrons.system import nmcli
+
+
+CHIP = gpiod.Chip('gpiochip0')
+
+ETH_LED = 22
+WIFI_LED = 0
+HEARTBEAT_LED = 25
+UNDEFINED_LED = 1
+
+
+class Line(enum.Enum):
+    ETH = enum.auto()
+    WIFI = enum.auto()
+    HEARTBEAT = enum.auto()
+    UNDEFINED = enum.auto()
+
+
+GPIO_LINES = {
+    Line.ETH: CHIP.get_line(ETH_LED),
+    Line.WIFI: CHIP.get_line(WIFI_LED),
+    Line.HEARTBEAT: CHIP.get_line(HEARTBEAT_LED),
+    Line.UNDEFINED: CHIP.get_line(UNDEFINED_LED)
+}
+
+
+def init_leds():
+    for line in GPIO_LINES.values():
+        line.request(consumer='ot-status-leds', type=gpiod.LINE_REQ_DIR_OUT)
+        line.set_value(0)
+
+
+async def blink_heartbeat_led():
+    hb_line = GPIO_LINES[Line.HEARTBEAT]
+    while True:
+        hb_line.set_value(1)
+        await asyncio.sleep(0.25)
+        hb_line.set_value(0)
+        await asyncio.sleep(2)
+
+
+async def update_eth_status_led():
+    eth_line = GPIO_LINES[Line.ETH]
+    while True:
+        eth_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.ETH_LL)
+        if eth_status.get('ipAddress') is None:
+            eth_line.set_value(0)
+        else:
+            eth_line.set_value(1)
+        await asyncio.sleep(5)
+
+
+async def update_wifi_status_led():
+    wifi_line = GPIO_LINES[Line.WIFI]
+    while True:
+        wifi_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.WIFI)
+        if wifi_status.get('ipAddress') is None:
+            wifi_line.set_value(0)
+        else:
+            wifi_line.set_value(1)
+        await asyncio.sleep(5)
+
+
+async def main():
+    init_leds()
+
+    heartbeat_task = asyncio.create_task(blink_heartbeat_led())
+    eth_update_task = asyncio.create_task(update_eth_status_led())
+    wifi_update_task = asyncio.create_task(update_wifi_status_led())
+
+    await heartbeat_task
+    await eth_update_task
+    await wifi_update_task
+
+asyncio.run(main())
