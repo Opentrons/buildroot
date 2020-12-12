@@ -9,78 +9,71 @@
 import gpiod
 import enum
 import asyncio
+from typing import Optional, Any
 from opentrons.system import nmcli
 
 
 CHIP = gpiod.Chip('gpiochip0')
 
-ETH_LED = 22
-WIFI_LED = 0
-HEARTBEAT_LED = 25
-UNDEFINED_LED = 1
+BLINK_ON_TIME = 0.25    # seconds
+BLINK_OFF_TIME = 2      # seconds
+NW_STATUS_POLL_SEC = 5
 
 
-class Line(enum.Enum):
-    ETH = enum.auto()
-    WIFI = enum.auto()
-    HEARTBEAT = enum.auto()
-    UNDEFINED = enum.auto()
+class LineOffset(int, enum.Enum):
+    ETH = 22
+    WIFI = 0
+    HEARTBEAT = 25
+    UNDEFINED = 1
 
+    def __init__(self, offset):
+        self._line = CHIP.get_line(offset)
 
-GPIO_LINES = {
-    Line.ETH: CHIP.get_line(ETH_LED),
-    Line.WIFI: CHIP.get_line(WIFI_LED),
-    Line.HEARTBEAT: CHIP.get_line(HEARTBEAT_LED),
-    Line.UNDEFINED: CHIP.get_line(UNDEFINED_LED)
-}
+    @property
+    def line(self):
+        return self._line
 
 
 def init_leds():
-    for line in GPIO_LINES.values():
-        line.request(consumer='ot-status-leds', type=gpiod.LINE_REQ_DIR_OUT)
-        line.set_value(0)
+    for offset in list(LineOffset):
+        offset.line.request(consumer='ot-status-leds',
+                            type=gpiod.LINE_REQ_DIR_OUT)
+        offset.line.set_value(0)
 
 
 async def blink_heartbeat_led():
-    hb_line = GPIO_LINES[Line.HEARTBEAT]
+    hb_line = LineOffset.HEARTBEAT.line
     while True:
         hb_line.set_value(1)
-        await asyncio.sleep(0.25)
+        await asyncio.sleep(BLINK_ON_TIME)
         hb_line.set_value(0)
-        await asyncio.sleep(2)
+        await asyncio.sleep(BLINK_OFF_TIME)
 
 
-async def update_eth_status_led():
-    eth_line = GPIO_LINES[Line.ETH]
+async def update_nw_status_leds():
     while True:
         eth_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.ETH_LL)
-        if eth_status.get('ipAddress') is None:
-            eth_line.set_value(0)
-        else:
-            eth_line.set_value(1)
-        await asyncio.sleep(5)
+        update_led(eth_status.get('ipAddress'), LineOffset.ETH.line)
 
-
-async def update_wifi_status_led():
-    wifi_line = GPIO_LINES[Line.WIFI]
-    while True:
         wifi_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.WIFI)
-        if wifi_status.get('ipAddress') is None:
-            wifi_line.set_value(0)
-        else:
-            wifi_line.set_value(1)
-        await asyncio.sleep(5)
+        update_led(wifi_status.get('ipAddress'), LineOffset.WIFI.line)
+        await asyncio.sleep(NW_STATUS_POLL_SEC)
+
+
+def update_led(ip_status: Optional[str], line: Any):
+    if ip_status is None:
+        line.set_value(0)
+    else:
+        line.set_value(1)
 
 
 async def main():
     init_leds()
 
     heartbeat_task = asyncio.create_task(blink_heartbeat_led())
-    eth_update_task = asyncio.create_task(update_eth_status_led())
-    wifi_update_task = asyncio.create_task(update_wifi_status_led())
+    update_nw_status_task = asyncio.create_task(update_nw_status_leds())
 
     await heartbeat_task
-    await eth_update_task
-    await wifi_update_task
+    await update_nw_status_task
 
 asyncio.run(main())
