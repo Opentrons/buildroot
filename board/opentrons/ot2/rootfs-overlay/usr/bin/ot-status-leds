@@ -10,7 +10,10 @@ import gpiod
 import enum
 import asyncio
 from typing import Optional, Any
+
 from opentrons.system import nmcli
+from opentrons.hardware_control.types import BoardRevision
+from opentrons.drivers.rpi_drivers.gpio import GPIOCharDev
 
 
 CHIP = gpiod.Chip('gpiochip0')
@@ -20,7 +23,7 @@ BLINK_OFF_TIME = 2      # seconds
 NW_STATUS_POLL_SEC = 5
 
 
-class LineOffset(int, enum.Enum):
+class LedLineOffset(int, enum.Enum):
     ETH = 22
     WIFI = 0
     HEARTBEAT = 25
@@ -34,15 +37,17 @@ class LineOffset(int, enum.Enum):
         return self._line
 
 
-def init_leds():
-    for offset in list(LineOffset):
+def init_leds() -> None:
+    """ Sets LED pins as output. """
+    for offset in list(LedLineOffset):
         offset.line.request(consumer='ot-status-leds',
                             type=gpiod.LINE_REQ_DIR_OUT)
         offset.line.set_value(0)
 
 
-async def blink_heartbeat_led():
-    hb_line = LineOffset.HEARTBEAT.line
+async def blink_heartbeat_led() -> None:
+    """ Keep heartbeat LED blinking indefinitely. """
+    hb_line = LedLineOffset.HEARTBEAT.line
     while True:
         hb_line.set_value(1)
         await asyncio.sleep(BLINK_ON_TIME)
@@ -50,26 +55,51 @@ async def blink_heartbeat_led():
         await asyncio.sleep(BLINK_OFF_TIME)
 
 
-async def update_nw_status_leds():
+async def update_nw_status_leds() -> None:
+    """ Update WIFI & LinkLocal status LEDs according to NW status.
+
+    Turn the LED ON when the respective network interface is UP.
+    LED OFF when the interface is DOWN.
+    """
     while True:
         eth_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.ETH_LL)
-        update_led(eth_status.get('ipAddress'), LineOffset.ETH.line)
+        update_led(eth_status.get('ipAddress'), LedLineOffset.ETH.line)
 
         wifi_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.WIFI)
-        update_led(wifi_status.get('ipAddress'), LineOffset.WIFI.line)
+        update_led(wifi_status.get('ipAddress'), LedLineOffset.WIFI.line)
         await asyncio.sleep(NW_STATUS_POLL_SEC)
 
 
 def update_led(ip_status: Optional[str], line: Any):
+    """ Set/ Reset the pin. """
     if ip_status is None:
         line.set_value(0)
     else:
         line.set_value(1)
 
 
-async def main():
-    init_leds()
+def is_refresh_board():
+    """ Check if this is a refresh board.
 
+    Use the GPIOCharDev class to get board version and immediately close the
+    gpiod chip so that the lines are released for use by Hardware Control.
+    """
+    gpio = GPIOCharDev(chip_name='gpiochip0')
+    board_rev = gpio._determine_board_revision()
+    gpio._chip.close()
+    return False if board_rev in (BoardRevision.OG, BoardRevision.UNKNOWN) \
+        else True
+
+
+async def main():
+    """ If we have a refresh board, initialize LEDs
+        and run status update tasks
+    """
+    if not is_refresh_board():
+        raise Exception("Not a refresh board. "
+                        "Exiting status lights service.")
+
+    init_leds()
     heartbeat_task = asyncio.create_task(blink_heartbeat_led())
     update_nw_status_task = asyncio.create_task(update_nw_status_leds())
 
