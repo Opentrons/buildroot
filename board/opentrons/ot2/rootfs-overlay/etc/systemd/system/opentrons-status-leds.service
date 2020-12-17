@@ -4,7 +4,9 @@ Description=Opentrons: Run status LEDs
 [Service]
 Type=simple
 ExecStart=/usr/bin/ot-status-leds
-
+Restart=on-failure
+RestartSec=10s
+RestartPreventExitStatus=10
 
 [Install]
 WantedBy=basic.target

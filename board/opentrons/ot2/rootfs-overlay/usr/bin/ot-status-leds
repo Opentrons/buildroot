@@ -9,6 +9,8 @@
 import gpiod
 import enum
 import asyncio
+import logging
+from logging.config import dictConfig
 from typing import Optional, Any
 
 from opentrons.system import nmcli
@@ -21,6 +23,29 @@ CHIP = gpiod.Chip('gpiochip0')
 BLINK_ON_TIME = 0.25    # seconds
 BLINK_OFF_TIME = 2      # seconds
 NW_STATUS_POLL_SEC = 5
+
+dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'message_only': {'format': '%(levelname)s - %(message)s'}
+        },
+        'handlers': {
+            'service': {
+                'class': 'systemd.journal.JournalHandler',
+                'level': logging.INFO,
+                'formatter': 'message_only',
+                'SYSLOG_IDENTIFIER': 'ot-status-leds',
+            }
+        },
+        'loggers': {
+            '__main__': {
+                'level': logging.INFO,
+                'handlers': ['service']
+            }
+        },
+    })
+log = logging.getLogger(__name__)
 
 
 class LedLineOffset(int, enum.Enum):
@@ -83,10 +108,18 @@ def is_refresh_board():
 
     Use the GPIOCharDev class to get board version and immediately close the
     gpiod chip so that the lines are released for use by Hardware Control.
+    If GPIO isn't accessible, exit with exit-code 10 so that the service
+    doesn't restart.
     """
-    gpio = GPIOCharDev(chip_name='gpiochip0')
-    board_rev = gpio._determine_board_revision()
-    gpio._chip.close()
+    try:
+        gpio = GPIOCharDev(chip_name='gpiochip0')
+        board_rev = gpio._determine_board_revision()
+        gpio._chip.close()
+    except OSError:
+        log.exception("Cannot access GPIO to determine board revision. "
+                      "Aborting status lights service.")
+        exit(10)
+
     return False if board_rev in (BoardRevision.OG, BoardRevision.UNKNOWN) \
         else True
 
@@ -96,9 +129,10 @@ async def main():
         and run status update tasks
     """
     if not is_refresh_board():
-        raise Exception("Not a refresh board. "
-                        "Exiting status lights service.")
+        log.info("Not a refresh board. Exiting status lights service.")
+        exit(0)
 
+    log.info("Refresh board found. Starting status LEDs service.")
     init_leds()
     heartbeat_task = asyncio.create_task(blink_heartbeat_led())
     update_nw_status_task = asyncio.create_task(update_nw_status_leds())
