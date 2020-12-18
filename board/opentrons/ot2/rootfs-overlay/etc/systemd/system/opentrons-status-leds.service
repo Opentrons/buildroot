@@ -3,7 +3,7 @@ Description=Opentrons: Run status LEDs
 Before=opentrons-robot-server.service
 
 [Service]
-Type=simple
+Type=notify
 ExecStart=/usr/bin/ot-status-leds
 Restart=on-failure
 RestartSec=10s
