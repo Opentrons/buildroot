@@ -60,7 +60,7 @@ except ImportError:
     systemdd_notify = partial(lambda: None)
 
 
-# ############## NMCLI ###################
+# ------------ <NMCLI> ----------------
 
 class NetworkInterfaces(enum.Enum):
     """ Network interface names that we manage here.
@@ -160,7 +160,7 @@ async def _call(cmd: List[str]) -> Tuple[str, str]:
         log.warning('{}: stderr={}'.format(' '.join(to_exec), err_str))
     return out_str, err_str
 
-# ______________ </NMCLI> ___________________
+# ______________ </NMCLI> _________________
 
 
 class LedLineOffset(int, enum.Enum):
