@@ -10,13 +10,14 @@ import gpiod
 import enum
 import asyncio
 import logging
+import pathlib
+import re
+import json
+from shlex import quote
+from asyncio import subprocess as as_subprocess
 from functools import partial
 from logging.config import dictConfig
-from typing import Optional, Any
-
-from opentrons.system import nmcli
-from opentrons.hardware_control.types import BoardRevision
-from opentrons.drivers.rpi_drivers.gpio import GPIOCharDev
+from typing import Optional, Any, Dict, List, Tuple
 
 
 CHIP = gpiod.Chip('gpiochip0')
@@ -24,6 +25,9 @@ CHIP = gpiod.Chip('gpiochip0')
 BLINK_ON_TIME = 0.25    # seconds
 BLINK_OFF_TIME = 2      # seconds
 NW_STATUS_POLL_SEC = 5
+
+DTOVERLAY_PATH = '/proc/device-tree/soc/gpio@7e200000/gpio_rev_bit_pins'
+OT2_BOARD_REV_PINMAP_PATH = '/etc/ot2_board_rev/revision_pinmaps.json'
 
 dictConfig({
         'version': 1,
@@ -54,6 +58,109 @@ try:
 except ImportError:
     log.info("Systemd couldn't be imported, not notifying")
     systemdd_notify = partial(lambda: None)
+
+
+# ############## NMCLI ###################
+
+class NetworkInterfaces(enum.Enum):
+    """ Network interface names that we manage here.
+    """
+    WIFI = 'wlan0'
+    ETH_LL = 'eth0'
+
+
+async def is_iface_connected(iface: NetworkInterfaces) -> bool:
+    """ Return True/False whether the given interface is connected. """
+    iface_status = await iface_info(iface)
+    if iface_status.get('ipAddress') is not None and \
+            iface_status.get('state') == 'connected':
+        return True
+    else:
+        return False
+
+
+async def iface_info(which_iface: NetworkInterfaces) -> Dict[str, Optional[str]]:
+    """ Get the basic network configuration of an interface.
+
+    Returns a dict containing the info:
+    {
+      'ipAddress': 'xx.xx.xx.xx/yy' (ip4 addr with subnet as CIDR) or None
+      'state':  'connected' (or 'disconnected', 'unavailable', etc..)
+    }
+
+    which_iface should be a string in IFACE_NAMES.
+    """
+    # example device info lines
+    #  GENERAL.HWADDR:B8:27:EB:24:D1:D0
+    #  IP4.ADDRESS[1]:10.10.2.221/22
+    # capture the field name (without the number in brackets) and the value
+    # using regex instead of split because there may be ":" in the value
+    _DEV_INFO_LINE_RE = re.compile(r'([\w.]+)(?:\[\d+])?:(.*)')
+    # example device info: 30 (disconnected)
+    # capture the string without the number
+    _IFACE_STATE_RE = re.compile(r'\d+ \((.+)\)')
+
+    info: Dict[str, Optional[str]] = {'ipAddress': None,
+                                      'state': None}
+    fields = ['IP4.ADDRESS', 'GENERAL.STATE']
+    # Note on this specific command: Most nmcli commands default to a tabular
+    # output mode, where if there are multiple things to pull a couple specific
+    # fields from it you’ll get a table where rows are, say, connections, and
+    # columns are field name. However, specifically ‘con show <con-name>‘ and
+    # ‘dev show <dev-name>’ default to a multiline representation, and even if
+    # explicitly ask for it to be tabular, it’s not quite the same as the other
+    # commands. So we have to special-case the parsing.
+    res, err = await _call(['--mode', 'multiline',
+                            '--escape', 'no',
+                            '--terse', '--fields', ','.join(fields),
+                            'dev', 'show', which_iface.value])
+
+    field_map = {}
+    for line in res.split('\n'):
+        # pull the key (without brackets) and the value out of the line
+        match = _DEV_INFO_LINE_RE.fullmatch(line)
+        if match is None:
+            raise ValueError(
+                "Bad nmcli result; out: {}; err: {}".format(res, err))
+        key, val = match.groups()
+        # nmcli can put "--" instead of "" for None
+        field_map[key] = None if val == '--' else val
+
+    info['ipAddress'] = field_map.get('IP4.ADDRESS')
+    state_val = field_map.get('GENERAL.STATE')
+
+    if state_val:
+        state_match = _IFACE_STATE_RE.fullmatch(state_val)
+        if state_match:
+            info['state'] = state_match.group(1)
+
+    return info
+
+
+async def _call(cmd: List[str]) -> Tuple[str, str]:
+    """
+    Runs the command in a subprocess and returns the captured stdout output.
+    :param cmd: a list of arguments to nmcli. Should not include nmcli itself.
+
+    :return: (stdout, stderr)
+    """
+    to_exec = [quote(c) for c in ['nmcli'] + cmd]
+    cmd_str = ' '.join(to_exec)
+    # We have to use a shell invocation here because nmcli will not accept
+    # secrets specified on the command line unless it’s in a shell. The other
+    # option is editing the connection configuration file in /etc/ afterwards
+    # (or using d-bus and pretending to be an auth agent)
+    proc = await as_subprocess.create_subprocess_shell(
+        cmd_str,
+        stdout=as_subprocess.PIPE, stderr=as_subprocess.PIPE)
+    out, err = await proc.communicate()
+    out_str, err_str = out.decode().strip(), err.decode().strip()
+    log.debug('{}: stdout={}'.format(' '.join(to_exec), out_str))
+    if err_str:
+        log.warning('{}: stderr={}'.format(' '.join(to_exec), err_str))
+    return out_str, err_str
+
+# ______________ </NMCLI> ___________________
 
 
 class LedLineOffset(int, enum.Enum):
@@ -94,42 +201,68 @@ async def update_nw_status_leds() -> None:
     Turn the LED ON when the respective network interface is UP.
     LED OFF when the interface is DOWN.
     """
+    log.info("Starting Network status monitor")
     while True:
-        eth_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.ETH_LL)
-        update_led(eth_status.get('ipAddress'), LedLineOffset.ETH.line)
+        eth_conn = await is_iface_connected(NetworkInterfaces.ETH_LL)
+        update_led(eth_conn, LedLineOffset.ETH.line)
 
-        wifi_status = await nmcli.iface_info(nmcli.NETWORK_IFACES.WIFI)
-        update_led(wifi_status.get('ipAddress'), LedLineOffset.WIFI.line)
+        wifi_conn = await is_iface_connected(NetworkInterfaces.WIFI)
+        update_led(wifi_conn, LedLineOffset.WIFI.line)
         await asyncio.sleep(NW_STATUS_POLL_SEC)
 
 
-def update_led(ip_status: Optional[str], line: Any):
+def update_led(connected: bool, line: Any):
     """ Set/ Reset the pin. """
-    if ip_status is None:
-        line.set_value(0)
+    line.set_value(int(connected))
+
+# ------------- <BOARD REVISION CHECK> ----------------
+
+
+def determine_board_revision() -> str:
+    """ Get revision bits pinmaps from file, read pin values and compute
+    the bits' value to determine the board revision
+    """
+    if pathlib.Path(DTOVERLAY_PATH).exists():
+        with open(OT2_BOARD_REV_PINMAP_PATH, "r") as fp:
+            rev_pins_data = json.load(fp)
+
+        bit_value = 0
+        for pin in rev_pins_data.get("pins"):
+            """ Get each pin's line object, set it to input and read pin. """
+            pin.update(line=CHIP.get_line(int(pin["line-offset"])))
+            pin["line"].request(consumer="ot-status-leds",
+                                type=gpiod.LINE_REQ_DIR_IN)
+            bit_value += (int(pin["line"].get_value()) * pin["bit-position"])
+            pin["line"].release()   # Release line once its value is read
+
+        for rev in rev_pins_data.get("revisions"):
+            if bit_value == rev.get("revision-bits-value"):
+                return rev.get("revision")
+
+        raise LookupError("Read revision bits' values do not exist.")
     else:
-        line.set_value(1)
+        raise EnvironmentError("GPIO dtoverlay not found. "
+                               "Revision pins not set up.")
 
 
 def is_refresh_board():
     """ Check if this is a refresh board.
 
-    Use the GPIOCharDev class to get board version and immediately close the
-    gpiod chip so that the lines are released for use by Hardware Control.
+    Get board version and immediately release the revision bit lines
+    so that they can be used by Hardware Control.
     If GPIO isn't accessible, exit with exit-code 10 so that the service
     doesn't restart.
     """
     try:
-        gpio = GPIOCharDev(chip_name='gpiochip0')
-        board_rev = gpio._determine_board_revision()
-        gpio._chip.close()
+        board_rev = determine_board_revision()
     except OSError:
         log.exception("Cannot access GPIO to determine board revision. "
                       "Aborting status lights service.")
         exit(10)
 
-    return False if board_rev in (BoardRevision.OG, BoardRevision.UNKNOWN) \
-        else True
+    return True if board_rev == "A" else False
+
+# ______________ </BOARD REVISION CHECK> ________________
 
 
 async def main():

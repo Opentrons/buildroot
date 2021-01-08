@@ -1,0 +1,13 @@
+{
+    "pins": [
+      {"pin-name": "rev0", "line-offset": 17, "bit-position": 1},
+      {"pin-name": "rev1", "line-offset": 27, "bit-position": 2}
+    ],
+    "revisions": [
+      {"revision": "2.1", "revision-bits-value": 3, "capabilities": ["ethernet-to-usb"]},
+      {"revision": "A", "revision-bits-value": 2 , "capabilities": ["direct-ethernet", "status-leds", "rtc"]},
+      {"revision": "B", "revision-bits-value": 1 , "capabilities": ["future-use"]},
+      {"revision": "C", "revision-bits-value": 0 , "capabilities": ["future-use"]}
+   ]
+}
+
