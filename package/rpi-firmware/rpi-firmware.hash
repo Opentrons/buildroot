@@ -1,2 +1,4 @@
 # Locally computed
-sha256 259cba0673e24d49f4f0c11e2171651ff157b8f049facd0f183cfafe762ade73 rpi-firmware-b324aea801f669b6ab18441f970e74a5a7346684.tar.gz
+sha256  ae4e317681995e0f7becd7900ae667cba394e3a0b7ca93a267f3303df7284697  rpi-firmware-d016a6eb01c8c7326a89cb42809fed2a21525de5.tar.gz
+sha256  c7283ff51f863d93a275c66e3b4cb08021a5dd4d8c1e7acc47d872fbe52d3d6b  boot/LICENCE.broadcom
+
