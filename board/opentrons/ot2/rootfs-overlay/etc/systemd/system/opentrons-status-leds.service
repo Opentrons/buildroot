@@ -1,0 +1,13 @@
+[Unit]
+Description=Opentrons: Run status LEDs
+Before=opentrons-robot-server.service
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/ot-status-leds
+Restart=on-failure
+RestartSec=10s
+RestartPreventExitStatus=10
+
+[Install]
+WantedBy=basic.target

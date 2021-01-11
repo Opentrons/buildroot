@@ -1,0 +1,282 @@
+#!/usr/bin/env python3
+
+# Monitor system status and update LEDs accordingly
+# D2 ) Ethernet LED  : STATUS_LED_1  => Pin15    => bcm22
+# D3 ) Wifi LED      : STATUS_LED_2  => Pin27    => bcm00
+# D4 ) Heartbeat LED : STATUS_LED_3  => Pin22    => bcm25
+# D5 ) UNDEFINED_LED : STATUS_LED_4  => Pin28    => bcm01
+
+import gpiod
+import enum
+import asyncio
+import logging
+import pathlib
+import re
+import json
+from shlex import quote
+from asyncio import subprocess as as_subprocess
+from functools import partial
+from logging.config import dictConfig
+from typing import Optional, Any, Dict, List, Tuple
+
+
+CHIP = gpiod.Chip('gpiochip0')
+
+BLINK_ON_TIME = 0.25    # seconds
+BLINK_OFF_TIME = 2      # seconds
+NW_STATUS_POLL_SEC = 5
+
+DTOVERLAY_PATH = '/proc/device-tree/soc/gpio@7e200000/gpio_rev_bit_pins'
+OT2_BOARD_REV_PINMAP_PATH = '/etc/ot2_board_rev/revision_pinmaps.json'
+
+dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'message_only': {'format': '%(levelname)s - %(message)s'}
+        },
+        'handlers': {
+            'service': {
+                'class': 'systemd.journal.JournalHandler',
+                'level': logging.INFO,
+                'formatter': 'message_only',
+                'SYSLOG_IDENTIFIER': 'ot-status-leds',
+            }
+        },
+        'loggers': {
+            '__main__': {
+                'level': logging.INFO,
+                'handlers': ['service']
+            }
+        },
+    })
+log = logging.getLogger(__name__)
+
+try:
+    import systemd.daemon  # type: ignore
+    systemdd_notify = partial(systemd.daemon.notify, "READY=1")
+except ImportError:
+    log.info("Systemd couldn't be imported, not notifying")
+    systemdd_notify = partial(lambda: None)
+
+
+# ------------ <NMCLI> ----------------
+
+class NetworkInterfaces(enum.Enum):
+    """ Network interface names that we manage here.
+    """
+    WIFI = 'wlan0'
+    ETH_LL = 'eth0'
+
+
+async def is_iface_connected(iface: NetworkInterfaces) -> bool:
+    """ Return True/False whether the given interface is connected. """
+    iface_status = await iface_info(iface)
+    if iface_status.get('ipAddress') is not None and \
+            iface_status.get('state') == 'connected':
+        return True
+    else:
+        return False
+
+
+async def iface_info(which_iface: NetworkInterfaces) -> Dict[str, Optional[str]]:
+    """ Get the basic network configuration of an interface.
+
+    Returns a dict containing the info:
+    {
+      'ipAddress': 'xx.xx.xx.xx/yy' (ip4 addr with subnet as CIDR) or None
+      'state':  'connected' (or 'disconnected', 'unavailable', etc..)
+    }
+
+    which_iface should be a string in IFACE_NAMES.
+    """
+    # example device info lines
+    #  GENERAL.HWADDR:B8:27:EB:24:D1:D0
+    #  IP4.ADDRESS[1]:10.10.2.221/22
+    # capture the field name (without the number in brackets) and the value
+    # using regex instead of split because there may be ":" in the value
+    _DEV_INFO_LINE_RE = re.compile(r'([\w.]+)(?:\[\d+])?:(.*)')
+    # example device info: 30 (disconnected)
+    # capture the string without the number
+    _IFACE_STATE_RE = re.compile(r'\d+ \((.+)\)')
+
+    info: Dict[str, Optional[str]] = {'ipAddress': None,
+                                      'state': None}
+    fields = ['IP4.ADDRESS', 'GENERAL.STATE']
+    # Note on this specific command: Most nmcli commands default to a tabular
+    # output mode, where if there are multiple things to pull a couple specific
+    # fields from it you’ll get a table where rows are, say, connections, and
+    # columns are field name. However, specifically ‘con show <con-name>‘ and
+    # ‘dev show <dev-name>’ default to a multiline representation, and even if
+    # explicitly ask for it to be tabular, it’s not quite the same as the other
+    # commands. So we have to special-case the parsing.
+    res, err = await _call(['--mode', 'multiline',
+                            '--escape', 'no',
+                            '--terse', '--fields', ','.join(fields),
+                            'dev', 'show', which_iface.value])
+
+    field_map = {}
+    for line in res.split('\n'):
+        # pull the key (without brackets) and the value out of the line
+        match = _DEV_INFO_LINE_RE.fullmatch(line)
+        if match is None:
+            raise ValueError(
+                "Bad nmcli result; out: {}; err: {}".format(res, err))
+        key, val = match.groups()
+        # nmcli can put "--" instead of "" for None
+        field_map[key] = None if val == '--' else val
+
+    info['ipAddress'] = field_map.get('IP4.ADDRESS')
+    state_val = field_map.get('GENERAL.STATE')
+
+    if state_val:
+        state_match = _IFACE_STATE_RE.fullmatch(state_val)
+        if state_match:
+            info['state'] = state_match.group(1)
+
+    return info
+
+
+async def _call(cmd: List[str]) -> Tuple[str, str]:
+    """
+    Runs the command in a subprocess and returns the captured stdout output.
+    :param cmd: a list of arguments to nmcli. Should not include nmcli itself.
+
+    :return: (stdout, stderr)
+    """
+    to_exec = [quote(c) for c in ['nmcli'] + cmd]
+    cmd_str = ' '.join(to_exec)
+    # We have to use a shell invocation here because nmcli will not accept
+    # secrets specified on the command line unless it’s in a shell. The other
+    # option is editing the connection configuration file in /etc/ afterwards
+    # (or using d-bus and pretending to be an auth agent)
+    proc = await as_subprocess.create_subprocess_shell(
+        cmd_str,
+        stdout=as_subprocess.PIPE, stderr=as_subprocess.PIPE)
+    out, err = await proc.communicate()
+    out_str, err_str = out.decode().strip(), err.decode().strip()
+    log.debug('{}: stdout={}'.format(' '.join(to_exec), out_str))
+    if err_str:
+        log.warning('{}: stderr={}'.format(' '.join(to_exec), err_str))
+    return out_str, err_str
+
+# ______________ </NMCLI> _________________
+
+
+class LedLineOffset(int, enum.Enum):
+    ETH = 22
+    WIFI = 0
+    HEARTBEAT = 25
+    UNDEFINED = 1
+
+    def __init__(self, offset):
+        self._line = CHIP.get_line(offset)
+
+    @property
+    def line(self):
+        return self._line
+
+
+def init_leds() -> None:
+    """ Sets LED pins as output. """
+    for offset in list(LedLineOffset):
+        offset.line.request(consumer='ot-status-leds',
+                            type=gpiod.LINE_REQ_DIR_OUT)
+        offset.line.set_value(0)
+
+
+async def blink_heartbeat_led() -> None:
+    """ Keep heartbeat LED blinking indefinitely. """
+    hb_line = LedLineOffset.HEARTBEAT.line
+    while True:
+        hb_line.set_value(1)
+        await asyncio.sleep(BLINK_ON_TIME)
+        hb_line.set_value(0)
+        await asyncio.sleep(BLINK_OFF_TIME)
+
+
+async def update_nw_status_leds() -> None:
+    """ Update WIFI & LinkLocal status LEDs according to NW status.
+
+    Turn the LED ON when the respective network interface is UP.
+    LED OFF when the interface is DOWN.
+    """
+    log.info("Starting Network status monitor")
+    while True:
+        eth_conn = await is_iface_connected(NetworkInterfaces.ETH_LL)
+        update_led(eth_conn, LedLineOffset.ETH.line)
+
+        wifi_conn = await is_iface_connected(NetworkInterfaces.WIFI)
+        update_led(wifi_conn, LedLineOffset.WIFI.line)
+        await asyncio.sleep(NW_STATUS_POLL_SEC)
+
+
+def update_led(connected: bool, line: Any):
+    """ Set/ Reset the pin. """
+    line.set_value(int(connected))
+
+# ------------- <BOARD REVISION CHECK> ----------------
+
+
+def determine_board_revision() -> str:
+    """ Get revision bits pinmaps from file, read pin values and compute
+    the bits' value to determine the board revision
+    """
+    if pathlib.Path(DTOVERLAY_PATH).exists():
+        with open(OT2_BOARD_REV_PINMAP_PATH, "r") as fp:
+            rev_pins_data = json.load(fp)
+
+        bit_value = 0
+        for pin in rev_pins_data.get("pins"):
+            """ Get each pin's line object, set it to input and read pin. """
+            pin.update(line=CHIP.get_line(int(pin["line-offset"])))
+            pin["line"].request(consumer="ot-status-leds",
+                                type=gpiod.LINE_REQ_DIR_IN)
+            bit_value += (int(pin["line"].get_value()) * pin["bit-position"])
+            pin["line"].release()   # Release line once its value is read
+
+        for rev in rev_pins_data.get("revisions"):
+            if bit_value == rev.get("revision-bits-value"):
+                return rev.get("revision")
+
+        raise LookupError("Read revision bits' values do not exist.")
+    else:
+        raise EnvironmentError("GPIO dtoverlay not found. "
+                               "Revision pins not set up.")
+
+
+def is_refresh_board():
+    """ Check if this is a refresh board.
+
+    Get board version and immediately release the revision bit lines
+    so that they can be used by Hardware Control.
+    If GPIO isn't accessible, exit with exit-code 10 so that the service
+    doesn't restart.
+    """
+    try:
+        board_rev = determine_board_revision()
+    except OSError:
+        log.exception("Cannot access GPIO to determine board revision. "
+                      "Aborting status lights service.")
+        exit(10)
+
+    return True if board_rev == "A" else False
+
+# ______________ </BOARD REVISION CHECK> ________________
+
+
+async def main():
+    """ If we have a refresh board, initialize LEDs
+        and run status update tasks
+    """
+    if not is_refresh_board():
+        log.info("Not a refresh board. Exiting status lights service.")
+        exit(0)
+
+    systemdd_notify()   # Notify systemd so that it can move to next service
+    log.info("Refresh board found. Starting status LEDs service.")
+    init_leds()
+
+    await asyncio.gather(blink_heartbeat_led(), update_nw_status_leds())
+
+asyncio.run(main())
