@@ -51,7 +51,6 @@ set -eu -o pipefail
 
 MACHINE_ID_FILE=/etc/machine-id
 
-
 function already_committed {
     # Return success if there's already a machine ID committed to persistent
     # storage, or false otherwise.
@@ -64,12 +63,6 @@ function already_committed {
     ! findmnt --mountpoint "$MACHINE_ID_FILE" > /dev/null
 }
 
-function clean_up {
-    umount "$rw_remount_point" || true
-    rmdir "$rw_remount_point" || true
-}
-
-
 if already_committed
 then
     printf "machine-id"
@@ -79,8 +72,6 @@ then
     exit
 fi
 
-trap clean_up EXIT
-
 # To write stuff in the root filesystem while keeping it read-only to everyone
 # else: mount it at an additional second place, somewhere off to the side where
 # only we will touch it, and make that mount writeable.
@@ -88,11 +79,14 @@ trap clean_up EXIT
 # Bind mounts don't recursively include submounts, so when we access the
 # machine-id file through this, we'll hit the real underlying file instead of
 # the temporary one that systemd bind-mounted atop it.
-#
-# A quirk of `mount --bind` is that this needs to be two separate commands,
-# or the `-o rw` won't work.
-rw_remount_point=$(mktemp -d -t "$(basename "$0")")
+rw_remount_point=$(mktemp -d -t "$(basename "$0")XXXXXXXXXX")
+function clean_up {
+    umount "$rw_remount_point" || true
+    rmdir "$rw_remount_point" || true
+}
+trap clean_up EXIT
 mount --bind / "$rw_remount_point"
+# `mount --bind` quirk: the `-o rw` needs to be in a separate remount command.
 mount -o remount,rw "$rw_remount_point"
 
 # Unfortunately, we can't make this write atomic with `cp` because it errors
