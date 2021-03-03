@@ -1,0 +1,6 @@
+[Service]
+Type=oneshot
+ExecStart=/bin/ot-commit-machine-id
+
+[Install]
+WantedBy=basic.target
