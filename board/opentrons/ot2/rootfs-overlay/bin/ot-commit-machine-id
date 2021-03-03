@@ -1,0 +1,99 @@
+#!/usr/bin/env sh
+
+# Make sure the device's random machine ID is saved to persistent storage on
+# the active root filesystem. If it's already been saved, do nothing.
+#
+# This matters for the first boot after flashing a fresh SD card.
+#
+#
+# Background:
+#
+# /etc/machine-id should contain a unique identifier for this device, and it
+# should remain constant across reboots. Userspace programs like journald rely
+# on this.
+#
+# /etc/machine-id comes unpopulated on our SD card images. So, when the system
+# boots, systemd autogenerates a random, transient machine ID in its place. It
+# bind-mounts that transient ID atop /etc/machine-id so that other userspace
+# programs will be able to find it there.
+#
+#  +---------------------------+
+#  | temp file with random ID  |
+#  +---------------------------+
+#               |
+#     bind-mounted by systemd
+#               |
+#               V
+#  +---------------------------+
+#  | regular file, unpopulated |
+#  +---------------------------+
+#               |
+#         on filesystem
+#               |
+#               V
+#        /etc/machine-id
+#
+# Normally, systemd-machine-id-commit.service eventually writes this transient
+# ID back to persistent storage, so that it's properly constant across reboots.
+# But on our system, that doesn't work, because we mount our root filesystem
+# read-only.
+#
+# This script takes the place of systemd-machine-id-commit.service.
+# It commits the transient ID to persistent storage, but in a way that avoids
+# having to remount the whole root filesystem as writeable (which would open
+# it up to uncontrolled modifications).
+#
+# See also our update-server, which preserves machine IDs across system updates
+# through a similar fixup.
+
+
+set -eu -o pipefail
+
+MACHINE_ID_FILE=/etc/machine-id
+
+function already_committed {
+    # Return success if there's already a machine ID committed to persistent
+    # storage, or false otherwise.
+
+    # todo(mm, 2021-02-25): Instead of checking like this, should we use
+    # systemd's ConditionFirstBoot to only run this script at all on first boot?
+
+    # If $MACHINE_ID_FILE was unpopulated at the beginning of this
+    # boot, then systemd will have bind-mounted a transient file atop it.
+    ! findmnt --mountpoint "$MACHINE_ID_FILE" > /dev/null
+}
+
+if already_committed
+then
+    printf "machine-id"
+    printf " \"$(cat "$MACHINE_ID_FILE")\""
+    printf " already committed."
+    printf " Exiting without doing anything.\n"
+    exit
+fi
+
+# To write stuff in the root filesystem while keeping it read-only to everyone
+# else: mount it at an additional second place, somewhere off to the side where
+# only we will touch it, and make that mount writeable.
+#
+# Bind mounts don't recursively include submounts, so when we access the
+# machine-id file through this, we'll hit the real underlying file instead of
+# the temporary one that systemd bind-mounted atop it.
+rw_remount_point=$(mktemp -d -t "$(basename "$0")XXXXXXXXXX")
+function clean_up {
+    umount "$rw_remount_point" || true
+    rmdir "$rw_remount_point" || true
+}
+trap clean_up EXIT
+mount --bind / "$rw_remount_point"
+# `mount --bind` quirk: the `-o rw` needs to be in a separate remount command.
+mount -o remount,rw "$rw_remount_point"
+
+# Unfortunately, we can't make this write atomic with `cp` because it errors
+# with "device or resource busy." The underlying file is serving as the mount
+# point for systemd's bind mount, so possibly, it can't be removed or replaced
+# (even though it can have its contents rewritten).
+rw_underlying_machine_id_file="$rw_remount_point/$MACHINE_ID_FILE"
+cat "$MACHINE_ID_FILE" > "$rw_underlying_machine_id_file"
+
+printf "Committed machine-id \"$(cat "$rw_underlying_machine_id_file")\".\n"
