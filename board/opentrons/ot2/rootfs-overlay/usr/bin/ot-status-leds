@@ -271,10 +271,11 @@ async def main():
     """
     refresh_board = is_refresh_board()
 
-    """Systemd can start next service once revision pins have been read. """
+    # Systemd can start next service once revision pins have been read.
+    # Necessary to avoid pin access conflict with the next service (opentrons-robot-server)
     systemdd_notify()
 
-    if not is_refresh_board():
+    if not refresh_board:
         log.info("Not a refresh board. Exiting status lights service.")
         exit(0)
     else:
