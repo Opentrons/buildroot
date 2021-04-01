@@ -269,14 +269,18 @@ async def main():
     """ If we have a refresh board, initialize LEDs
         and run status update tasks
     """
-    if not is_refresh_board():
+    refresh_board = is_refresh_board()
+
+    # Systemd can start next service once revision pins have been read.
+    # Necessary to avoid pin access conflict with the next service (opentrons-robot-server)
+    systemdd_notify()
+
+    if not refresh_board:
         log.info("Not a refresh board. Exiting status lights service.")
         exit(0)
-
-    systemdd_notify()   # Notify systemd so that it can move to next service
-    log.info("Refresh board found. Starting status LEDs service.")
-    init_leds()
-
-    await asyncio.gather(blink_heartbeat_led(), update_nw_status_leds())
+    else:
+        log.info("Refresh board found. Starting status LEDs service.")
+        init_leds()
+        await asyncio.gather(blink_heartbeat_led(), update_nw_status_leds())
 
 asyncio.run(main())
