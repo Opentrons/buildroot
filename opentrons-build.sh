@@ -46,7 +46,7 @@ fi
 
 imgname=opentrons-buildroot-$(git describe --all --dirty --always)
 
-docker build ${filter_arg} -t ${imgname} .
+docker build ${filter_arg} -t ${imgname,,} .
 
 # Save codebuild-relevant env vars to get them inside docker
 env | grep 'CODEBUILD\|AWS\|DATADOG' >.env
