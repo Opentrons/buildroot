@@ -44,9 +44,10 @@ then
     export DATADOG_API_KEY=$(./get_parameter.py /buildroot-codebuild/datadog-api -)
 fi
 
-imgname=opentrons-buildroot-$(git describe --all --dirty --always)
+githubname="$(git describe --all --dirty --always | tr '[:upper:]' '[:lower:]')"
+imgname=opentrons-buildroot-${githubname}
 
-docker build ${filter_arg} -t ${imgname,,} .
+docker build ${filter_arg} -t ${imgname} .
 
 # Save codebuild-relevant env vars to get them inside docker
 env | grep 'CODEBUILD\|AWS\|DATADOG' >.env
