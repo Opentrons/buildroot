@@ -44,7 +44,8 @@ then
     export DATADOG_API_KEY=$(./get_parameter.py /buildroot-codebuild/datadog-api -)
 fi
 
-imgname=opentrons-buildroot-$(git describe --all --dirty --always)
+githubname="$(git describe --all --dirty --always | tr '[:upper:]' '[:lower:]')"
+imgname=opentrons-buildroot-${githubname}
 
 docker build ${filter_arg} -t ${imgname} .
 
