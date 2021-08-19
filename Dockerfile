@@ -1,4 +1,9 @@
-FROM debian:stable-slim
+FROM debian:10-slim
+# We're stuck on Debian 10 (which will go EOL around 2022-08) because
+# Debian 11 upgrades GNU Make to v4.3, which breaks Buildroot's build system.
+#
+# Upstream Buildroot has fixes for this (try grepping their CHANGES file for
+# "4.3"), but those commits aren't currently in this fork.
 
 ARG filter_output
 
