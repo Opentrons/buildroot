@@ -1,5 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/websockets/json
-md5	f12d7f31fe8d0b3e65c12f845bcd0ad8  websockets-8.1.tar.gz
-sha256	5c65d2da8c6bce0fca2528f69f44b2f977e06954c8512a952222cea50dad430f  websockets-8.1.tar.gz
+md5	cc76058a2c2c682dac445b2f9684b7cc  websockets-9.1.tar.gz
+sha256	276d2339ebf0df4f45df453923ebd2270b87900eda5dfd4a6b0cfa15f82111c3  websockets-9.1.tar.gz
 # Locally computed sha256 checksums
-sha256  daeca11bf3608da35e546ea0c32be18958a8be1441fa3de9cbd20e4c8bc718e6  LICENSE
+sha256	daeca11bf3608da35e546ea0c32be18958a8be1441fa3de9cbd20e4c8bc718e6  LICENSE
