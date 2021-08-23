@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_ASGIREF
+	bool "python-asgiref"
+	depends on BR2_PACKAGE_PYTHON3
+	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
+	help
+	  ASGI specs, helper code, and adapters.
+
+	  https://github.com/django/asgiref/
