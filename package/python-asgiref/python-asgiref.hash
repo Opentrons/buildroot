@@ -1,5 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/asgiref/json
-md5  562ecd896dcbf5576db8c29cb1881ca4  asgiref-3.6.0.tar.gz
-sha256  9567dfe7bd8d3c8c892227827c41cce860b368104c3431da67a0c5a65a949506  asgiref-3.6.0.tar.gz
+md5	b9cdefdf1c24172c8664bbac59f28812  asgiref-3.4.1.tar.gz
+sha256	4ef1ab46b484e3c706329cedeff284a5d40824200638503f5768edb6de7d58e9  asgiref-3.4.1.tar.gz
 # Locally computed sha256 checksums
-sha256  b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669  LICENSE
+sha256	b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669  LICENSE
