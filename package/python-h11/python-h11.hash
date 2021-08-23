@@ -1,5 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/h11/json
-md5	53affae306153388512040e038519fa3  h11-0.9.0.tar.gz
-sha256	33d4bca7be0fa039f4e84d50ab00531047e53d6ee8ffbc83501ea602c169cae1  h11-0.9.0.tar.gz
+md5	6b23d6eafbeaadf43ce26ec0a9a99594  h11-0.12.0.tar.gz
+sha256	47222cb6067e4a307d535814917cd98fd0a57b6788ce715755fa2b6c28b56042  h11-0.12.0.tar.gz
 # Locally computed sha256 checksums
 sha256	37db5bb85926db28a427a25867f10b1232003aea1be69ccb851138adb8e6f361  LICENSE.txt
