@@ -1,7 +1,7 @@
 config BR2_PACKAGE_PYTHON_CLICK
 	bool "python-click"
+	select BR2_PACKAGE_PYTHON_IMPORTLIB_METADATA # runtime
 	help
-	  A simple wrapper around optparse for powerful command line
-	  utilities.
+	  Composable command line interface toolkit.
 
-	  https://pypi.python.org/pypi/click
+	  https://palletsprojects.com/p/click/
