@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_SNIFFIO
+	bool "python-sniffio"
+	depends on BR2_PACKAGE_PYTHON3
+	help
+	  Sniff out which async library your code is running under.
+
+	  https://github.com/python-trio/sniffio
