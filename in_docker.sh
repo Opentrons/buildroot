@@ -8,7 +8,7 @@ set -e
 set -v
 
 targets=$@
-filtered_build_log="/buildroot/buildlog,txt"
+filtered_build_log="/buildroot/buildlog.txt"
 filtered_warnings_log="/buildroot/warnings.txt"
 
 function finish {
