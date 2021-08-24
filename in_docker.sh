@@ -6,12 +6,22 @@
 set -o pipefail
 set -e
 set -v
+
 targets=$@
-if [ -n "$FILTER" ]
-then
+filtered_build_log="/buildroot/buildlog.txt"
+filtered_warnings_log="/buildroot/warnings.txt"
+
+function finish {
+    if [[ -f "${filtered_warnings_log}" ]]; then
+        cat ${filtered_warnings_log}
+    fi
+}
+
+trap finish EXIT
+
+if [[ -n "${FILTER}" ]]; then
    echo "in ci"
-   for w in $@
-   do
+   for w in $@; do
        case "$w" in
            "all")
                filter=1
@@ -26,11 +36,10 @@ then
    done;
 fi
 
-if [ -z $filter ]
-then
+if [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
     BR2_EXTERNAL=/opentrons make -C /buildroot $@
 else
     echo "Filtered make"
-    (BR2_EXTERNAL=/opentrons make -C /buildroot $@ 2>/buildroot/warnings.txt | awk '/^make/;{print $0 >>"/buildroot/buildlog.txt"}') || cat warnings.txt
+    BR2_EXTERNAL=/opentrons make -C /buildroot $@ 2>${filtered_warnings_log} | awk "/^make/;{print $0 >>\"${filtered_build_log}\"}"
 fi
