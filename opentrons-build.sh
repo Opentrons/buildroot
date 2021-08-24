@@ -34,11 +34,11 @@ DOCKER_BIND="${DOCKER_BIND_BR} ${DOCKER_BIND_OT}"
 heads=${@:1:$(($# - 1))}
 tail=${@:$#}
 
-if [ -n "$CI" ]; then
+if [[ -n "${CI}" ]]; then
    filter_arg="--build-arg filter_output=true"
 fi
 
-if [ -n "$DATADOG_API_KEY" ]; then
+if [[ -z "${DATADOG_API_KEY}" ]]; then
     export DATADOG_API_KEY=$(./get_parameter.py /buildroot-codebuild/datadog-api -)
 fi
 
@@ -53,7 +53,7 @@ codebuild_args=$(env | grep 'CODEBUILD\|AWS\|DATADOG') || true
 echo ${codebuild_args} > .env
 echo "OT_BUILD_TYPE=${OT_BUILD_TYPE-dev}" >> .env
 echo "FORCE_UNSAFE_CONFIGURE=1" >> .env
-if [ "${SIGNING_KEY}" ]; then
+if [[ -n "${SIGNING_KEY}" ]]; then
     echo "${SIGNING_KEY}" > .signing-key
 fi
 
