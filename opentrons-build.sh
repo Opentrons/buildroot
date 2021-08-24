@@ -21,7 +21,6 @@ set -e -o pipefail
 
 function finish {
     rm -f .signing-key
-    exit $?
 }
 
 trap finish EXIT
