@@ -21,8 +21,7 @@ trap finish EXIT
 
 if [[ -n "${FILTER}" ]]; then
    echo "in ci"
-   for w in $@;
-   do
+   for w in $@; do
        case "$w" in
            "all")
                filter=1
