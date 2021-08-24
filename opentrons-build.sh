@@ -47,11 +47,10 @@ imgname=opentrons-buildroot-${githubname}
 docker build ${filter_arg} -t ${imgname} .
 
 # Save codebuild-relevant env vars to get them inside docker
-codebuild_args=$(env | grep 'CODEBUILD\|AWS\|DATADOG') || true
-
-echo ${codebuild_args} > .env
+env | grep 'CODEBUILD\|AWS\|DATADOG' > .env
 echo "OT_BUILD_TYPE=${OT_BUILD_TYPE-dev}" >> .env
 echo "FORCE_UNSAFE_CONFIGURE=1" >> .env
+
 if [[ -n "${SIGNING_KEY}" ]]; then
     echo "${SIGNING_KEY}" > .signing-key
 fi
