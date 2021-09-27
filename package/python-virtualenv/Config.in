@@ -1,0 +1,14 @@
+config BR2_PACKAGE_PYTHON_VIRTUALENV
+	bool "python-virtualenv"
+	select BR2_PACKAGE_PYTHON_BACKPORTSENTRY_POINTS_SELECTABLE # runtime
+	select BR2_PACKAGE_PYTHON_DISTLIB # runtime
+	select BR2_PACKAGE_PYTHON_FILELOCK # runtime
+	select BR2_PACKAGE_PYTHON_PLATFORMDIRS # runtime
+	select BR2_PACKAGE_PYTHON_SIX # runtime
+	select BR2_PACKAGE_PYTHON_IMPORTLIB_METADATA # runtime
+	select BR2_PACKAGE_PYTHON_IMPORTLIB_RESOURCES # runtime
+	select BR2_PACKAGE_PYTHON_PATHLIB2 # runtime
+	help
+	  Virtual Python Environment builder.
+
+	  https://virtualenv.pypa.io/

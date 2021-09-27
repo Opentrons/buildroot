@@ -13,3 +13,4 @@ PYTHON_ZIPP_LICENSE_FILES = LICENSE
 PYTHON_ZIPP_DEPENDENCIES = host-python-setuptools-scm host-python-toml
 
 $(eval $(python-package))
+$(eval $(host-python-package))

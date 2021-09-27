@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_PLATFORMDIRS
+	bool "python-platformdirs"
+	help
+	  A small Python module for determining appropriate platform-
+	  specific dirs, e.g. a "user data dir".
+
+	  https://github.com/platformdirs/platformdirs

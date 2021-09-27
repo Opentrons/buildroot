@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/charset_normalizer/json
+md5	2a22fbe572aa9ddd783f54eea42d5a99  charset-normalizer-2.0.6.tar.gz
+sha256	5ec46d183433dcbd0ab716f2d7f29d8dee50505b3fdb40c6b985c7c4f5a3591f  charset-normalizer-2.0.6.tar.gz
+# Locally computed sha256 checksums
+sha256	eb31a0c5a4fb09b8a4e32055d25c1e5f9c358a2752fef3cd720213d1ccfee241  LICENSE

@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/poetry-core/json
+md5	a9988452ce0a755b4bb257f6251dc734  poetry-core-1.0.6.tar.gz
+sha256	dd3c97003579242236890306836f2acc86d9741e6bea320dda6f844f16b0d845  poetry-core-1.0.6.tar.gz
+# Locally computed sha256 checksums
+sha256	514c8cdaa16f66467980972cb4c1f5bce83b8eb7561e313b5e73074daeb84a9e  LICENSE

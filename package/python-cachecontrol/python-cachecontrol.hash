@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/cachecontrol/json
+md5	5890b797f9b48b2b4cd1448cca89e396  CacheControl-0.12.6.tar.gz
+sha256	be9aa45477a134aee56c8fac518627e1154df063e85f67d4f83ce0ccc23688e8  CacheControl-0.12.6.tar.gz
+# Locally computed sha256 checksums
+sha256	6237161756bc47b65cf3f820d93995d76f98ccbd4658dfc10ee09bd455adcb47  LICENSE.txt

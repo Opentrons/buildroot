@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_CACHECONTROL
+	bool "python-cachecontrol"
+	select BR2_PACKAGE_PYTHON_REQUESTS # runtime
+	select BR2_PACKAGE_PYTHON_MSGPACK # runtime
+	help
+	  httplib2 caching for requests.
+
+	  https://github.com/ionrock/cachecontrol

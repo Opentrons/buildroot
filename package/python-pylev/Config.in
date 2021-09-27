@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_PYLEV
+	bool "python-pylev"
+	help
+	  A pure Python Levenshtein implementation that's not
+	  freaking GPL'd.
+
+	  http://github.com/toastdriven/pylev

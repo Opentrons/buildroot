@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_BACKPORTSENTRY_POINTS_SELECTABLE
+	bool "python-backportsentry_points_selectable"
+	select BR2_PACKAGE_PYTHON_IMPORTLIB_METADATA # runtime
+	help
+	  Compatibility shim providing selectable entry points for
+	  older implementations.
+
+	  https://github.com/jaraco/backports.entry_points_selectable

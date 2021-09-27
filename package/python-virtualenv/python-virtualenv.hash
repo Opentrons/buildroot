@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/virtualenv/json
+md5	fe232ee8498fe69e4bb47be15bfef0da  virtualenv-20.8.1.tar.gz
+sha256	bcc17f0b3a29670dd777d6f0755a4c04f28815395bca279cdcb213b97199a6b8  virtualenv-20.8.1.tar.gz
+# Locally computed sha256 checksums
+sha256	5c15919378c5b2aaab7b19cea70d8cdc75f76879e32454e4c0399f8b71d171e9  LICENSE

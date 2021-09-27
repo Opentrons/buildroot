@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_CLEO
+	bool "python-cleo"
+	select BR2_PACKAGE_PYTHON_CLIKIT # runtime
+	help
+	  Cleo allows you to create beautiful and testable command-
+	  line interfaces.
+
+	  https://github.com/sdispater/cleo

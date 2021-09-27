@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_IMPORTLIB_RESOURCES
+	bool "python-importlib-resources"
+	depends on BR2_PACKAGE_PYTHON3
+	select BR2_PACKAGE_PYTHON_ZIPP # runtime
+	help
+	  Read resources from Python packages.
+
+	  https://github.com/python/importlib_resources

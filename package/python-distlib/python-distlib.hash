@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/distlib/json
+md5	442dc114d7e59deec1c727b8a27d7e7c  distlib-0.3.3.zip
+sha256	d982d0751ff6eaaab5e2ec8e691d949ee80eddf01a62eaa96ddb11531fe16b05  distlib-0.3.3.zip
+# Locally computed sha256 checksums
+sha256	808e10c8a6ab8deb149ff9b3fb19f447a808094606d712a9ca57fead3552599d  LICENSE.txt

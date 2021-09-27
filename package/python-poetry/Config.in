@@ -1,0 +1,20 @@
+config BR2_PACKAGE_PYTHON_POETRY
+	bool "python-poetry"
+	select BR2_PACKAGE_PYTHON_CACHECONTROL # runtime
+	select BR2_PACKAGE_PYTHON_CACHY # runtime
+	select BR2_PACKAGE_PYTHON_CLEO # runtime
+	select BR2_PACKAGE_PYTHON_CLIKIT # runtime
+	select BR2_PACKAGE_PYTHON_HTML5LIB # runtime
+	select BR2_PACKAGE_PYTHON_PACKAGING # runtime
+	select BR2_PACKAGE_PYTHON_PEXPECT # runtime
+	select BR2_PACKAGE_PYTHON_PKGINFO # runtime
+	select BR2_PACKAGE_PYTHON_POETRY_CORE # runtime
+	select BR2_PACKAGE_PYTHON_REQUESTS_TOOLBELT # runtime
+	select BR2_PACKAGE_PYTHON_REQUESTS # runtime
+	select BR2_PACKAGE_PYTHON_SHELLINGHAM # runtime
+	select BR2_PACKAGE_PYTHON_TOMLKIT # runtime
+	select BR2_PACKAGE_PYTHON_VIRTUALENV # runtime
+	help
+	  Python dependency management and packaging made easy.
+
+	  https://python-poetry.org/

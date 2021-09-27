@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_CACHY
+	bool "python-cachy"
+	help
+	  Cachy provides a simple yet effective caching library.
+
+	  https://github.com/sdispater/cachy

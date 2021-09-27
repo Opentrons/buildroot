@@ -11,3 +11,4 @@ PYTHON_WEBENCODINGS_SETUP_TYPE = setuptools
 PYTHON_WEBENCODINGS_LICENSE = BSD-3-Clause
 
 $(eval $(python-package))
+$(eval $(host-python-package))

@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_PASTEL
+	bool "python-pastel"
+	help
+	  Bring colors to your terminal.
+
+	  https://github.com/sdispater/pastel

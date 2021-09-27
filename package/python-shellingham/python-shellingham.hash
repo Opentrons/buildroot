@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/shellingham/json
+md5	db34676eb6db3ed40c9437667946ca76  shellingham-1.4.0.tar.gz
+sha256	4855c2458d6904829bd34c299f11fdeed7cfefbf8a2c522e4caea6cd76b3171e  shellingham-1.4.0.tar.gz
+# Locally computed sha256 checksums
+sha256	f388fd38cad13112c1dc0f669bbe80e7f84541edbafb72f3030d2ca7642c3c9d  LICENSE

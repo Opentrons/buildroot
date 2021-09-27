@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/cleo/json
+md5	ba25f33045fc555d1b67be01fe8ad64d  cleo-0.8.1.tar.gz
+sha256	3d0e22d30117851b45970b6c14aca4ab0b18b1b53c8af57bed13208147e4069f  cleo-0.8.1.tar.gz
+# Locally computed sha256 checksums
+sha256	217e27cc3c5c144d93e8306f08aaaa16f4e6067057813aca3a9147caa77192cd  LICENSE

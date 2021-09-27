@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/platformdirs/json
+md5	4e5b836d19600cc4bf0b789ab1de3b51  platformdirs-2.4.0.tar.gz
+sha256	367a5e80b3d04d2428ffa76d33f124cf11e8fff2acdaa9b43d545f5c7d661ef2  platformdirs-2.4.0.tar.gz
+# Locally computed sha256 checksums
+sha256	d65ee5b2a36a391e8d6aefceb80ae50063049a5db14bc824ee0f1ebac9970e50  LICENSE.txt
