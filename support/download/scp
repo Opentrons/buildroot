@@ -8,16 +8,18 @@ set -e
 # Options:
 #   -q          Be quiet.
 #   -o FILE     Copy to local file FILE.
-#   -u FILE     Copy from remote file FILE.
+#   -f FILE     Copy from remote file FILE.
+#   -u URI      Download file at URI.
 #
 # Environment:
 #   SCP       : the scp command to call
 
-verbose=
+quiet=
 while getopts "${BR_BACKEND_DL_GETOPTS}" OPT; do
     case "${OPT}" in
-    q)  verbose=-q;;
+    q)  quiet=-q;;
     o)  output="${OPTARG}";;
+    f)  filename="${OPTARG}";;
     u)  uri="${OPTARG}";;
     :)  printf "option '%s' expects a mandatory argument\n" "${OPTARG}"; exit 1;;
     \?) printf "unknown option '%s'\n" "${OPTARG}" >&2; exit 1;;
@@ -29,7 +31,17 @@ shift $((OPTIND-1)) # Get rid of our options
 # Caller needs to single-quote its arguments to prevent them from
 # being expanded a second time (in case there are spaces in them)
 _scp() {
+    if [ -z "${quiet}" ]; then
+        printf '%s ' ${SCP} "${@}"; printf '\n'
+    fi
+    _plain_scp "$@"
+}
+# Note: please keep command below aligned with what is printed above
+_plain_scp() {
     eval ${SCP} "${@}"
 }
 
-_scp ${verbose} "${@}" "'${uri}'" "'${output}'"
+# Remove any scheme prefix
+uri="${uri##scp://}"
+
+_scp ${quiet} "${@}" "'${uri}/${filename}'" "'${output}'"

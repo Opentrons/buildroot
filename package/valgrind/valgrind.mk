@@ -4,18 +4,16 @@
 #
 ################################################################################
 
-VALGRIND_VERSION = 3.14.0
-VALGRIND_SITE = ftp://sourceware.org/pub/valgrind
+VALGRIND_VERSION = 3.18.1
+VALGRIND_SITE = https://sourceware.org/pub/valgrind
 VALGRIND_SOURCE = valgrind-$(VALGRIND_VERSION).tar.bz2
 VALGRIND_LICENSE = GPL-2.0, GFDL-1.2
 VALGRIND_LICENSE_FILES = COPYING COPYING.DOCS
+VALGRIND_CPE_ID_VENDOR = valgrind
 VALGRIND_CONF_OPTS = \
 	--disable-ubsan \
 	--without-mpicc
 VALGRIND_INSTALL_STAGING = YES
-# Patch 0003-configure.ac-disable-gcc-march-mips64r2-detection.patch
-# touches configure.ac
-VALGRIND_AUTORECONF = YES
 
 # Valgrind must be compiled with no stack protection, so forcefully
 # pass -fno-stack-protector to override what Buildroot may have in
@@ -66,7 +64,7 @@ VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_INSTALL_UCLIBC_SUPP
 
 ifeq ($(BR2_PACKAGE_VALGRIND_MEMCHECK),)
 define VALGRIND_REMOVE_MEMCHECK
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*memcheck*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*memcheck*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_MEMCHECK
@@ -74,7 +72,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_CACHEGRIND),)
 define VALGRIND_REMOVE_CACHEGRIND
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*cachegrind*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*cachegrind*
 	for i in cg_annotate cg_diff cg_merge; do \
 		rm -f $(TARGET_DIR)/usr/bin/$$i ; \
 	done
@@ -85,7 +83,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_CALLGRIND),)
 define VALGRIND_REMOVE_CALLGRIND
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*callgrind*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*callgrind*
 	for i in callgrind_annotate callgrind_control ; do \
 		rm -f $(TARGET_DIR)/usr/bin/$$i ; \
 	done
@@ -96,7 +94,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_HELGRIND),)
 define VALGRIND_REMOVE_HELGRIND
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*helgrind*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*helgrind*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_HELGRIND
@@ -104,7 +102,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_DRD),)
 define VALGRIND_REMOVE_DRD
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*drd*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*drd*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_DRD
@@ -112,8 +110,8 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_MASSIF),)
 define VALGRIND_REMOVE_MASSIF
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*massif*
-	rm -f $(TARGET_DIR)/usr/bin/ms_script
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*massif*
+	rm -f $(TARGET_DIR)/usr/bin/ms_print
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_MASSIF
@@ -121,7 +119,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_DHAT),)
 define VALGRIND_REMOVE_DHAT
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*dhat*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*dhat*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_DHAT
@@ -129,7 +127,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_SGCHECK),)
 define VALGRIND_REMOVE_SGCHECK
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*sgcheck*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*sgcheck*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_SGCHECK
@@ -137,7 +135,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_BBV),)
 define VALGRIND_REMOVE_BBV
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*bbv*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*bbv*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_BBV
@@ -145,7 +143,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_LACKEY),)
 define VALGRIND_REMOVE_LACKEY
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*lackey*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*lackey*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_LACKEY
@@ -153,7 +151,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_VALGRIND_NULGRIND),)
 define VALGRIND_REMOVE_NULGRIND
-	rm -f $(TARGET_DIR)/usr/lib/valgrind/*none*
+	rm -f $(TARGET_DIR)/usr/libexec/valgrind/*none*
 endef
 
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_NULGRIND

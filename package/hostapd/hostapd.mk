@@ -4,30 +4,32 @@
 #
 ################################################################################
 
-HOSTAPD_VERSION = 2.6
+HOSTAPD_VERSION = 2.10
 HOSTAPD_SITE = http://w1.fi/releases
-HOSTAPD_PATCH = \
-	http://w1.fi/security/2017-1/rebased-v2.6-0001-hostapd-Avoid-key-reinstallation-in-FT-handshake.patch \
-	http://w1.fi/security/2017-1/rebased-v2.6-0005-Fix-PTK-rekeying-to-generate-a-new-ANonce.patch
 HOSTAPD_SUBDIR = hostapd
 HOSTAPD_CONFIG = $(HOSTAPD_DIR)/$(HOSTAPD_SUBDIR)/.config
 HOSTAPD_DEPENDENCIES = host-pkgconf
 HOSTAPD_CFLAGS = $(TARGET_CFLAGS)
 HOSTAPD_LICENSE = BSD-3-Clause
 HOSTAPD_LICENSE_FILES = README
-HOSTAPD_CONFIG_SET =
 
-HOSTAPD_CONFIG_ENABLE = CONFIG_INTERNAL_LIBTOMMATH
+HOSTAPD_CPE_ID_VENDOR = w1.fi
+HOSTAPD_SELINUX_MODULES = hostapd
+
+HOSTAPD_CONFIG_ENABLE = \
+	CONFIG_INTERNAL_LIBTOMMATH \
+	CONFIG_DEBUG_FILE \
+	CONFIG_DEBUG_SYSLOG
 
 HOSTAPD_CONFIG_DISABLE =
 
 # Try to use openssl if it's already available
 ifeq ($(BR2_PACKAGE_LIBOPENSSL),y)
-HOSTAPD_DEPENDENCIES += libopenssl
-HOSTAPD_LIBS += $(if $(BR2_STATIC_LIBS),-lcrypto -lz)
+HOSTAPD_DEPENDENCIES += host-pkgconf libopenssl
+HOSTAPD_LIBS += `$(PKG_CONFIG_HOST_BINARY) --libs openssl`
 HOSTAPD_CONFIG_EDITS += 's/\#\(CONFIG_TLS=openssl\)/\1/'
 else
-HOSTAPD_CONFIG_DISABLE += CONFIG_EAP_PWD
+HOSTAPD_CONFIG_DISABLE += CONFIG_EAP_PWD CONFIG_EAP_TEAP
 HOSTAPD_CONFIG_EDITS += 's/\#\(CONFIG_TLS=\).*/\1internal/'
 endif
 
@@ -37,11 +39,6 @@ endif
 
 ifeq ($(BR2_PACKAGE_HOSTAPD_DRIVER_NL80211),)
 HOSTAPD_CONFIG_DISABLE += CONFIG_DRIVER_NL80211
-endif
-
-ifeq ($(BR2_PACKAGE_HOSTAPD_DRIVER_RTW),y)
-HOSTAPD_PATCH += https://github.com/pritambaral/hostapd-rtl871xdrv/raw/master/rtlxdrv.patch
-HOSTAPD_CONFIG_SET += CONFIG_DRIVER_RTW
 endif
 
 ifeq ($(BR2_PACKAGE_HOSTAPD_DRIVER_WIRED),y)
@@ -84,12 +81,26 @@ ifeq ($(BR2_PACKAGE_HOSTAPD_WPS),y)
 HOSTAPD_CONFIG_ENABLE += CONFIG_WPS
 endif
 
+ifeq ($(BR2_PACKAGE_HOSTAPD_WPA3),y)
+HOSTAPD_CONFIG_ENABLE += \
+	CONFIG_DPP \
+	CONFIG_SAE \
+	CONFIG_OWE
+else
+HOSTAPD_CONFIG_DISABLE += \
+	CONFIG_DPP \
+	CONFIG_SAE \
+	CONFIG_OWE
+endif
+
 ifeq ($(BR2_PACKAGE_HOSTAPD_VLAN),)
 HOSTAPD_CONFIG_ENABLE += CONFIG_NO_VLAN
 endif
 
 ifeq ($(BR2_PACKAGE_HOSTAPD_VLAN_DYNAMIC),y)
-HOSTAPD_CONFIG_ENABLE += CONFIG_FULL_DYNAMIC_VLAN
+HOSTAPD_CONFIG_ENABLE += \
+	CONFIG_FULL_DYNAMIC_VLAN \
+	NEED_LINUX_IOCTL
 endif
 
 ifeq ($(BR2_PACKAGE_HOSTAPD_VLAN_NETLINK),y)
@@ -113,9 +124,14 @@ define HOSTAPD_CONFIGURE_CMDS
 	cp $(@D)/hostapd/defconfig $(HOSTAPD_CONFIG)
 	sed -i $(patsubst %,-e 's/^#\(%\)/\1/',$(HOSTAPD_CONFIG_ENABLE)) \
 		$(patsubst %,-e 's/^\(%\)/#\1/',$(HOSTAPD_CONFIG_DISABLE)) \
-		$(patsubst %,-e '1i%=y',$(HOSTAPD_CONFIG_SET)) \
 		$(patsubst %,-e %,$(HOSTAPD_CONFIG_EDITS)) \
 		$(HOSTAPD_CONFIG)
+	# set requested configuration options not listed in hostapd defconfig
+	for s in $(HOSTAPD_CONFIG_ENABLE) ; do \
+		if ! grep -q "^$${s}" $(HOSTAPD_CONFIG); then \
+			echo "$${s}=y" >> $(HOSTAPD_CONFIG) ; \
+		fi \
+	done
 endef
 
 define HOSTAPD_BUILD_CMDS

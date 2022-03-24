@@ -4,12 +4,14 @@
 #
 ################################################################################
 
-FLATCC_VERSION = v0.5.2
-FLATCC_SITE = $(call github,dvidelabs,flatcc,$(FLATCC_VERSION))
+FLATCC_VERSION = 0.6.0
+FLATCC_SITE = $(call github,dvidelabs,flatcc,v$(FLATCC_VERSION))
 FLATCC_LICENSE = Apache-2.0
 FLATCC_LICENSE_FILES = LICENSE
 FLATCC_INSTALL_STAGING = YES
 FLATCC_DEPENDENCIES = host-flatcc
+FLATCC_CONF_OPTS = -DFLATCC_ALLOW_WERROR=OFF
+HOST_FLATCC_CONF_OPTS = -DFLATCC_ALLOW_WERROR=OFF
 
 # Disable build of tests and samples
 FLATCC_CONF_OPTS += -DFLATCC_TEST=OFF

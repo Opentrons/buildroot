@@ -1,4 +1,4 @@
 # Locally calculated after checking pgp signature from
-# http://www.musl-libc.org/releases/musl-1.1.20.tar.gz.asc
-sha256  44be8771d0e6c6b5f82dd15662eb2957c9a3173a19a8b49966ac0542bbd40d61  musl-1.1.20.tar.gz
-sha256  15d9afbf84041872b4d840ed7d165d3eee786ff3f97e703b10467c259ff4e7d9  COPYRIGHT
+# https://musl.libc.org/releases/musl-1.2.2.tar.gz.asc
+sha256  9b969322012d796dc23dda27a35866034fa67d8fb67e0e2c45c913c3d43219dd  musl-1.2.2.tar.gz
+sha256  f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af  COPYRIGHT

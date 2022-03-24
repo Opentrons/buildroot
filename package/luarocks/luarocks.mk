@@ -4,19 +4,22 @@
 #
 ################################################################################
 
-LUAROCKS_VERSION = 3.0.4
-LUAROCKS_SITE = http://luarocks.org/releases
+LUAROCKS_VERSION = 3.8.0
+LUAROCKS_SITE = https://luarocks.org/releases
 LUAROCKS_LICENSE = MIT
 LUAROCKS_LICENSE_FILES = COPYING
 
 HOST_LUAROCKS_DEPENDENCIES = host-luainterpreter
 
 LUAROCKS_CONFIG_DIR = $(HOST_DIR)/etc
-LUAROCKS_CONFIG_FILE = $(LUAROCKS_CONFIG_DIR)/luarocks/config-$(LUAINTERPRETER_ABIVER).lua
-LUAROCKS_CFLAGS = $(TARGET_CFLAGS) -fPIC
-ifeq ($(BR2_PACKAGE_LUA_5_3),y)
-LUAROCKS_CFLAGS += -DLUA_COMPAT_5_2
-endif
+LUAROCKS_CONFIG_FILE_DEFAULT = $(LUAROCKS_CONFIG_DIR)/luarocks/config-$(LUAINTERPRETER_ABIVER).lua
+LUAROCKS_CONFIG_FILE = $(LUAROCKS_CONFIG_DIR)/luarocks/config.lua
+HOST_LUAROCKS_CONFIG_FILE = $(LUAROCKS_CONFIG_DIR)/luarocks/host-config.lua
+
+define LUAROCKS_ADDON_EXTRACT
+	$(INSTALL) -D -m 0644 package/luarocks/buildroot.lua $(@D)/src/luarocks/cmd/external/buildroot.lua
+endef
+HOST_LUAROCKS_POST_EXTRACT_HOOKS += LUAROCKS_ADDON_EXTRACT
 
 HOST_LUAROCKS_CONF_OPTS = \
 	--prefix=$(HOST_DIR) \
@@ -28,26 +31,17 @@ define HOST_LUAROCKS_CONFIGURE_CMDS
 endef
 
 define HOST_LUAROCKS_INSTALL_CMDS
-	rm -f $(LUAROCKS_CONFIG_FILE)
+	rm -f $(LUAROCKS_CONFIG_FILE_DEFAULT)
 	$(MAKE1) -C $(@D) install
-	echo "-- BR cross-compilation"                                  >> $(LUAROCKS_CONFIG_FILE)
-	echo "variables.LUA_INCDIR = [[$(STAGING_DIR)/usr/include]]"    >> $(LUAROCKS_CONFIG_FILE)
-	echo "variables.LUA_LIBDIR = [[$(STAGING_DIR)/usr/lib]]"        >> $(LUAROCKS_CONFIG_FILE)
-	echo "variables.CC = [[$(TARGET_CC)]]"                          >> $(LUAROCKS_CONFIG_FILE)
-	echo "variables.LD = [[$(TARGET_CC)]]"                          >> $(LUAROCKS_CONFIG_FILE)
-	echo "variables.CFLAGS = [[$(LUAROCKS_CFLAGS)]]"                >> $(LUAROCKS_CONFIG_FILE)
-	echo "variables.LIBFLAG = [[-shared $(TARGET_LDFLAGS)]]"        >> $(LUAROCKS_CONFIG_FILE)
-	echo "external_deps_dirs = { [[$(STAGING_DIR)/usr]] }"          >> $(LUAROCKS_CONFIG_FILE)
-	echo "gcc_rpath = false"                                        >> $(LUAROCKS_CONFIG_FILE)
-	echo "rocks_trees = { [[$(TARGET_DIR)/usr]] }"                  >> $(LUAROCKS_CONFIG_FILE)
-	echo "wrap_bin_scripts = false"                                 >> $(LUAROCKS_CONFIG_FILE)
-	echo "deps_mode = [[none]]"                                     >> $(LUAROCKS_CONFIG_FILE)
+	cp $(LUAROCKS_CONFIG_FILE_DEFAULT) $(LUAROCKS_CONFIG_FILE)
+	echo "-- BR cross-compilation"  >> $(LUAROCKS_CONFIG_FILE)
+	echo "gcc_rpath = false"        >> $(LUAROCKS_CONFIG_FILE)
+	echo "wrap_bin_scripts = false" >> $(LUAROCKS_CONFIG_FILE)
+	cp $(LUAROCKS_CONFIG_FILE_DEFAULT) $(HOST_LUAROCKS_CONFIG_FILE)
+	rm -f $(LUAROCKS_CONFIG_FILE_DEFAULT)
 endef
 
 $(eval $(host-generic-package))
-
-LUAROCKS_RUN_ENV = LUA_PATH="$(HOST_DIR)/share/lua/$(LUAINTERPRETER_ABIVER)/?.lua"
-LUAROCKS_RUN_CMD = $(LUA_RUN) $(HOST_DIR)/bin/luarocks
 
 define LUAROCKS_FINALIZE_TARGET
 	rm -rf $(TARGET_DIR)/usr/lib/luarocks

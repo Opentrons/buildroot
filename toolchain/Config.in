@@ -15,10 +15,16 @@ config BR2_TOOLCHAIN_USES_GLIBC
 	select BR2_TOOLCHAIN_HAS_THREADS
 	select BR2_TOOLCHAIN_HAS_THREADS_DEBUG
 	select BR2_TOOLCHAIN_HAS_THREADS_NPTL
+	select BR2_TOOLCHAIN_HAS_UCONTEXT
 	select BR2_TOOLCHAIN_SUPPORTS_PIE
 
 config BR2_TOOLCHAIN_USES_UCLIBC
 	bool
+	# ucontext is only available for a subset of the supported
+	# architectures
+	select BR2_TOOLCHAIN_HAS_UCONTEXT if BR2_ARM_CPU_HAS_ARM || BR2_i386 \
+		|| BR2_mips || BR2_mipsel || BR2_mips64 || BR2_mips64el \
+		|| BR2_sparc || BR2_x86_64
 	select BR2_TOOLCHAIN_SUPPORTS_PIE if !BR2_m68k && !BR2_microblaze && !BR2_STATIC_LIBS
 
 config BR2_TOOLCHAIN_USES_MUSL
@@ -28,6 +34,7 @@ config BR2_TOOLCHAIN_USES_MUSL
 	select BR2_TOOLCHAIN_HAS_THREADS
 	select BR2_TOOLCHAIN_HAS_THREADS_DEBUG
 	select BR2_TOOLCHAIN_HAS_THREADS_NPTL
+	select BR2_TOOLCHAIN_HAS_UCONTEXT
 	select BR2_TOOLCHAIN_SUPPORTS_PIE if !BR2_STATIC_LIBS
 
 choice
@@ -64,15 +71,11 @@ source "package/gdb/Config.in.host"
 
 comment "Toolchain Generic Options"
 
-# https://sourceware.org/bugzilla/show_bug.cgi?id=19615
-# Affect toolchains built with binutils 2.26 (fixed in binutils 2.26.1).
-config BR2_TOOLCHAIN_HAS_BINUTILS_BUG_19615
+# https://sourceware.org/bugzilla/show_bug.cgi?id=27597
+# Affect toolchains built with binutils 2.36.1, still not fixed.
+config BR2_TOOLCHAIN_HAS_BINUTILS_BUG_27597
 	bool
-
-# https://sourceware.org/bugzilla/show_bug.cgi?id=20006
-# Affect toolchains built with binutils 2.26 (fixed in binutils 2.26.1).
-config BR2_TOOLCHAIN_HAS_BINUTILS_BUG_20006
-	bool
+	default y if BR2_nios2
 
 # Atomic types can be:
 #  - never lock-free
@@ -93,6 +96,36 @@ config BR2_TOOLCHAIN_SUPPORTS_ALWAYS_LOCKFREE_ATOMIC_INTS
 	depends on !BR2_sparc_v8
 	depends on !BR2_m68k_cf5208
 
+# GCC uses thunk functions to adjust the 'this' pointer when calling
+# C++ member functions in classes derived with multiple inheritance.
+# Generation of thunk functions requires support from the compiler
+# back end. In the absence of that support target-independent code
+# in the C++ front end is used to generate thunk functions, but it
+# does not support vararg functions.
+# or1k will support it in the gcc mainline starting with gcc-9.
+config BR2_TOOLCHAIN_SUPPORTS_VARIADIC_MI_THUNK
+	bool
+	default y
+	depends on !BR2_or1k
+	depends on !BR2_xtensa
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=43744. This bug no
+# reappeared on gcc 9.x and is still not fixed on gcc 11.x
+config BR2_TOOLCHAIN_HAS_GCC_BUG_43744
+	bool
+	default y if BR2_sh4
+	depends on !BR2_TOOLCHAIN_GCC_AT_LEAST_8 || \
+		BR2_TOOLCHAIN_GCC_AT_LEAST_9 || \
+		BR2_TOOLCHAIN_GCC_AT_LEAST_10 || \
+		BR2_TOOLCHAIN_GCC_AT_LEAST_11
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63261. This bug no
+# longer exists in gcc 8.x.
+config BR2_TOOLCHAIN_HAS_GCC_BUG_63261
+	bool
+	default y if BR2_microblaze
+	depends on !BR2_TOOLCHAIN_GCC_AT_LEAST_8
+
 # Prior to gcc 7.x, exception_ptr, nested_exception and future from
 # libstdc++ would only be provided on architectures that support
 # always lock-free atomic ints. See
@@ -104,11 +137,27 @@ config BR2_TOOLCHAIN_HAS_GCC_BUG_64735
 	default y if !BR2_TOOLCHAIN_SUPPORTS_ALWAYS_LOCKFREE_ATOMIC_INTS && \
 		!BR2_TOOLCHAIN_GCC_AT_LEAST_7
 
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68485. This bug still
+# exists in gcc 9.x
+config BR2_TOOLCHAIN_HAS_GCC_BUG_68485
+	bool
+	default y if BR2_microblaze
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83143
+# Error: invalid operands (*UND* and .text sections) for `-' on sh4.
+# This bug no longer exists in gcc 10.x but reappeared on gcc 11.x and
+# it still not been fixed yet.
+config BR2_TOOLCHAIN_HAS_GCC_BUG_83143
+	bool
+	default y if BR2_sh
+	depends on !BR2_TOOLCHAIN_GCC_AT_LEAST_10 || BR2_TOOLCHAIN_GCC_AT_LEAST_11
+
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85180. This bug no
 # longer exists in gcc 8.x.
 config BR2_TOOLCHAIN_HAS_GCC_BUG_85180
 	bool
 	default y if BR2_microblaze
+	depends on !BR2_TOOLCHAIN_GCC_AT_LEAST_8
 
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85862
 # An infinite loop exists in the find_base_term() logic of 6.x
@@ -117,6 +166,59 @@ config BR2_TOOLCHAIN_HAS_GCC_BUG_85862
 	bool
 	default y if BR2_microblaze
 	depends on !BR2_TOOLCHAIN_GCC_AT_LEAST_7
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90620
+# ICE: in do_output_reload, at reload1.c:7978 on microblaze.
+# This bug no longer exists in gcc 10.x
+config BR2_TOOLCHAIN_HAS_GCC_BUG_90620
+	bool
+	default y if BR2_microblaze
+	depends on !BR2_TOOLCHAIN_GCC_AT_LEAST_10
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=93847
+# ICE: compiler error: Segmentation fault on Nios II. This bug
+# no longer exists in gcc 9.x.
+config BR2_TOOLCHAIN_HAS_GCC_BUG_93847
+	bool
+	default y if BR2_nios2 && !BR2_TOOLCHAIN_GCC_AT_LEAST_9
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99410
+# Error: branch offset out of range on Nios II. This bug
+# no longer exists in gcc 8.x but reappeared on gcc 9.x and has been
+# fixed on gcc 11.x.
+config BR2_TOOLCHAIN_HAS_GCC_BUG_99140
+	bool
+	default y if !BR2_TOOLCHAIN_GCC_AT_LEAST_8
+	default y if BR2_TOOLCHAIN_GCC_AT_LEAST_9 && !BR2_TOOLCHAIN_GCC_AT_LEAST_11
+	depends on BR2_nios2
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101737
+# ICE: SH4 -Os causes internal compiler error. This bug
+# still exists in gcc = 11.1.0
+config BR2_TOOLCHAIN_HAS_GCC_BUG_101737
+	bool
+	default y if BR2_sh4
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101915
+# ICE: in extract_insn, at recog.c:2294 on microblaze.
+# This bug still exists in gcc = 11.1.0
+config BR2_TOOLCHAIN_HAS_GCC_BUG_101915
+	bool
+	default y if BR2_microblaze
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101916
+# ICE: on SH4: Segmentation fault signal terminated program cc1.
+# This bug still exists in gcc = 11.1.0
+config BR2_TOOLCHAIN_HAS_GCC_BUG_101916
+	bool
+	default y if BR2_sh4
+
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101952
+# ICE: on SH4: unaligned opcodes detected in executable segment.
+# This bug still exists in gcc = 11.1.0
+config BR2_TOOLCHAIN_HAS_GCC_BUG_101952
+	bool
+	default y if BR2_sh4
 
 config BR2_TOOLCHAIN_HAS_NATIVE_RPC
 	bool
@@ -128,6 +230,9 @@ config BR2_ENABLE_LOCALE
 	bool
 
 config BR2_INSTALL_LIBSTDCPP
+	bool
+
+config BR2_TOOLCHAIN_HAS_DLANG
 	bool
 
 config BR2_TOOLCHAIN_HAS_FORTRAN
@@ -143,6 +248,16 @@ config BR2_TOOLCHAIN_HAS_THREADS_NPTL
 	bool
 
 config BR2_TOOLCHAIN_HAS_SSP
+	bool
+
+config BR2_TOOLCHAIN_HAS_SSP_STRONG
+	bool
+	default y if BR2_TOOLCHAIN_HAS_SSP && BR2_TOOLCHAIN_GCC_AT_LEAST_4_9
+
+config BR2_TOOLCHAIN_HAS_UCONTEXT
+	bool
+
+config BR2_TOOLCHAIN_HAS_OPENMP
 	bool
 
 config BR2_TOOLCHAIN_SUPPORTS_PIE
@@ -170,6 +285,20 @@ config BR2_TOOLCHAIN_GLIBC_GCONV_LIBS_LIST
 	    IBM850 ISO8859-15 UNICODE
 
 	  Note: the full set of gconv libs are ~8MiB (on ARM).
+
+config BR2_TOOLCHAIN_EXTRA_LIBS
+	string "Extra toolchain libraries to be copied to target"
+	default BR2_TOOLCHAIN_EXTRA_EXTERNAL_LIBS if BR2_TOOLCHAIN_EXTRA_EXTERNAL_LIBS != "" # legacy
+	depends on !BR2_STATIC_LIBS
+	help
+	  If your toolchain provides extra libraries that need to be
+	  copied to the target filesystem, enter them here, separated
+	  by spaces. The library should not include a suffix or any
+	  type of pre/post wildcard.
+
+	  Examples where this can be useful is for adding debug
+	  libraries to the target like the GCC libsanitizer.
+	  e.g. "libasan liblsan libtsan libubsan"
 
 # This boolean is true if the toolchain provides a built-in full
 # featured gettext implementation (glibc), and false if only a stub
@@ -366,10 +495,113 @@ config BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_18
 	bool
 	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_17
 
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_19
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_18
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_20
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_19
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_0
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_20
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_1
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_0
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_2
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_1
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_3
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_2
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_3
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_5
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_6
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_5
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_7
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_6
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_8
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_7
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_9
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_8
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_10
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_9
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_11
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_10
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_12
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_11
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_13
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_12
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_14
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_13
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_15
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_14
+
+config BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_16
+	bool
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_15
+	select BR2_TOOLCHAIN_HEADERS_LATEST
+
+# This should be selected by the latest version, above, to indicate that
+# Buildroot does not know of more recent headers than the ones selected.
+# This allows using toolchains with headers more recent than Buildroot
+# knows about, while still enforcing strict check for older headers.
+config BR2_TOOLCHAIN_HEADERS_LATEST
+	bool
+
 # This order guarantees that the highest version is set, as kconfig
 # stops affecting a value on the first matching default.
 config BR2_TOOLCHAIN_HEADERS_AT_LEAST
 	string
+	default "5.16" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_16
+	default "5.15" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_15
+	default "5.14" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_14
+	default "5.13" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_13
+	default "5.12" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_12
+	default "5.11" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_11
+	default "5.10" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_10
+	default "5.9"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_9
+	default "5.8"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_8
+	default "5.7"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_7
+	default "5.6"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_6
+	default "5.5"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_5
+	default "5.4"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
+	default "5.3"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_3
+	default "5.2"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_2
+	default "5.1"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_1
+	default "5.0"  if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_0
+	default "4.20" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_20
+	default "4.19" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_19
 	default "4.18" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_18
 	default "4.17" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_17
 	default "4.16" if BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_16
@@ -454,10 +686,25 @@ config BR2_TOOLCHAIN_GCC_AT_LEAST_8
 	bool
 	select BR2_TOOLCHAIN_GCC_AT_LEAST_7
 
+config BR2_TOOLCHAIN_GCC_AT_LEAST_9
+	bool
+	select BR2_TOOLCHAIN_GCC_AT_LEAST_8
+
+config BR2_TOOLCHAIN_GCC_AT_LEAST_10
+	bool
+	select BR2_TOOLCHAIN_GCC_AT_LEAST_9
+
+config BR2_TOOLCHAIN_GCC_AT_LEAST_11
+	bool
+	select BR2_TOOLCHAIN_GCC_AT_LEAST_10
+
 # This order guarantees that the highest version is set, as kconfig
 # stops affecting a value on the first matching default.
 config BR2_TOOLCHAIN_GCC_AT_LEAST
 	string
+	default "11"	if BR2_TOOLCHAIN_GCC_AT_LEAST_11
+	default "10"	if BR2_TOOLCHAIN_GCC_AT_LEAST_10
+	default "9"	if BR2_TOOLCHAIN_GCC_AT_LEAST_9
 	default "8"	if BR2_TOOLCHAIN_GCC_AT_LEAST_8
 	default "7"	if BR2_TOOLCHAIN_GCC_AT_LEAST_7
 	default "6"	if BR2_TOOLCHAIN_GCC_AT_LEAST_6
@@ -544,6 +791,7 @@ config BR2_TOOLCHAIN_HAS_SYNC_8
 config BR2_TOOLCHAIN_HAS_LIBATOMIC
 	bool
 	default y if BR2_TOOLCHAIN_GCC_AT_LEAST_4_8 && \
+		!BR2_TOOLCHAIN_EXTERNAL_CODESOURCERY_AARCH64 && \
 		BR2_TOOLCHAIN_HAS_THREADS && \
 		!BR2_BINFMT_FLAT
 

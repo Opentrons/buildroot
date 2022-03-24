@@ -4,13 +4,9 @@
 #
 ################################################################################
 
-AT_VERSION = release/3.1.23
-AT_SITE = https://salsa.debian.org/debian/at.git
-AT_SITE_METHOD = git
-# Tried to add missing deps for parsetime.l but still parallel build fails
-# in some case, so at the moment let's keep MAKE1
-AT_MAKE = $(MAKE1)
-AT_AUTORECONF = YES
+AT_VERSION = 3.2.4
+AT_SOURCE = at_$(AT_VERSION).orig.tar.gz
+AT_SITE = http://software.calhariz.com/at
 AT_DEPENDENCIES = $(if $(BR2_PACKAGE_FLEX),flex) host-bison host-flex
 AT_LICENSE = GPL-2.0+, GPL-3.0+, ISC
 AT_LICENSE_FILES = Copyright COPYING

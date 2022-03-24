@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# ~*~ encoding=utf8 ~*~
+#!/usr/bin/env python3
 """
 
 Utility for building Buildroot packages for existing PyPI packages
@@ -7,16 +6,10 @@ Utility for building Buildroot packages for existing PyPI packages
 Any package built by scanpypi should be manually checked for
 errors.
 """
-from __future__ import print_function
-from __future__ import absolute_import
 import argparse
 import json
-import six.moves.urllib.request
-import six.moves.urllib.error
-import six.moves.urllib.parse
 import sys
 import os
-import copy
 import shutil
 import tarfile
 import zipfile
@@ -26,9 +19,10 @@ import re
 import textwrap
 import tempfile
 import imp
-import configparser
-import inspect
 from functools import wraps
+import six.moves.urllib.request
+import six.moves.urllib.error
+import six.moves.urllib.parse
 from six.moves import map
 from six.moves import zip
 from six.moves import input
@@ -64,11 +58,8 @@ def setup_decorator(func, method):
     def closure(*args, **kwargs):
         # Any python packages calls its setup function to be installed.
         # Argument 'name' of this setup function is the package's name
-        try:
-            BuildrootPackage.setup_args[kwargs['name']] = kwargs
-            BuildrootPackage.setup_args[kwargs['name']]['method'] = method
-        except KeyError:
-            pass
+        BuildrootPackage.setup_args[kwargs['name']] = kwargs
+        BuildrootPackage.setup_args[kwargs['name']]['method'] = method
     return closure
 
 # monkey patch
@@ -103,9 +94,10 @@ def pkg_buildroot_name(pkg_name):
     Keyword arguments:
     pkg_name -- String to rename
     """
-    name = re.sub('[^\w-]', '', pkg_name.lower())
+    name = re.sub(r'[^\w-]', '', pkg_name.lower())
+    name = name.replace('_', '-')
     prefix = 'python-'
-    pattern = re.compile('^(?!' + prefix + ')(.+?)$')
+    pattern = re.compile(r'^(?!' + prefix + ')(.+?)$')
     name = pattern.sub(r'python-\1', name)
     return name
 
@@ -232,6 +224,22 @@ class BuildrootPackage():
         self.filename = self.used_url['filename']
         self.url = self.used_url['url']
 
+    def check_archive(self, members):
+        """
+        Check archive content before extracting
+
+        Keyword arguments:
+        members -- list of archive members
+        """
+        # Protect against https://github.com/snyk/zip-slip-vulnerability
+        # Older python versions do not validate that the extracted files are
+        # inside the target directory. Detect and error out on evil paths
+        evil = [e for e in members if os.path.relpath(e).startswith(('/', '..'))]
+        if evil:
+            print('ERROR: Refusing to extract {} with suspicious members {}'.format(
+                self.filename, evil))
+            sys.exit(1)
+
     def extract_package(self, tmp_path):
         """
         Extract the package contents into a directrory
@@ -256,6 +264,7 @@ class BuildrootPackage():
                     print('Removing {pkg}...'.format(pkg=tmp_pkg))
                     shutil.rmtree(tmp_pkg)
                     os.makedirs(tmp_pkg)
+                self.check_archive(as_zipfile.namelist())
                 as_zipfile.extractall(tmp_pkg)
                 pkg_filename = self.filename.split(".zip")[0]
         else:
@@ -271,6 +280,7 @@ class BuildrootPackage():
                     print('Removing {pkg}...'.format(pkg=tmp_pkg))
                     shutil.rmtree(tmp_pkg)
                     os.makedirs(tmp_pkg)
+                self.check_archive(as_tarfile.getnames())
                 as_tarfile.extractall(tmp_pkg)
                 pkg_filename = self.filename.split(".tar")[0]
 
@@ -279,65 +289,28 @@ class BuildrootPackage():
             folder=tmp_pkg,
             name=pkg_filename)
 
-    def find_metadata(self, setup, extract_path):
-        if self.metadata_name in self.setup_args:
-            # setup was called on import, all good
-            return self.setup_args[self.metadata_name]
-        elif hasattr(setup, 'main') and inspect.isfunction(setup.main):
-            # maybe there’s a main function?
-            setup.main()
-        elif hasattr(setup, 'setup_args') and isinstance(setup.setup_args, tuple):
-            setup.setup(*setup_args)
-        elif hasattr(setup, 'setup_args') and isinstance(setup.setup_args, dict):
-            setup.setup(**setup.setup_args)
-        else:
-            # Maybe it’s in the config file
-            config = configparser.ConfigParser()
-            config.read(os.path.join(extract_path, 'setup.cfg'))
-            self.setup_args[self.metadata_name] = {}
-            if 'metadata' in config.sections():
-                self.setup_args[self.metadata_name].update(config['metadata'])
-            if 'options' in config.sections():
-                self.setup_args[self.metadata_name].update(config['options'])
-                if 'install_requires' in self.setup_args[self.metadata_name]:
-                    self.setup_args[self.metadata_name]['install_requires']\
-                        = [ir for ir in self.setup_args[self.metadata_name]['install_requires'].split('\n')
-                           if ir]
-            if 'method' not in self.setup_args[self.metadata_name]:
-                self.setup_args[self.metadata_name]['method'] = 'bdist_wheel'
-            if self.setup_args[self.metadata_name] == {}:
-                raise KeyError("I give up")
-
-        return self.setup_args[self.metadata_name]
-
     def load_setup(self):
         """
         Loads the corresponding setup and store its metadata
         """
         current_dir = os.getcwd()
         os.chdir(self.tmp_extract)
-        sys.path.append(self.tmp_extract)
-        old_sm = copy.copy(sys.modules)
+        sys.path.insert(0, self.tmp_extract)
         s_file, s_path, s_desc = imp.find_module('setup', [self.tmp_extract])
-        setup = imp.load_module('setup', s_file, s_path, s_desc)
-
-        self.setup_metadata = self.find_metadata(setup, self.tmp_extract)
-        # Here we must remove the module the hard way.
-        # We must do this because of a very specific case: if a package calls
-        # setup from the __main__ but does not come with a 'main()' function,
-        # for some reason setup.main() will successfully call the main
-        # function of a previous package...
-        will_delete = [k for k in sys.modules.keys() if k not in old_sm.keys()]
-        for k in will_delete:
-            sys.modules.pop(k)
-            try:
-                del locals()[k]
-            except KeyError:
-                try:
-                    del globals()[k]
-                except KeyError:
-                    pass
-
+        imp.load_module('__main__', s_file, s_path, s_desc)
+        if self.metadata_name in self.setup_args:
+            pass
+        elif self.metadata_name.replace('_', '-') in self.setup_args:
+            self.metadata_name = self.metadata_name.replace('_', '-')
+        elif self.metadata_name.replace('-', '_') in self.setup_args:
+            self.metadata_name = self.metadata_name.replace('-', '_')
+        try:
+            self.setup_metadata = self.setup_args[self.metadata_name]
+        except KeyError:
+            # This means setup was not called
+            print('ERROR: Could not determine package metadata for {pkg}.\n'
+                  .format(pkg=self.real_name))
+            raise
         os.chdir(current_dir)
         sys.path.remove(self.tmp_extract)
 
@@ -353,34 +326,13 @@ class BuildrootPackage():
             self.pkg_req = None
             return set()
         self.pkg_req = self.setup_metadata['install_requires']
-        # Pull possible python version requirements specified as e.g.
-        # ’functools32;python<3’ by transforming the list of requires
-        # into a list of tuples of (pkg, python-requirement-or-none)
-        possible_pyreqs = [(m.group(1), m.group(2)) for m in
-                           [re.match("([-.\w]+)(?:;([\w.-<=>!']*))?.*", pkg)
-                            for pkg in self.pkg_req]]
-        def parse_pyreqs(reqtuples):
-            to_ret = []
-            for pkg, python_required in reqtuples:
-                if not python_required:
-                    to_ret.append(pkg)
-                else:
-                    args = re.match("python_version([<>=]+)'?([\d.]+)'?", python_required)
-                    if None is args:
-                        to_ret.append(pkg)
-                    version = args.group(2)
-                    comp = args.group(1)
-                    version = [int(part) for part in version.split('.')]
-                    version = tuple(version + ([0]*(3-len(version))))
-                    import semver
-                    if semver.match('.'.join([str(vi) for vi in sys.version_info[:3]]),
-                                    comp + '.'.join([str(vi) for vi in version])):
-                        to_ret.append(pkg)
-            return to_ret
-        self.pkg_req = parse_pyreqs(possible_pyreqs)
+        self.pkg_req = [re.sub(r'([-.\w]+).*', r'\1', req)
+                        for req in self.pkg_req]
+
         # get rid of commented lines and also strip the package strings
         self.pkg_req = [item.strip() for item in self.pkg_req
                         if len(item) > 0 and item[0] != '#']
+
         req_not_found = self.pkg_req
         self.pkg_req = list(map(pkg_buildroot_name, self.pkg_req))
         pkg_tuples = list(zip(req_not_found, self.pkg_req))
@@ -416,13 +368,14 @@ class BuildrootPackage():
             version=self.version)
         lines.append(version_line)
 
-        targz = self.filename.replace(
-            self.version,
-            '$({name}_VERSION)'.format(name=self.mk_name))
-        targz_line = '{name}_SOURCE = {filename}\n'.format(
-            name=self.mk_name,
-            filename=targz)
-        lines.append(targz_line)
+        if self.buildroot_name != self.real_name:
+            targz = self.filename.replace(
+                self.version,
+                '$({name}_VERSION)'.format(name=self.mk_name))
+            targz_line = '{name}_SOURCE = {filename}\n'.format(
+                name=self.mk_name,
+                filename=targz)
+            lines.append(targz_line)
 
         if self.filename not in self.url:
             # Sometimes the filename is in the url, sometimes it's not
@@ -487,7 +440,7 @@ class BuildrootPackage():
                 "Mozilla Public License 2.0": "MPL-2.0",
                 "Zope Public License": "ZPL"
                 }
-            regexp = re.compile('^License :* *.* *:+ (.*)( \(.*\))?$')
+            regexp = re.compile(r'^License :* *.* *:+ (.*)( \(.*\))?$')
             classifiers_licenses = [regexp.sub(r"\1", lic)
                                     for lic in self.metadata['info']['classifiers']
                                     if regexp.match(lic)]
@@ -497,6 +450,7 @@ class BuildrootPackage():
                       ' likely wrong, please change it if need be'.format(
                           license=', '.join(licenses)))
                 licenses = [self.metadata['info']['license']]
+            licenses = set(licenses)
             license_line = '{name}_LICENSE = {license}\n'.format(
                 name=self.mk_name,
                 license=', '.join(licenses))
@@ -509,6 +463,7 @@ class BuildrootPackage():
                     license_names.append(match.license.id)
                 else:
                     license_names.append("FIXME: license id couldn't be detected")
+            license_names = set(license_names)
 
             if len(license_names) > 0:
                 license_line = ('{name}_LICENSE ='
@@ -529,8 +484,8 @@ class BuildrootPackage():
         """
         lines = []
 
-        filenames = ['LICENCE', 'LICENSE', 'LICENSE.RST', 'LICENSE.TXT',
-                     'COPYING', 'COPYING.TXT']
+        filenames = ['LICENCE', 'LICENSE', 'LICENSE.MD', 'LICENSE.RST',
+                     'LICENSE.TXT', 'COPYING', 'COPYING.TXT']
         self.license_files = list(find_file_upper_case(filenames, self.tmp_extract))
 
         lines.append(self.__get_license_names(self.license_files))
@@ -602,12 +557,12 @@ class BuildrootPackage():
             hash_header = '# md5, sha256 from {url}\n'.format(
                 url=self.metadata_url)
             lines.append(hash_header)
-            hash_line = '{method}\t{digest}  {filename}\n'.format(
+            hash_line = '{method}  {digest}  {filename}\n'.format(
                 method='md5',
                 digest=self.used_url['digests']['md5'],
                 filename=self.filename)
             lines.append(hash_line)
-            hash_line = '{method}\t{digest}  {filename}\n'.format(
+            hash_line = '{method}  {digest}  {filename}\n'.format(
                 method='sha256',
                 digest=self.used_url['digests']['sha256'],
                 filename=self.filename)
@@ -623,7 +578,7 @@ class BuildrootPackage():
                     if not data:
                         break
                     sha256.update(data)
-            hash_line = '{method}\t{digest}  {filename}\n'.format(
+            hash_line = '{method}  {digest}  {filename}\n'.format(
                 method='sha256',
                 digest=sha256.hexdigest(),
                 filename=license_file.replace(self.tmp_extract, '')[1:])
@@ -646,6 +601,7 @@ class BuildrootPackage():
         bool_line = '\tbool "{name}"\n'.format(name=self.buildroot_name)
         lines.append(bool_line)
         if self.pkg_req:
+            self.pkg_req.sort()
             for dep in self.pkg_req:
                 dep_line = '\tselect BR2_PACKAGE_{req} # runtime\n'.format(
                     req=dep.upper().replace('-', '_'))
@@ -697,6 +653,8 @@ def main():
     try:
         for real_pkg_name in packages:
             package = BuildrootPackage(real_pkg_name, pkg_folder)
+            print('buildroot package name for {}:'.format(package.real_name),
+                  package.buildroot_name)
             # First we download the package
             # Most of the info we need can only be found inside the package
             print('Package:', package.buildroot_name)
@@ -732,12 +690,12 @@ def main():
             try:
                 package.load_setup()
             except ImportError as err:
-                if 'buildutils' in err.message:
+                if 'buildutils' in str(err):
                     print('This package needs buildutils')
                 else:
                     raise
                 continue
-            except AttributeError as error:
+            except (AttributeError, KeyError) as error:
                 print('Error: Could not install package {pkg}: {error}'.format(
                     pkg=package.real_name, error=error))
                 continue
@@ -773,6 +731,8 @@ def main():
             package.create_hash_file()
 
             package.create_config_in()
+            print("NOTE: Remember to also make an update to the DEVELOPERS file")
+            print("      and include an entry for the pkg in packages/Config.in")
             print()
             # printing an empty line for visual confort
     finally:

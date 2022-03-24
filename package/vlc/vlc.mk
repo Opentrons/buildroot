@@ -4,12 +4,14 @@
 #
 ################################################################################
 
-VLC_VERSION = 3.0.4
+VLC_VERSION = 3.0.16
 VLC_SITE = https://get.videolan.org/vlc/$(VLC_VERSION)
 VLC_SOURCE = vlc-$(VLC_VERSION).tar.xz
 VLC_LICENSE = GPL-2.0+, LGPL-2.1+
 VLC_LICENSE_FILES = COPYING COPYING.LIB
-VLC_DEPENDENCIES = host-pkgconf
+VLC_CPE_ID_VENDOR = videolan
+VLC_CPE_ID_PRODUCT = vlc_media_player
+VLC_DEPENDENCIES = host-gettext host-pkgconf
 VLC_AUTORECONF = YES
 
 # Install vlc libraries in staging.
@@ -55,7 +57,6 @@ VLC_CONF_OPTS += \
 	--disable-dsm \
 	--disable-dv1394 \
 	--disable-fluidlite \
-	--disable-fluidsynth \
 	--disable-gme \
 	--disable-goom \
 	--disable-jack \
@@ -116,12 +117,18 @@ else
 VLC_CONF_OPTS += --disable-alsa
 endif
 
-# avahi support needs avahi-client, which needs avahi-daemon and dbus
-ifeq ($(BR2_PACKAGE_AVAHI)$(BR2_PACKAGE_AVAHI_DAEMON)$(BR2_PACKAGE_DBUS),yyy)
+ifeq ($(BR2_PACKAGE_AVAHI_LIBAVAHI_CLIENT),y)
 VLC_CONF_OPTS += --enable-avahi
 VLC_DEPENDENCIES += avahi
 else
 VLC_CONF_OPTS += --disable-avahi
+endif
+
+ifeq ($(BR2_PACKAGE_DAV1D),y)
+VLC_CONF_OPTS += --enable-dav1d
+VLC_DEPENDENCIES += dav1d
+else
+VLC_CONF_OPTS += --disable-dav1d
 endif
 
 ifeq ($(BR2_PACKAGE_DBUS),y)
@@ -164,6 +171,13 @@ else
 VLC_CONF_OPTS += --disable-flac
 endif
 
+ifeq ($(BR2_PACKAGE_FLUIDSYNTH),y)
+VLC_CONF_OPTS += --enable-fluidsynth
+VLC_DEPENDENCIES += fluidsynth
+else
+VLC_CONF_OPTS += --disable-fluidsynth
+endif
+
 ifeq ($(BR2_PACKAGE_FREERDP),y)
 VLC_CONF_OPTS += --enable-freerdp
 VLC_DEPENDENCIES += freerdp
@@ -196,13 +210,9 @@ else
 VLC_CONF_OPTS += --disable-gles2
 endif
 
-ifeq ($(BR2_PACKAGE_OPENCV)$(BR2_PACKAGE_OPENCV3),y)
+ifeq ($(BR2_PACKAGE_OPENCV3),y)
 VLC_CONF_OPTS += --enable-opencv
-ifeq ($(BR2_PACKAGE_OPENCV),y)
-VLC_DEPENDENCIES += opencv
-else
 VLC_DEPENDENCIES += opencv3
-endif
 else
 VLC_CONF_OPTS += --disable-opencv
 endif
@@ -367,9 +377,9 @@ else
 VLC_CONF_OPTS += --disable-theora
 endif
 
-ifeq ($(BR2_PACKAGE_LIBUPNP)$(BR2_PACKAGE_LIBUPNP18),y)
+ifeq ($(BR2_PACKAGE_LIBUPNP),y)
 VLC_CONF_OPTS += --enable-upnp
-VLC_DEPENDENCIES += $(if $(BR2_PACKAGE_LIBUPNP),libupnp,libupnp18)
+VLC_DEPENDENCIES += libupnp
 else
 VLC_CONF_OPTS += --disable-upnp
 endif
@@ -427,6 +437,9 @@ endif
 ifeq ($(BR2_PACKAGE_LIVE555),y)
 VLC_CONF_OPTS += --enable-live555
 VLC_DEPENDENCIES += live555
+ifneq ($(BR2_PACKAGE_OPENSSL),y)
+VLC_CONF_ENV += CXXFLAGS="$(TARGET_CXXFLAGS) -DNO_OPENSSL"
+endif
 else
 VLC_CONF_OPTS += --disable-live555
 endif
@@ -559,6 +572,13 @@ endif
 
 ifeq ($(BR2_PACKAGE_ZLIB),y)
 VLC_DEPENDENCIES += zlib
+endif
+
+ifeq ($(BR2_PACKAGE_GNUTLS),y)
+VLC_CONF_OPTS += --enable-gnutls
+VLC_DEPENDENCIES += gnutls
+else
+VLC_CONF_OPTS += --disable-gnutls
 endif
 
 $(eval $(autotools-package))
