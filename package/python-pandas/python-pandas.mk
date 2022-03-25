@@ -4,9 +4,9 @@
 #
 ################################################################################
 
-PYTHON_PANDAS_VERSION = 0.25.3
+PYTHON_PANDAS_VERSION = 1.4.1
 PYTHON_PANDAS_SOURCE = pandas-$(PYTHON_PANDAS_VERSION).tar.gz
-PYTHON_PANDAS_SITE = https://files.pythonhosted.org/packages/b7/93/b544dd08092b457d88e10fc1e0989d9397fd32ca936fdfcbb2584178dd2b
+PYTHON_PANDAS_SITE = https://files.pythonhosted.org/packages/c4/eb/cfa96ba42695b3c28d4864a796d492f188471dd536df7e5e5e0c54b629a6
 PYTHON_PANDAS_DEPENDENCIES = host-python-numpy
 PYTHON_PANDAS_SETUP_TYPE = setuptools
 PYTHON_PANDAS_LICENSE = BSD
