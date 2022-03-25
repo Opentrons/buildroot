@@ -12,3 +12,4 @@ PYTHON_BACKCALL_LICENSE = BSD-3-Clause
 PYTHON_BACKCALL_LICENSE_FILES = LICENSE
 
 $(eval $(python-package))
+$(eval $(host-python-package))

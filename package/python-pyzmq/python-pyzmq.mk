@@ -11,6 +11,7 @@ PYTHON_PYZMQ_LICENSE = LGPL-3.0+, BSD-3-Clause, Apache-2.0
 # Apache license only online: http://www.apache.org/licenses/LICENSE-2.0
 PYTHON_PYZMQ_LICENSE_FILES = COPYING.LESSER COPYING.BSD
 PYTHON_PYZMQ_DEPENDENCIES = zeromq
+HOST_PYTHON_PYZMG_DEPENDENCIES = host-zeromq
 PYTHON_PYZMQ_SETUP_TYPE = distutils
 PYTHON_PYZMQ_BUILD_OPTS = --zmq=$(STAGING_DIR)/usr
 
@@ -27,3 +28,4 @@ PYTHON_PYZMQ_BUILD_OPTS += --enable-drafts
 endif
 
 $(eval $(python-package))
+$(eval $(host-python-package))

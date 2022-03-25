@@ -10,5 +10,7 @@ PYTHON_PEXPECT_SITE = https://files.pythonhosted.org/packages/e5/9b/ff402e0e930e
 PYTHON_PEXPECT_LICENSE = ISC
 PYTHON_PEXPECT_LICENSE_FILES = LICENSE
 PYTHON_PEXPECT_SETUP_TYPE = distutils
+HOST_PYTHON_PEXPECT_DEPENDENCIES = host-python-ptyprocess
 
 $(eval $(python-package))
+$(eval $(host-python-package))
