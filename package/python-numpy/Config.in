@@ -15,6 +15,13 @@ config BR2_PACKAGE_PYTHON_NUMPY_ARCH_SUPPORTS
 	default y if BR2_sh
 	default y if BR2_x86_64
 
+config BR2_PACKAGE_PYTHON_NUMPY_TESTS
+	bool "numpy.tests"
+	help
+		Include test files.
+		Selecting this option adds about 2.5 MB to the target file
+		system.
+
 config BR2_PACKAGE_PYTHON_NUMPY
 	bool "python-numpy"
 	depends on BR2_PACKAGE_PYTHON_NUMPY_ARCH_SUPPORTS
