@@ -32,5 +32,13 @@ endef
 # in the staging area.
 PYTHON_NUMPY_INSTALL_STAGING = YES
 
+ifneq ($(BR2_PACKAGE_PYTHON_NUMPY_TESTS),y)
+define PYTHON_NUMPY_REMOVE_TESTS
+	find $(TARGET_DIR)/usr/lib/python*/site-packages/numpy/ \
+		-name tests -prune -exec rm -rf {} \;
+endef
+PYTHON_NUMPY_POST_INSTALL_TARGET_HOOKS += PYTHON_NUMPY_REMOVE_TESTS
+endif
+
 $(eval $(python-package))
 $(eval $(host-python-package))
