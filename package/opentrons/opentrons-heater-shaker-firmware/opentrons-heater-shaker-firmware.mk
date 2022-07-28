@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-OPENTRONS_HEATER_SHAKER_FIRMWARE_VERSION=v0.4.14
-OPENTRONS_HEATER_SHAKER_FIRMWARE_SOURCE=heater-shaker@v0.4.14.bin
+OPENTRONS_HEATER_SHAKER_FIRMWARE_VERSION=v0.4.23
+OPENTRONS_HEATER_SHAKER_FIRMWARE_SOURCE=heater-shaker@v0.4.23.bin
 OPENTRONS_HEATER_SHAKER_FIRMWARE_SITE=https://opentrons-modules-builds.s3.us-east-2.amazonaws.com/heater-shaker/$(OPENTRONS_HEATER_SHAKER_FIRMWARE_VERSION)
 OPENTRONS_HEATER_SHAKER_FIRMWARE_LICENSE=Apache-2.0
 
