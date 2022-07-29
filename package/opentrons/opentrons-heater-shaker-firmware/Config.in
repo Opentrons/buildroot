@@ -1,0 +1,9 @@
+config BR2_PACKAGE_OPENTRONS_HEATER_SHAKER_FIRMWARE
+	bool "opentrons-heater-shaker-firmware"
+	help
+		Opentrons Heater-Shaker Firmware
+
+		Binary of the current board firmware
+		for an Opentrons Heater-Shaker
+
+		https://github.com/opentrons/opentrons-modules
