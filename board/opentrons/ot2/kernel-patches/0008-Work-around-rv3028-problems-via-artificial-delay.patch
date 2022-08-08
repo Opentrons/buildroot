@@ -18,6 +18,9 @@ bus time in order to apply postponed time updates.
 
 See Opentrons Jira RSS-9 for investigation details.
 
+We sleep for 2-4 milliseconds. Shorter sleeps might also work;
+we just haven't tested with them.
+
 ---
  drivers/rtc/rtc-rv3028.c | 6 ++++++
  1 file changed, 6 insertions(+)
