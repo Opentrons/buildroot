@@ -30,7 +30,7 @@ index a714e5aeefb8..d499a2e5d956 100644
 --- a/drivers/rtc/rtc-rv3028.c
 +++ b/drivers/rtc/rtc-rv3028.c
 @@ -10,6 +10,7 @@
-
+ 
  #include <linux/bcd.h>
  #include <linux/bitops.h>
 +#include <linux/delay.h>
@@ -38,9 +38,9 @@ index a714e5aeefb8..d499a2e5d956 100644
  #include <linux/interrupt.h>
  #include <linux/kernel.h>
 @@ -79,6 +80,9 @@
-
+ 
  #define OFFSET_STEP_PPT            953674
-
+ 
 +#define WORKAROUND_SLEEP_MIN_US        2000
 +#define WORKAROUND_SLEEP_MAX_US        4000
 +
@@ -50,12 +50,12 @@ index a714e5aeefb8..d499a2e5d956 100644
 @@ -227,6 +231,8 @@ static int rv3028_get_time(struct device *dev, struct rtc_time *tm)
         return -EINVAL;
     }
-
+ 
 +   usleep_range(WORKAROUND_SLEEP_MIN_US, WORKAROUND_SLEEP_MAX_US);
 +
     ret = regmap_bulk_read(rv3028->regmap, RV3028_SEC, date, sizeof(date));
     if (ret)
         return ret;
---
+-- 
 2.37.1
 
