@@ -1,6 +1,11 @@
-This is an Opentrons workaround for what we suspect is an undocumented silicon
-erratum in the RV-3028 RTC. It adds an artificial sleep whenever something
-reads the current time from the RTC's registers.
+From 16292687fd316543bba3d0d0179c2439a85acb6a Mon Sep 17 00:00:00 2001
+From: Max Marrone <max@opentrons.com>
+Date: Mon, 8 Aug 2022 15:34:12 -0400
+Subject: [PATCH] Work around RV-3028 problems via artificial delay
+
+This is an Opentrons workaround for what we suspect is an undocumented
+silicon erratum in the RV-3028 RTC. It adds an artificial sleep whenever
+something reads the current time from the RTC's registers.
 
 Whenever there is an open I2C transaction, the RV-3028 will hold its
 time registers steady, in order to avoid a torn read/write hazard.
@@ -20,7 +25,6 @@ See Opentrons Jira RSS-9 for investigation details.
 
 We sleep for 2-4 milliseconds. Shorter sleeps might also work;
 we just haven't tested with them.
-
 ---
  drivers/rtc/rtc-rv3028.c | 6 ++++++
  1 file changed, 6 insertions(+)
@@ -39,23 +43,23 @@ index a714e5aeefb8..d499a2e5d956 100644
  #include <linux/kernel.h>
 @@ -79,6 +80,9 @@
  
- #define OFFSET_STEP_PPT            953674
+ #define OFFSET_STEP_PPT			953674
  
-+#define WORKAROUND_SLEEP_MIN_US        2000
-+#define WORKAROUND_SLEEP_MAX_US        4000
++#define WORKAROUND_SLEEP_MIN_US		2000
++#define WORKAROUND_SLEEP_MAX_US		4000
 +
  enum rv3028_type {
-    rv_3028,
+ 	rv_3028,
  };
 @@ -227,6 +231,8 @@ static int rv3028_get_time(struct device *dev, struct rtc_time *tm)
-        return -EINVAL;
-    }
+ 		return -EINVAL;
+ 	}
  
-+   usleep_range(WORKAROUND_SLEEP_MIN_US, WORKAROUND_SLEEP_MAX_US);
++	usleep_range(WORKAROUND_SLEEP_MIN_US, WORKAROUND_SLEEP_MAX_US);
 +
-    ret = regmap_bulk_read(rv3028->regmap, RV3028_SEC, date, sizeof(date));
-    if (ret)
-        return ret;
+ 	ret = regmap_bulk_read(rv3028->regmap, RV3028_SEC, date, sizeof(date));
+ 	if (ret)
+ 		return ret;
 -- 
 2.37.1
 
