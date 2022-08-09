@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -u
 set -e
 
 GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
@@ -31,11 +30,9 @@ mkdir -p ${TARGET_DIR}/mnt/bootpart
 cp -r ${BINARIES_DIR}/rpi-firmware/overlays ${TARGET_DIR}/boot/overlays
 cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
 
-# rewrite config.txt to boot u-boot
-sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.txt
 hostname_to_write=$(cat ${TARGET_DIR}/etc/hostname)
 
-if [ ${OT_BUILD_TYPE} != "release" ]; then
+if [ "${OT_BUILD_TYPE}" != "release" ]; then
     echo "Build type is NOT RELEASE, adding default ssh key and removing signing"
     # write common pubkey to authorized keys
     cat ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys

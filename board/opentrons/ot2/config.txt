@@ -1,0 +1,40 @@
+# set our third stage bootloader to u-boot
+kernel=u-boot.bin
+
+# Enable audio (loads snd_bcm2835)
+dtparam=audio=on
+
+# Automatically load overlays for detected cameras
+camera_auto_detect=1
+
+# Automatically load overlays for detected DSI displays
+display_auto_detect=1
+
+# Disable compensation for displays with overscan
+disable_overscan=1
+
+# fixes rpi (3B, 3B+, 3A+, 4B and Zero W) ttyAMA0 serial console
+enable_uart=1
+#dtoverlay=miniuart-bt	 # NOT WORKING
+
+# How much memory in MB to assign to the GPU on Pi models having
+# 256, 512 or 1024 MB total memory
+gpu_mem_256=100
+gpu_mem_512=100
+gpu_mem_1024=100
+
+dtoverlay=gpio-revision-bits
+
+# Set the RTC driver (Loads in rv3028)
+dtoverlay=i2c-rtc,rv3028
+
+[pi4]
+
+# Run as fast as firmware / board allows
+arm_boost=1
+
+# Enable DRM VC4 V3D driver
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+
+[all]
