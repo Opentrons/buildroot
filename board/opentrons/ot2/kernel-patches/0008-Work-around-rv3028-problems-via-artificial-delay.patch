@@ -1,0 +1,65 @@
+From 16292687fd316543bba3d0d0179c2439a85acb6a Mon Sep 17 00:00:00 2001
+From: Max Marrone <max@opentrons.com>
+Date: Mon, 8 Aug 2022 15:34:12 -0400
+Subject: [PATCH] Work around RV-3028 problems via artificial delay
+
+This is an Opentrons workaround for what we suspect is an undocumented
+silicon erratum in the RV-3028 RTC. It adds an artificial sleep whenever
+something reads the current time from the RTC's registers.
+
+Whenever there is an open I2C transaction, the RV-3028 will hold its
+time registers steady, in order to avoid a torn read/write hazard.
+If the time registers would have ticked to a new value during that
+transaction, the RV-3028 is supposed to postpone that update and
+apply it as soon as the transaction ends.
+
+But on some boards, we're seeing the time registers never update at
+all whenever they're under rapid polling. `hwclock` does rapid
+polling under normal usage, so this causes it to error with
+"Timed out waiting for time change".
+
+We theorize that problematic RV-3028 chips need a big block of idle
+bus time in order to apply postponed time updates.
+
+See Opentrons Jira RSS-9 for investigation details.
+
+We sleep for 2-4 milliseconds. Shorter sleeps might also work;
+we just haven't tested with them.
+---
+ drivers/rtc/rtc-rv3028.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/rtc/rtc-rv3028.c b/drivers/rtc/rtc-rv3028.c
+index a714e5aeefb8..d499a2e5d956 100644
+--- a/drivers/rtc/rtc-rv3028.c
++++ b/drivers/rtc/rtc-rv3028.c
+@@ -10,6 +10,7 @@
+ 
+ #include <linux/bcd.h>
+ #include <linux/bitops.h>
++#include <linux/delay.h>
+ #include <linux/i2c.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+@@ -79,6 +80,9 @@
+ 
+ #define OFFSET_STEP_PPT			953674
+ 
++#define WORKAROUND_SLEEP_MIN_US		2000
++#define WORKAROUND_SLEEP_MAX_US		4000
++
+ enum rv3028_type {
+ 	rv_3028,
+ };
+@@ -227,6 +231,8 @@ static int rv3028_get_time(struct device *dev, struct rtc_time *tm)
+ 		return -EINVAL;
+ 	}
+ 
++	usleep_range(WORKAROUND_SLEEP_MIN_US, WORKAROUND_SLEEP_MAX_US);
++
+ 	ret = regmap_bulk_read(rv3028->regmap, RV3028_SEC, date, sizeof(date));
+ 	if (ret)
+ 		return ret;
+-- 
+2.37.1
+
