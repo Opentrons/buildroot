@@ -1,0 +1,9 @@
+config BR2_PACKAGE_OPENTRONS_THERMOCYCLER_GEN2_FIRMWARE
+	bool "opentrons-thermocycler-gen2-firmware"
+	help
+		Opentrons Thermocycler-Gen2 Firmware
+
+		Binary of the current board firmware
+		for an Opentrons Thermocycler Gen2
+
+		https://github.com/opentrons/opentrons-modules
