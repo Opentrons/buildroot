@@ -11,4 +11,11 @@ PYTHON_IPYKERNEL_SETUP_TYPE = setuptools
 PYTHON_IPYKERNEL_LICENSE = BSD-3-Clause
 PYTHON_IPYKERNEL_DEPENDENCIES = python-ipython python-jupyter_client host-python-ipython host-python-jupyter_client
 
+ifneq ($(BR2_PACKAGE_PYTHON_IPYKERNEL_TESTS),y)
+define PYTHON_IPYKERNEL_REMOVE_TESTS
+    rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/ipykernel/tests
+endef
+PYTHON_IPYKERNEL_POST_INSTALL_TARGET_HOOKS += PYTHON_IPYKERNEL_REMOVE_TESTS
+endif
+
 $(eval $(python-package))
