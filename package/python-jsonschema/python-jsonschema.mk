@@ -12,4 +12,13 @@ PYTHON_JSONSCHEMA_LICENSE = MIT
 PYTHON_JSONSCHEMA_LICENSE_FILES = COPYING json/LICENSE
 PYTHON_JSONSCHEMA_DEPENDENCIES = host-python-vcversioner
 
+ifneq ($(BR2_PACKAGE_PYTHON_JSONSCHEMA_TESTS),y)
+define PYTHON_JSONSCHEMA_REMOVE_TESTS
+	find $(TARGET_DIR)/usr/lib/python*/site-packages/jsonschema/ \
+		-name tests -prune -exec rm -rf {} \;
+    rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/jsonschema/tests
+endef
+PYTHON_JSONSCHEMA_POST_INSTALL_TARGET_HOOKS += PYTHON_JSONSCHEMA_REMOVE_TESTS
+endif
+
 $(eval $(python-package))
