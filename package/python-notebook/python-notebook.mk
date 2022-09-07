@@ -16,4 +16,12 @@ define PYTHON_NOTEBOOK_USERS
 	jupyter -1 jupyter -1 * - - -
 endef
 
+ifneq ($(BR2_PACKAGE_PYTHON_NOTEBOOK_TESTS),y)
+define PYTHON_NOTEBOOK_REMOVE_TESTS
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/notebook/tests
+endef
+PYTHON_NOTEBOOK_POST_INSTALL_TARGET_HOOKS += PYTHON_NOTEBOOK_REMOVE_TESTS
+endif
+
+
 $(eval $(python-package))
