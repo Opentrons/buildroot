@@ -27,5 +27,13 @@ ifeq ($(BR2_PACKAGE_ZEROMQ_DRAFTS),y)
 PYTHON_PYZMQ_BUILD_OPTS += --enable-drafts
 endif
 
+ifneq ($(BR2_PACKAGE_PYTHON_PYZMQ_TESTS),y)
+define PYTHON_PYZMQ_REMOVE_TESTS
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/zmq/tests
+endef
+PYTHON_PYZMQ_POST_INSTALL_TARGET_HOOKS += PYTHON_PYZMQ_REMOVE_TESTS
+endif
+
+
 $(eval $(python-package))
 $(eval $(host-python-package))
