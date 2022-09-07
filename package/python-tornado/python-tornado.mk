@@ -13,5 +13,12 @@ PYTHON_TORNADO_CPE_ID_VENDOR = tornadoweb
 PYTHON_TORNADO_CPE_ID_PRODUCT = tornado
 PYTHON_TORNADO_SETUP_TYPE = setuptools
 
+ifneq ($(BR2_PACKAGE_PYTHON_TORNADO_TESTS),y)
+define PYTHON_TORNADO_REMOVE_TESTS
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/tornado/test
+endef
+PYTHON_TORNADO_POST_INSTALL_TARGET_HOOKS += PYTHON_TORNADO_REMOVE_TESTS
+endif
+
 $(eval $(python-package))
 $(eval $(host-python-package))
