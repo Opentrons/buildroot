@@ -6,3 +6,10 @@ config BR2_PACKAGE_PYTHON_JUPYTER_CORE
 	  projects rely.
 
 	  https://jupyter.org
+
+config BR2_PACKAGE_PYTHON_JUPYTER_CORE_TESTS
+	bool "jupyter_core.tests"
+	help
+		Include test files.
+		Selecting this option adds about 0.5 MB to the target file
+		system.
