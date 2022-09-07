@@ -15,7 +15,7 @@ PYTHON_PANDAS_LICENSE_FILES = LICENSE
 ifneq ($(BR2_PACKAGE_PYTHON_PANDAS_TESTS),y)
 define PYTHON_PANDAS_REMOVE_TESTS
    rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/pandas/tests
-   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packasges/pandas/_testing
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/pandas/_testing
 endef
 PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_REMOVE_TESTS
 endif
