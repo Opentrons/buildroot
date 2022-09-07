@@ -14,5 +14,13 @@ PYTHON_TRAITLETS_SETUP_TYPE = distutils
 HOST_PYTHON_TRAITLETS_DEPENDENCIES = host-python-ipython-genutils host-python-six
 PYTHON_TRAITLETS_DEPENDENCIES = python-ipython-genutils python-six
 
+ifneq ($(BR2_PACKAGE_PYTHON_TRAITLETS_TESTS),y)
+define PYTHON_TRAITLETS_REMOVE_TESTS
+    rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/traitlets/tests
+endef
+PYTHON_TRAITLETS_POST_INSTALL_TARGET_HOOKS += PYTHON_TRAITLETS_REMOVE_TESTS
+endif
+
+
 $(eval $(python-package))
 $(eval $(host-python-package))
