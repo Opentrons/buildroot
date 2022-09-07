@@ -2,7 +2,7 @@
 #
 # This device table is used only to create device files when a static
 # device configuration is used (entries in /dev are static).
-#
+# adding this for a test
 # <name>	<type>	<mode>	<uid>	<gid>	<major>	<minor>	<start>	<inc>	<count>
 
 # Normal system devices
