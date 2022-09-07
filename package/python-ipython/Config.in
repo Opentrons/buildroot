@@ -17,3 +17,10 @@ config BR2_PACKAGE_PYTHON_IPYTHON
 	  completion, and rich history.
 
 	  http://ipython.org/
+
+config BR2_PACKAGE_PYTHON_IPYTHON_TESTS
+	bool "ipython.tests"
+	help
+		Include test files.
+		Selecting this option adds about 0.7 MB to the target file
+		system.

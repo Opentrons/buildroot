@@ -15,5 +15,13 @@ PYTHON_IPYTHON_SETUP_TYPE = distutils
 HOST_PYTHON_IPYTHON_DEPENDENCIES = host-python-pickleshare host-python-pexpect host-python-pygments host-python-decorator host-python-traitlets host-python-prompt-toolkit host-python-simplegeneric host-python-backcall
 PYTHON_IPYTHON_DEPENDENCIES = python-pickleshare python-pexpect python-pygments python-decorator python-traitlets python-prompt-toolkit python-simplegeneric
 
+ifneq ($(BR2_PACKAGE_PYTHON_IPYTHON_TESTS),y)
+define PYTHON_IPYTHON_REMOVE_TESTS
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/IPython/*/tests
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/IPython/testing
+endef
+PYTHON_IPYTHON_POST_INSTALL_TARGET_HOOKS += PYTHON_IPYTHON_REMOVE_TESTS
+endif
+
 $(eval $(python-package))
 $(eval $(host-python-package))
