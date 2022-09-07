@@ -4,3 +4,10 @@ config BR2_PACKAGE_PYTHON_TRAITLETS
 	  A configuration system for Python applications.
 
 	  https://pypi.python.org/pypi/traitlets
+
+config BR2_PACKAGE_PYTHON_TRAITLETS_TESTS
+	bool "traitlets.tests"
+	help
+		Include test files.
+		Selecting this option adds about 0.5 MB to the target file
+		system.
