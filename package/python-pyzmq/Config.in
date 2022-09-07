@@ -10,3 +10,10 @@ config BR2_PACKAGE_PYTHON_PYZMQ
 
 comment "python-pyzmq needs a toolchain w/ C++, threads"
 	depends on !(BR2_INSTALL_LIBSTDCPP && BR2_TOOLCHAIN_HAS_THREADS)
+
+config BR2_PACKAGE_PYTHON_PYZMQ_TESTS
+	bool "pyzmq.tests"
+	help
+		Include test files.
+		Selecting this option adds about 0.5 MB to the target file
+		system.
