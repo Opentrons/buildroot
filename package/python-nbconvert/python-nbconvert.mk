@@ -13,4 +13,12 @@ PYTHON_NBCONVERT_LICENSE_FILES = LICENSE
 
 PYTHON_NBCONVERT_DEPENDENCIES=python-mistune python-jinja2 python-pygments python-traitlets python-jupyter_core python-nbformat python-entrypoints python-bleach python-pandocfilters python-testpath python-defusedxml
 
+ifneq ($(BR2_PACKAGE_PYTHON_NBCONVERT_TESTS),y)
+define PYTHON_NBCONVERT_REMOVE_TESTS
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/nbconvert/tests
+   rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/nbconvert/*/tests
+endef
+PYTHON_NBCONVERT_POST_INSTALL_TARGET_HOOKS += PYTHON_NBCONVERT_REMOVE_TESTS
+endif
+
 $(eval $(python-package))
