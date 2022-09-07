@@ -16,3 +16,10 @@ config BR2_PACKAGE_PYTHON_SQLALCHEMY
 	  Pythonic domain language.
 
 	  http://www.sqlalchemy.org
+
+config BR2_PACKAGE_PYTHON_SQLALCHEMY_TESTS
+	bool "sqlalchemy.tests"
+	help
+		Include test files.
+		Selecting this option adds about 0.5 MB to the target file
+		system.
