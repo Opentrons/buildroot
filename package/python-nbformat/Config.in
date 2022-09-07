@@ -8,3 +8,10 @@ config BR2_PACKAGE_PYTHON_NBFORMAT
 	  The Jupyter Notebook format.
 
 	  http://jupyter.org
+
+config BR2_PACKAGE_PYTHON_NBFORMAT_TESTS
+	bool "nbformat.tests"
+	help
+		Include test files.
+		Selecting this option adds about 0.7 MB to the target file
+		system.
