@@ -13,7 +13,7 @@ PYTHON_HTTPTOOLS_LICENSE_FILES = LICENSE
 
 ifneq ($(BR2_PACKAGE_PYTHON_HTTPTOOLS_SOURCE),y)
 define PYTHON_HTTPTOOLS_TRIM_SOURCE
-   find $(TARGET_DIR)/usr/lib/python*/site-packages/httptools/ -name *.c -o -name *.pyx -o -name *.pxd | xargs rm -rf
+   find $(TARGET_DIR)/usr/lib/python*/site-packages/httptools/ -type f -regex '.*\.c\|.*\.pyx\|.*\.pxd' -exec rm {} \;
 endef
 PYTHON_HTTPTOOLS_POST_INSTALL_TARGET_HOOKS += PYTHON_HTTPTOOLS_TRIM_SOURCE
 endif

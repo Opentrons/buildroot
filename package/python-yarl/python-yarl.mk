@@ -13,7 +13,7 @@ PYTHON_YARL_SETUP_TYPE = setuptools
 
 ifneq ($(BR2_PACKAGE_PYTHON_YARL_SOURCE),y)
 define PYTHON_YARL_TRIM_SOURCE
-   find $(TARGET_DIR)/usr/lib/python*/site-packages/yarl/ -name *.c -o -name *.pyx -o -name *.pxd | xargs rm -rf
+   find $(TARGET_DIR)/usr/lib/python*/site-packages/yarl/ -type f -regex '.*\.c\|.*\.pyx\|.*\.pxd' -exec rm {} \;
 endef
 PYTHON_YARL_POST_INSTALL_TARGET_HOOKS += PYTHON_YARL_TRIM_SOURCE
 endif
