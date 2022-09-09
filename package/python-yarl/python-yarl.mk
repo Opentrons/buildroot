@@ -11,4 +11,11 @@ PYTHON_YARL_LICENSE = Apache-2.0
 PYTHON_YARL_LICENSE_FILES = LICENSE
 PYTHON_YARL_SETUP_TYPE = setuptools
 
+ifneq ($(BR2_PACKAGE_PYTHON_YARL_SOURCE),y)
+define PYTHON_YARL_TRIM_SOURCE
+   find $(TARGET_DIR)/usr/lib/python*/site-packages/yarl/ -name *.c -o -name *.pyx -o -name *.pxd | xargs rm -rf
+endef
+PYTHON_YARL_POST_INSTALL_TARGET_HOOKS += PYTHON_YARL_TRIM_SOURCE
+endif
+
 $(eval $(python-package))
