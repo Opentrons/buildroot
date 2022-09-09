@@ -20,6 +20,13 @@ config BR2_PACKAGE_PYTHON_NUMPY_TESTS
 		Selecting this option adds about 2.5 MB to the target file
 		system.
 
+config BR2_PACKAGE_PYTHON_NUMPY_SOURCE
+        bool "numpy.source"
+        help
+                Include source files (.c, .pyx, .pxd).
+                Selecting this option adds about 3 MB to the target file
+                system.
+
 config BR2_PACKAGE_PYTHON_NUMPY
 	bool "python-numpy"
 	depends on BR2_PACKAGE_PYTHON_NUMPY_ARCH_SUPPORTS
