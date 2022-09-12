@@ -5,3 +5,10 @@ config BR2_PACKAGE_PYTHON_HTTPTOOLS
 	  A collection of framework independent HTTP protocol utils.
 
 	  https://github.com/MagicStack/httptools
+
+config BR2_PACKAGE_PYTHON_HTTPTOOLS_SOURCE
+        bool "httptools.source"
+        help
+                Include source files (.c, .pyx, .pxd).
+                Selecting this option adds about 1 MB to the target file
+                system.

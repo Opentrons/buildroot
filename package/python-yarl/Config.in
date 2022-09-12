@@ -6,3 +6,10 @@ config BR2_PACKAGE_PYTHON_YARL
 	  Yet another URL library.
 
 	  http://yarl.readthedocs.io/
+
+config BR2_PACKAGE_PYTHON_YARL_SOURCE
+        bool "yarl.source"
+        help
+                Include source files (.c, .pyx, .pxd).
+                Selecting this option adds about 1 MB to the target file
+                system.

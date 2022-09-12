@@ -14,4 +14,11 @@ PYTHON_UVLOOP_BUILD_OPTS = build_ext --inplace --use-system-libuv
 PYTHON_UVLOOP_INSTALL_TARGET_OPTS = build_ext --inplace --use-system-libuv
 PYTHON_UVLOOP_DEPENDENCIES = libuv
 
+ifneq ($(BR2_PACKAGE_PYTHON_UVLOOP_SOURCE),y)
+define PYTHON_UVLOOP_TRIM_SOURCE
+   find $(TARGET_DIR)/usr/lib/python*/site-packages/uvloop/ -type f -regex '.*\.c\|.*\.pyx\|.*\.pxd' -exec rm {} \;
+endef
+PYTHON_UVLOOP_POST_INSTALL_TARGET_HOOKS += PYTHON_UVLOOP_TRIM_SOURCE
+endif
+
 $(eval $(python-package))

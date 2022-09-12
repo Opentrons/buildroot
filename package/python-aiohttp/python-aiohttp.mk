@@ -13,4 +13,12 @@ PYTHON_AIOHTTP_LICENSE_FILES = LICENSE.txt
 PYTHON_AIOHTTP_CPE_ID_VENDOR = aiohttp_project
 PYTHON_AIOHTTP_CPE_ID_PRODUCT = aiohttp
 
+ifneq ($(BR2_PACKAGE_PYTHON_AIOHTTP_SOURCE),y)
+define PYTHON_AIOHTTP_TRIM_SOURCE
+   find $(TARGET_DIR)/usr/lib/python*/site-packages/aiohttp/ -type f -regex '.*\.c\|.*\.pyx\|.*\.pxd' -exec rm {} \;
+endef
+PYTHON_AIOHTTP_POST_INSTALL_TARGET_HOOKS += PYTHON_AIOHTTP_TRIM_SOURCE
+endif
+
+
 $(eval $(python-package))

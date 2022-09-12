@@ -15,3 +15,10 @@ comment "python-uvloop needs a toolchain w/ NPTL, dynamic library"
 	depends on !BR2_TOOLCHAIN_HAS_THREADS_NPTL || BR2_STATIC_LIBS
 	depends on BR2_TOOLCHAIN_HAS_SYNC_4
 	depends on BR2_USE_MMU
+
+config BR2_PACKAGE_PYTHON_UVLOOP_SOURCE
+        bool "uvloop.source"
+        help
+                Include source files (.c, .pyx, .pxd).
+                Selecting this option adds about 6 MB to the target file
+                system.

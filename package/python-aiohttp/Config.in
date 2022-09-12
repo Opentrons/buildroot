@@ -14,3 +14,10 @@ config BR2_PACKAGE_PYTHON_AIOHTTP
 	  Async http client/server framework (asyncio).
 
 	  https://github.com/aio-libs/aiohttp
+
+config BR2_PACKAGE_PYTHON_AIOHTTP_SOURCE
+        bool "aiohttp.source"
+        help
+                Include source files (.c, .pyx, .pxd).
+                Selecting this option adds about 1 MB to the target file
+                system.
