@@ -6,3 +6,5 @@ KERNEL=="ttyACM[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="ed12", ATTRS{idVen
 # adafruit feather m0 board for dev:
 KERNEL=="ttyACM[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="800b", ATTRS{idVendor}=="239a", SYMLINK+="ot_module_thermocycler%n"
 KERNEL=="ttyACM[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="4853", ATTRS{idVendor}=="0483", SYMLINK+="ot_module_heatershaker%n"
+# gen2 thermocycler on stm32:
+KERNEL=="ttyACM[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="ed8d", ATTRS{idVendor}=="0483", SYMLINK+="ot_module_thermocycler%n"
