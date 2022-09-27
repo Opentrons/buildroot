@@ -15,7 +15,8 @@ disable_overscan=1
 
 # fixes rpi (3B, 3B+, 3A+, 4B and Zero W) ttyAMA0 serial console
 enable_uart=1
-#dtoverlay=miniuart-bt	 # NOT WORKING
+dtoverlay=uart0,txd0_pin=14,rxd0_pin15
+dtoverlay=uart1,txd1_pin=32,rxd_pin33
 
 # How much memory in MB to assign to the GPU on Pi models having
 # 256, 512 or 1024 MB total memory
