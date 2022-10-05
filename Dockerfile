@@ -1,4 +1,4 @@
-FROM debian:stable-slim
+FROM debian:11-slim
 
 ARG filter_output
 
