@@ -57,6 +57,11 @@ fi
 
 case $# in
     0)
+        # create old kernel
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_tiny_defconfig
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} linux-rebuild
+
+        # create regular build
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_defconfig
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} sdk
