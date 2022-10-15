@@ -24,7 +24,17 @@ EOF
 
 # Get our kernel and dt(s) in rootfs
 mkdir -p ${TARGET_DIR}/boot
-cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/zImage
+
+# copy the kernel + tinyKernel images
+# NOTE: we want to boot into the tinyKernel which is why
+# we are renaming it to zImage, this way we can update
+# the boot partition from the init script in ramdiskfs.
+cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel
+cp ./output/tinyKernel/images/tinyKernel ${TARGET_DIR}/boot/zImage
+
+# copy the config.txt
+cp ./board/opentrons/ot2/config.txt ${TARGET_DIR}/boot/
+
 mkdir -p ${TARGET_DIR}/boot/overlays
 mkdir -p ${TARGET_DIR}/mnt/bootpart
 cp -r ${BINARIES_DIR}/rpi-firmware/overlays ${TARGET_DIR}/boot/overlays

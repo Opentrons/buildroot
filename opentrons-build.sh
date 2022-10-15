@@ -57,14 +57,16 @@ fi
 
 case $# in
     0)
-        # create old kernel
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_tiny_defconfig
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} linux-rebuild
+        echo "------------------------------------ TINY BUILD ------------------------------------"
+        # create tiny kernel
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/tinyKernel ot2_tiny_defconfig
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/tinyKernel all
 
+        echo "------------------------------------ REGULAR BUILD ------------------------------------"
         # create regular build
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_defconfig
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} sdk
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/ot2 ot2_defconfig
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/ot2 all
+        docker run --env-file ./.env ${DOCKER_BIND} O=./output/ot2 ${imgname} sdk
         ;;
     *)
         docker run --env-file ./.env ${heads} ${DOCKER_BIND} ${imgname} ${tail}
