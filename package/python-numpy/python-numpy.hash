@@ -1,5 +1,5 @@
-# Copied from https://github.com/numpy/numpy/releases/tag/v1.21.2
-sha256  76af194fbc117934ec5bbe2ff15177adbd05aeed23f18ee209ed88edcd777e05  numpy-1.21.2.tar.gz
+# Copied from https://github.com/numpy/numpy/releases/tag/v1.23.1
+sha256  d748ef349bfef2e1194b59da37ed5a29c19ea8d7e6342019921ba2ba4fd8b624  numpy-1.23.1.tar.gz
 # License files, locally calculated
 sha256  bc1b0af15cdc9415ea26c5f1df352c226ac86425ec0fb9ab38d111018bf1c6f2  LICENSE.txt
 sha256  2be6947e0432ecf7950ee8fe38681316749dd06d1de17c9ec4de6d2f55adb3a1  numpy/core/src/multiarray/dragon4.c
