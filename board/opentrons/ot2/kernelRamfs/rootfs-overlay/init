@@ -1,0 +1,39 @@
+#!/bin/sh
+
+######################
+# BOOT UPDATE SCRIPT #
+######################
+
+# Mount the /proc, /sys and /dev filesystems.
+/bin/mount -t proc none /proc
+/bin/mount -t sysfs none /sys
+/bin/mount -t devtmpfs devtmpfs /dev
+
+# sleep to give time for the sdhc to be setup
+sleep 5
+
+# find the active rootfs and mount it
+ROOTFS=$(cat /proc/cmdline | grep -o "/dev/mmcblk0p.")
+mount $ROOTFS /rootfs
+
+# mount the boot partition
+mount /dev/mmcblk0p1 /boot
+
+# copy the dtb(s) + overlays + config.txt from rootfs to boot
+cp /rootfs/boot/*.dtb /boot/
+cp /rootfs/boot/overlays/overlays/*.dtbo /boot/overlays/
+cp /rootfs/boot/config.txt /boot/
+
+# TODO(ba, 2022-10-15): do i need to set a uboot flag here?
+
+mv /rootfs/boot/kernel /rootfs/boot/zImage
+
+# unmount the partitions and reboot
+umount /dev/mmcblk0p1
+umount $ROOTFS
+
+# restart the system
+reboot -f now
+
+# drop into shell if something goes wrong
+setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
