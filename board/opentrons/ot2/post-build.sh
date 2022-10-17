@@ -25,12 +25,17 @@ EOF
 # Get our kernel and dt(s) in rootfs
 mkdir -p ${TARGET_DIR}/boot
 
-# copy the kernel + tinyKernel images
-# NOTE: we want to boot into the tinyKernel which is why
-# we are renaming it to zImage, this way we can update
-# the boot partition from the init script in ramdiskfs.
+# NOTE: we want to boot into the KernalRamfs which is why
+# we are renaming it to zImage, this way when updating from
+# old kernel to new kernel we will boot into KernalRamfs first.
+# This will copy the dtb + overlays + config.txt in the rootfs
+# to the boot partition, lastly we rename the actual "kernel" back
+# "zImage" and reboot. Once we reboot the system boots into the new
+# kernel with the appropriate dtb + overlays.
+
+# copy the KernelRamfs + actual Kernel images
 cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel
-cp ./output/tinyKernel/images/tinyKernel ${TARGET_DIR}/boot/zImage
+cp ./output/tinyKernel/images/kernelRamfs ${TARGET_DIR}/boot/zImage
 
 # copy the config.txt
 cp ./board/opentrons/ot2/config.txt ${TARGET_DIR}/boot/
