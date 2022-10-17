@@ -57,7 +57,7 @@ fi
 
 case $# in
     0)
-        echo "------------------------------------ KenelRamfs BUILD ---------------------------------"
+        echo "------------------------------------ KernelRamfs BUILD --------------------------------"
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/kernelRamfs ot2_kernelramfs_defconfig
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/kernelRamfs all
 

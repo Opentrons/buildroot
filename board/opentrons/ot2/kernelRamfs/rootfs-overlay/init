@@ -1,39 +1,78 @@
 #!/bin/sh
 
-######################
-# BOOT UPDATE SCRIPT #
-######################
+###################
+# Opentrons KernelRamFS     
+###################
+#
+# The purpose of this init script is to allow
+# one stage updates when updating from buildroot
+# with an old kernel to buildroot with new kernel.
+# 
+# The reason why we need to do that is because the device tree (dtb)
+# and device tree overlays (dtbo) files have changed and so a clean
+# update causes the device to get bricked needing a reflash.
+#
+# The way we accomplish this is by shipping the rootfs with this kernelRamfs
+# as the zImage in the /boot dir, as well as the actual kernel image.
+# When the rootfs is written in the inactive partition and the system
+# restarts we boot into this kernelRamfs. From here we mount the active
+# rootfs partition, copy the dtb(s) + overlays + config.txt files from
+# /boot to the boot partition and rename the kernel. We then set the 
+# uboot env variable 'ot2part' to the current part and reboot. Once 
+# the system reboots it will boot into the new kernel.
+###################
 
+echo "Welcome to Opentrons kernelRamfs"
+
+function recovery {
+   # drop into shell if something goes wrong
+   echo "Something went wrong, entering recovery..."
+   setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
+}
+
+echo "Setting up ramdisk"
 # Mount the /proc, /sys and /dev filesystems.
-/bin/mount -t proc none /proc
-/bin/mount -t sysfs none /sys
-/bin/mount -t devtmpfs devtmpfs /dev
+/bin/mount -t proc none /proc || recovery
+/bin/mount -t sysfs none /sys || recovery
+/bin/mount -t devtmpfs devtmpfs /dev || recovery
+
+# create lock dir for fw_printenv
+mkdir /run/lock || recovery
 
 # sleep to give time for the sdhc to be setup
-sleep 5
+sleep 10
+
+echo "Ramdisk setup, starting update"
 
 # find the active rootfs and mount it
-ROOTFS=$(cat /proc/cmdline | grep -o "/dev/mmcblk0p.")
-mount $ROOTFS /rootfs
+ROOTFS=$(cat /proc/cmdline | grep -o "/dev/mmcblk0p.") || recovery
+echo "Mounting active rootfs partiton - $ROOTFS"
+/bin/mount $ROOTFS /rootfs || recovery
 
 # mount the boot partition
-mount /dev/mmcblk0p1 /boot
+/bin/mount /dev/mmcblk0p1 /boot || recovery
 
+echo "Copying files to boot partition..."
 # copy the dtb(s) + overlays + config.txt from rootfs to boot
-cp /rootfs/boot/*.dtb /boot/
-cp /rootfs/boot/overlays/overlays/*.dtbo /boot/overlays/
-cp /rootfs/boot/config.txt /boot/
+cp /rootfs/boot/*.dtb /boot/ || recovery
+cp /rootfs/boot/overlays/overlays/*.dtbo /boot/overlays/ || recovery
+cp /rootfs/boot/config.txt /boot/ || recovery
 
-# TODO(ba, 2022-10-15): do i need to set a uboot flag here?
+# NOTE (ba, 2022-10-16): we need to set the ot2part env variable so 
+# uboot does not revert to the old partition once we restart. We
+# want to boot on the same partition but with updated kernel.
+boot_part=$(grep -o [2-3]) || recovery
+echo "Setting ot2part to $boot_part"
+fw_setenv ot2part $boot_part || recovery
 
-mv /rootfs/boot/kernel /rootfs/boot/zImage
+echo "Renaming kernel back to zImage"
+# overwrite the kernelRamfs with the new kernel
+mv /rootfs/boot/kernel /rootfs/boot/zImage || recovery
 
 # unmount the partitions and reboot
-umount /dev/mmcblk0p1
-umount $ROOTFS
+echo "Unmounting boot and rootfs partitions"
+/bin/umount /dev/mmcblk0p1 || recovery
+/bin/umount $ROOTFS || recovery
 
-# restart the system
-reboot -f now
-
-# drop into shell if something goes wrong
-setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
+echo "Opentrons KernalRamfs finished successfully, restarting..."
+reboot -f || recovery
