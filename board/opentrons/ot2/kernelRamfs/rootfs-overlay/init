@@ -22,57 +22,86 @@
 # the system reboots it will boot into the new kernel.
 ###################
 
-echo "Welcome to Opentrons kernelRamfs"
+set -e pipefail
+trap recovery EXIT
 
-function recovery {
-   # drop into shell if something goes wrong
+recovery() {
+   # drop into recovery shell if we get a non-zero exit status
+   [ $? != 1 ] && exit
    echo "Something went wrong, entering recovery..."
    setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
 }
 
+echo "Welcome to Opentrons kernelRamfs"
+
 echo "Setting up ramdisk"
 # Mount the /proc, /sys and /dev filesystems.
-/bin/mount -t proc none /proc || recovery
-/bin/mount -t sysfs none /sys || recovery
-/bin/mount -t devtmpfs devtmpfs /dev || recovery
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t devtmpfs devtmpfs /dev
 
 # create lock dir for fw_printenv
-mkdir /run/lock || recovery
+mkdir -p /run/lock
 
 # sleep to give time for the sdhc to be setup
 sleep 10
 
-echo "Ramdisk setup, starting update"
-
-# find the active rootfs and mount it
-ROOTFS=$(cat /proc/cmdline | grep -o "/dev/mmcblk0p.") || recovery
-echo "Mounting active rootfs partiton - $ROOTFS"
-/bin/mount $ROOTFS /rootfs || recovery
-
 # mount the boot partition
-/bin/mount /dev/mmcblk0p1 /boot || recovery
+mount /dev/mmcblk0p1 /boot
+
+# if the 'kernelramfs' env flag does not exist,
+# then its our first time here and we need to set it.
+if ! fw_printenv | grep kernelramfs > /dev/null; then
+   fw_setenv kernelramfs 0
+fi
+
+# if kernelramfs env flag is set to "1" jump the shell
+start_recovery=$(fw_printenv -n kernelramfs)
+if [ $start_recovery -eq "1" ]; then
+    echo "Entering KernelRamfs"
+    setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
+    echo "Leaving KernelRamfs"
+    reboot -f
+fi
+
+echo "Ramdisk setup, starting update"
+# find the active rootfs and mount it
+ROOTFS=$(cat /proc/cmdline | grep -o "/dev/mmcblk0p.")
+echo "Mounting active rootfs partiton - $ROOTFS"
+mount $ROOTFS /rootfs
+
+# create partitions incase they dont exist
+mkdir -p /rootfs/boot
+mkdir -p /rootfs/overlays/overlays
+mkdir -p /boot/overlays
+
+# use ls command to make sure the update files exist
+# redirect output to null so we arent flooded with messages
+# we dont have brace expantion so have to call ls multiple times.
+ls /boot/*.dtb > /dev/null
+ls /boot/overlays/*.dtbo > /dev/null
+ls /boot/config.txt > /dev/null
+ls /boot/boot.scr > /dev/null
 
 echo "Copying files to boot partition..."
-# copy the dtb(s) + overlays + config.txt from rootfs to boot
-cp /rootfs/boot/*.dtb /boot/ || recovery
-cp /rootfs/boot/overlays/overlays/*.dtbo /boot/overlays/ || recovery
-cp /rootfs/boot/config.txt /boot/ || recovery
+# copy the dtb(s) + overlays + config.txt + boot.scr from rootfs to boot
+cp /rootfs/boot/*.dtb /boot/
+cp /rootfs/boot/overlays/overlays/*.dtbo /boot/overlays/
+cp /rootfs/boot/config.txt /boot/
+cp /rootfs/boot/boot.scr /boot/
 
-# NOTE (ba, 2022-10-16): we need to set the ot2part env variable so 
-# uboot does not revert to the old partition once we restart. We
-# want to boot on the same partition but with updated kernel.
-boot_part=$(grep -o [2-3]) || recovery
+# We need to set the ot2part env variable so uboot does not revert to
+# the old partition once we restart. Since we want to boot on the same
+# partition but with updated kernel.
+boot_part=$(fw_printenv -n ot2part)
 echo "Setting ot2part to $boot_part"
-fw_setenv ot2part $boot_part || recovery
-
-echo "Renaming kernel back to zImage"
-# overwrite the kernelRamfs with the new kernel
-mv /rootfs/boot/kernel /rootfs/boot/zImage || recovery
+fw_setenv ot2part $boot_part
 
 # unmount the partitions and reboot
 echo "Unmounting boot and rootfs partitions"
-/bin/umount /dev/mmcblk0p1 || recovery
-/bin/umount $ROOTFS || recovery
+umount /dev/mmcblk0p1
+umount $ROOTFS
 
 echo "Opentrons KernalRamfs finished successfully, restarting..."
-reboot -f || recovery
+sleep 2
+reboot -f

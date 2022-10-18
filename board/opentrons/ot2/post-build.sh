@@ -35,7 +35,8 @@ mkdir -p ${TARGET_DIR}/boot
 
 # copy the KernelRamfs + actual Kernel images
 cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel
-cp ./output/tinyKernel/images/kernelRamfs ${TARGET_DIR}/boot/zImage
+cp ./output/kernelRamfs/images/kernelRamfs ${TARGET_DIR}/boot/zImage
+cp ./output/kernelRamfs/kernelRamfs.dtb /${TARGET_DIR}/boot/
 
 # copy the config.txt
 cp ./board/opentrons/ot2/config.txt ${TARGET_DIR}/boot/
