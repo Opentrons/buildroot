@@ -76,7 +76,7 @@ while true; do
         ext4load mmc 0:$ot2part $kernel_addr_r /boot/kernelRamfs
     fi
 
-    # boot the correspoing kernel + device tree blob
+    # boot the corresponding kernel + device tree blob
     bootz $kernel_addr_r - $fdt_addr
     echo "Boot failed! Switching"
     tmp=$ot2part
@@ -91,5 +91,5 @@ while true; do
         setenv kernelramfs 1
         sleep 5
     fi
-    fail_count="$fail_count$fail_count"
+    fail_count="f${fail_count}"
 done

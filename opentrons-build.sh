@@ -58,13 +58,15 @@ fi
 case $# in
     0)
         echo "------------------------------------ KernelRamfs BUILD --------------------------------"
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/kernelRamfs ot2_kernelramfs_defconfig
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/kernelRamfs all
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_kernelramfs_defconfig
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
+        # clean out the build so it does not interfere with the regular build
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} distclean
 
         echo "------------------------------------ REGULAR BUILD ------------------------------------"
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/ot2 ot2_defconfig
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/ot2 all 
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} O=./output/ot2 sdk
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_defconfig
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
+#        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} sdk
         ;;
     *)
         docker run --env-file ./.env ${heads} ${DOCKER_BIND} ${imgname} ${tail}

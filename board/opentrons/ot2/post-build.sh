@@ -25,21 +25,37 @@ EOF
 # Get our kernel and dt(s) in rootfs
 mkdir -p ${TARGET_DIR}/boot
 
-# NOTE: we want to boot into the KernalRamfs which is why
-# we are renaming it to zImage, this way when updating from
-# old kernel to new kernel we will boot into KernalRamfs first.
-# This will copy the dtb + overlays + config.txt in the rootfs
-# to the boot partition, lastly we rename the actual "kernel" back
-# "zImage" and reboot. Once we reboot the system boots into the new
-# kernel with the appropriate dtb + overlays.
+# NOTE: When updating from old buildroot with kernel < 5.10 to new
+# buildroot, when the device reboots u-boot will look for the kernel
+# /boot/zImage which now is a symlink to 'kernelRamfs' and start our
+# update process. Once in KernelRamfs we copy the dtb + overlays + 
+# config.txt + boot.scr in the rootfs to the boot partition, and restart.
+#
+# The new boot.scr looks for /boot/kernel in the partition determined by the
+# 'ot2part' u-boot env variable, which will boot into
+# the regular opentrons kernel. Or if the 'kernelramfs' uboot env
+# variable is set we do the following depending on its value
+# kernelramfs = "0"   - load kernel at /boot/kernel
+# kernelramfs = "1"   - load kernelRamfs at /boot/kernelRamfs and drop into recovery shell
+# kernelramfs > "1"   - load kernelRamfs at /boot/kernelRamfs and update the boot partition
+#                       with the contents of the /boot dir in the active rootfs partition (2,3)
+#                       as determined by the 'ot2part' u-boot env variable.
 
-# copy the KernelRamfs + actual Kernel images
+# copy the KernelRamfs + dtb to boot dir
+cp ./kernelramfs_bin/kernelRamfs ${TARGET_DIR}/boot/
+cp ${BINARIES_DIR}/bcm2710-rpi-3-b-plus.dtb ${TARGET_DIR}/boot/kernelRamfs.dtb
+# create copy of dtb so we include it in the boot partition
+cp ${BINARIES_DIR}/bcm2710-rpi-3-b-plus.dtb ${BINARIES_DIR}/kernelRamfs.dtb
+# create symlink of kernelRamfs so updating from pre-6.2 is possible
+rm -f ${TARGET_DIR}/boot/zImage
+ln -s ${TARGET_DIR}/boot/kernelRamfs ${TARGET_DIR}/boot/zImage
+
+# copy the actual kernel
 cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel
-cp ./output/kernelRamfs/images/kernelRamfs ${TARGET_DIR}/boot/zImage
-cp ./output/kernelRamfs/kernelRamfs.dtb /${TARGET_DIR}/boot/
 
-# copy the config.txt
+# copy the config.txt + boot.scr to boot dir
 cp ./board/opentrons/ot2/config.txt ${TARGET_DIR}/boot/
+cp ${BINARIES_DIR}/boot.scr ${TARGET_DIR}/boot/
 
 mkdir -p ${TARGET_DIR}/boot/overlays
 mkdir -p ${TARGET_DIR}/mnt/bootpart
