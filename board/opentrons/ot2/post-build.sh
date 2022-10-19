@@ -25,16 +25,22 @@ EOF
 # Get our kernel and dt(s) in rootfs
 mkdir -p ${TARGET_DIR}/boot
 
-# NOTE: When updating from old buildroot with kernel < 5.10 to new
-# buildroot, when the device reboots u-boot will look for the kernel
-# /boot/zImage which now is a symlink to 'kernelRamfs' and start our
-# update process. Once in KernelRamfs we copy the dtb + overlays + 
-# config.txt + boot.scr in the rootfs to the boot partition, and restart.
-#
-# The new boot.scr looks for /boot/kernel in the partition determined by the
-# 'ot2part' u-boot env variable, which will boot into
-# the regular opentrons kernel. Or if the 'kernelramfs' uboot env
-# variable is set we do the following depending on its value
+# The KernelRamfs is a minimal kernel + initramfs whos purpose is to update
+# the boot partition. The primary use case for this is to update from pre-6.2
+# since update the kernel + dtb + overlays, pre-6.2 systems dont have these files
+# in the boot partition, which causes the system to hang after post-6.2 update.
+
+# If we are updating from pre-6.2, after the rootfs has been written to the
+# inactive partition and the device reboots u-boot will look for the kernel
+# /boot/zImage. Since /boot/zImage is now a symlink to 'kernelRamfs' the system
+# will boot into kernelRamfs, which starts the pdate process. Once we are in the
+# KernelRamfs, the init script will copy the dtb + overlays + config.txt + boot.scr
+# in the rootfs to the boot partition. Finally we reboot, since we updated the boot.scr
+# script this changes the boot logic. Now the new boot.scr looks for /boot/kernel
+# in the partition determined by the 'ot2part' u-boot env variable, which will boot
+# into the regular opentrons post-6.2 kernel.
+
+# The 'kernelramfs' uboot env variable changes the boot target based on the following values
 # kernelramfs = "0"   - load kernel at /boot/kernel
 # kernelramfs = "1"   - load kernelRamfs at /boot/kernelRamfs and drop into recovery shell
 # kernelramfs > "1"   - load kernelRamfs at /boot/kernelRamfs and update the boot partition
@@ -43,12 +49,13 @@ mkdir -p ${TARGET_DIR}/boot
 
 # copy the KernelRamfs + dtb to boot dir
 cp ./kernelramfs_bin/kernelRamfs ${TARGET_DIR}/boot/
-cp ${BINARIES_DIR}/bcm2710-rpi-3-b-plus.dtb ${TARGET_DIR}/boot/kernelRamfs.dtb
-# create copy of dtb so we include it in the boot partition
-cp ${BINARIES_DIR}/bcm2710-rpi-3-b-plus.dtb ${BINARIES_DIR}/kernelRamfs.dtb
+cp ./kernelramfs_bin/kernelRamfs.dtb ${TARGET_DIR}/boot/
+# create copy of dtb so genimage can include it in the boot partition
+cp ./kernelramfs_bin/kernelRamfs.dtb ${BINARIES_DIR}/kernelRamfs.dtb
+
 # create symlink of kernelRamfs so updating from pre-6.2 is possible
 rm -f ${TARGET_DIR}/boot/zImage
-ln -s ${TARGET_DIR}/boot/kernelRamfs ${TARGET_DIR}/boot/zImage
+ln -s ${TARGET_DIR}/boot/kernelRamfs zImage
 
 # copy the actual kernel
 cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel
