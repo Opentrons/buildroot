@@ -8,7 +8,7 @@
 # or regular kernel, this could be set from userspace but also missing.
 if test -z "$kernelramfs"
 then
-    echo "No saved kernelramfs, defaultint to 0"
+    echo "No saved kernelramfs, defaulting to 0"
     setenv kernelramfs "0"
     saveenv
 fi
