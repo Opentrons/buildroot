@@ -66,7 +66,7 @@ case $# in
         echo "------------------------------------ REGULAR BUILD ------------------------------------"
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_defconfig
         docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
-#        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} sdk
+        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} sdk
         ;;
     *)
         docker run --env-file ./.env ${heads} ${DOCKER_BIND} ${imgname} ${tail}
