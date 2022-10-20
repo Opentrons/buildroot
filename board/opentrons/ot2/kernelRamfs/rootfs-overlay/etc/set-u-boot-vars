@@ -1,0 +1,7 @@
+# this file runs in the kernelRamfs and sets some default u-boot env values
+
+# disable u-boot interuupt to deal with non-refresh ot2 issue
+bootdelay -2
+
+# disable KernelRamfs
+kernelramfs 0

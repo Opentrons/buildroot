@@ -55,7 +55,7 @@ for arg in $fdtargs; do
     fi
 done
 
-fail_count="f"
+fail_count=""
 while true; do
     echo "Try booting from partition $ot2part"
 

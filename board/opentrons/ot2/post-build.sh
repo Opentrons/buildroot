@@ -54,8 +54,7 @@ cp ./kernelramfs_bin/kernelRamfs.dtb ${TARGET_DIR}/boot/
 cp ./kernelramfs_bin/kernelRamfs.dtb ${BINARIES_DIR}/kernelRamfs.dtb
 
 # create symlink of kernelRamfs so updating from pre-6.2 is possible
-rm -f ${TARGET_DIR}/boot/zImage
-ln -s ${TARGET_DIR}/boot/kernelRamfs zImage
+ln -sf kernelRamfs ${TARGET_DIR}/boot/zImage
 
 # copy the actual kernel
 cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel

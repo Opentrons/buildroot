@@ -1,35 +1,50 @@
 #!/bin/sh
 
-###################
-# Opentrons KernelRamFS     
-###################
+################################################################################################
+# Opentrons KernelRamFS
+################################################################################################
 #
-# The purpose of this init script is to allow
-# one stage updates when updating from buildroot
-# with an old kernel to buildroot with new kernel.
-# 
-# The reason why we need to do that is because the device tree (dtb)
-# and device tree overlays (dtbo) files have changed and so a clean
-# update causes the device to get bricked needing a reflash.
+# The KernelRamfs is a minimal kernel + initramfs whos purpose is to update
+# the boot partition. The primary use case for this is to update from out of 6.1
+# since we have update the kernel + dtb + overlays, and pre-6.2 systems dont have
+# these files in the boot partition, which causes the system to hang after post-6.2 update.
 #
-# The way we accomplish this is by shipping the rootfs with this kernelRamfs
-# as the zImage in the /boot dir, as well as the actual kernel image.
-# When the rootfs is written in the inactive partition and the system
-# restarts we boot into this kernelRamfs. From here we mount the active
-# rootfs partition, copy the dtb(s) + overlays + config.txt files from
-# /boot to the boot partition and rename the kernel. We then set the 
-# uboot env variable 'ot2part' to the current part and reboot. Once 
-# the system reboots it will boot into the new kernel.
-###################
+# When we are updating from pre-6.2, after the rootfs has been written to the
+# inactive partition and the device reboots u-boot will look for the kernel
+# /boot/zImage. Since /boot/zImage is now a symlink to 'kernelRamfs' the system
+# will boot into kernelRamfs, which starts the update process. Once we are in the
+# KernelRamfs, the init script will copy the dtb + overlays + config.txt + boot.scr
+# in the rootfs to the boot partition. Finally we reboot, since we updated the boot.scr
+# script this changes the boot logic. Now the new boot.scr looks for /boot/kernel
+# in the partition determined by the 'ot2part' u-boot env variable, which will boot
+# into the regular opentrons post-6.2 kernel. The 'kernelramfs' uboot env variable
+# changes the boot target based on the following values.
+#
+# kernelramfs = "0"   - load kernel at /boot/kernel
+# kernelramfs = "1"   - load kernelRamfs at /boot/kernelRamfs and drop into recovery shell
+# kernelramfs > "1"   - load kernelRamfs at /boot/kernelRamfs and update the boot partition
+#                       with the contents of the /boot dir in the active rootfs partition (2,3)
+#                       as determined by the 'ot2part' u-boot env variable.
+################################################################################################
 
 set -e pipefail
-trap recovery EXIT
+trap reboot_system EXIT
 
-recovery() {
-   # drop into recovery shell if we get a non-zero exit status
-   [ $? != 1 ] && exit
-   echo "Something went wrong, entering recovery..."
-   setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
+reboot_system() {
+   if [ $? -eq 1 ]; then echo "Something went wrong";fi
+
+   # reset the kernelramfs var so we dont boot back in here
+   fw_setenv kernelramfs 0
+
+   # unset trap so we dont capture umount
+   trap - EXIT
+
+   # Only unmount the boot partition, unmounting the rootfs housing kernelramfs causes kernel panic.
+   echo "Unmount the boot partition"
+   umount /dev/mmcblk0p1
+
+   echo "Rebooting the system"
+   exec reboot -nf
 }
 
 echo "Welcome to Opentrons kernelRamfs"
@@ -46,13 +61,20 @@ mkdir -p /run/lock
 # sleep to give time for the sdhc to be setup
 sleep 10
 
-# mount the boot partition
-mount /dev/mmcblk0p1 /boot
+BOOTFS=/dev/mmcblk0p1
+# mount the boot partition if it exists
+ls $BOOTFS > /dev/null
+mount $BOOTFS /boot
 
-# if the 'kernelramfs' env flag does not exist,
-# then its our first time here and we need to set it.
+# if the 'kernelramfs' env flag does not exist, then its our first
+# time here and we need to set it along with any other variables in
+# the /boot/set-u-boot-vars file. The reason we need this
+# file is because we need to set the 'bootdelay' var to -2, so
+# the non-refresh ot2 does not get interrupted during boot. We cant
+# set u-boot variables to negative numbers directly, so we are
+# using a config file instead.
 if ! fw_printenv | grep kernelramfs > /dev/null; then
-   fw_setenv kernelramfs 0
+   fw_setenv --config /etc/set-u-boot-vars
 fi
 
 # if kernelramfs env flag is set to "1" jump the shell
@@ -60,8 +82,7 @@ start_recovery=$(fw_printenv -n kernelramfs)
 if [ $start_recovery -eq "1" ]; then
     echo "Entering KernelRamfs"
     setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
-    echo "Leaving KernelRamfs"
-    reboot -f
+    reboot_system
 fi
 
 echo "Ramdisk setup, starting update"
@@ -75,20 +96,29 @@ mkdir -p /rootfs/boot
 mkdir -p /rootfs/overlays/overlays
 mkdir -p /boot/overlays
 
-# use ls command to make sure the update files exist
+# use ls command to make sure the update files exist, if a file does not exist, ls will throw an error which will be caught by trap and the system will reboot.
 # redirect output to null so we arent flooded with messages
 # we dont have brace expantion so have to call ls multiple times.
-ls /boot/*.dtb > /dev/null
-ls /boot/overlays/*.dtbo > /dev/null
-ls /boot/config.txt > /dev/null
-ls /boot/boot.scr > /dev/null
+ls /rootfs/boot/*.dtb > /dev/null
+ls /rootfs/boot/overlays/overlays/*.dtbo > /dev/null
+ls /rootfs/boot/config.txt > /dev/null
+ls /rootfs/boot/boot.scr > /dev/null
+ls /rootfs/boot/kernel > /dev/null
+ls /rootfs/boot/kernelRamfs > /dev/null
+ls /rootfs/boot/kernelRamfs.dtb > /dev/null
+ls /rootfs/boot/zImage > /dev/null
 
+# if we made it here, then all required files exist in the rootfs and we can continue.
 echo "Copying files to boot partition..."
 # copy the dtb(s) + overlays + config.txt + boot.scr from rootfs to boot
 cp /rootfs/boot/*.dtb /boot/
 cp /rootfs/boot/overlays/overlays/*.dtbo /boot/overlays/
 cp /rootfs/boot/config.txt /boot/
 cp /rootfs/boot/boot.scr /boot/
+
+# The /boot/boot.env will be invalidate so we need to remove it so it gets regenerated
+# on the next boot.
+rm -f /boot/boot.env
 
 # We need to set the ot2part env variable so uboot does not revert to
 # the old partition once we restart. Since we want to boot on the same
@@ -97,11 +127,5 @@ boot_part=$(fw_printenv -n ot2part)
 echo "Setting ot2part to $boot_part"
 fw_setenv ot2part $boot_part
 
-# unmount the partitions and reboot
-echo "Unmounting boot and rootfs partitions"
-umount /dev/mmcblk0p1
-umount $ROOTFS
-
-echo "Opentrons KernalRamfs finished successfully, restarting..."
-sleep 2
-reboot -f
+echo "Boot partition update complete."
+reboot_system
