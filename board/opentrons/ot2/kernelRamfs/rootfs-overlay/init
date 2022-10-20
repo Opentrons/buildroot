@@ -98,7 +98,7 @@ mkdir -p /boot/overlays
 
 # use ls command to make sure the update files exist, if a file does not exist, ls will throw an error which will be caught by trap and the system will reboot.
 # redirect output to null so we arent flooded with messages
-# we dont have brace expantion so have to call ls multiple times.
+# we dont have brace expansion so have to call ls multiple times.
 ls /rootfs/boot/*.dtb > /dev/null
 ls /rootfs/boot/overlays/overlays/*.dtbo > /dev/null
 ls /rootfs/boot/config.txt > /dev/null
