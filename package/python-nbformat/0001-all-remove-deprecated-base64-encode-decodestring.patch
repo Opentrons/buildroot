@@ -1,0 +1,294 @@
+From 5f2042ce4c92f12568ab0ee58dddca98e7474b19 Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Fri, 21 Oct 2022 11:40:24 -0400
+Subject: [PATCH 1/2] all: remove deprecated base64 encode/decodestring
+
+These functions were deprecated since 3.1 and removed in 3.9; they are
+1:1 replaced with {encode,decode}bytes.
+---
+ nbformat/sign.py                |  2 +-
+ nbformat/v1/nbjson.py           |  1 -
+ nbformat/v1/rwbase.py           |  1 -
+ nbformat/v2/nbxml.py            |  6 +++---
+ nbformat/v2/rwbase.py           | 10 +++++-----
+ nbformat/v2/tests/nbexamples.py |  6 +++---
+ nbformat/v3/rwbase.py           | 10 +++++-----
+ nbformat/v3/tests/nbexamples.py |  6 +++---
+ nbformat/v3/tests/test_json.py  |  6 +++---
+ nbformat/v4/tests/nbexamples.py |  6 +++---
+ nbformat/v4/tests/test_json.py  |  6 +++---
+ 11 files changed, 29 insertions(+), 31 deletions(-)
+
+diff --git a/nbformat/sign.py b/nbformat/sign.py
+index 0d52251..555605f 100644
+--- a/nbformat/sign.py
++++ b/nbformat/sign.py
+@@ -383,7 +383,7 @@ class NotebookNotary(LoggingConfigurable):
+             with io.open(self.secret_file, 'rb') as f:
+                 return f.read()
+         else:
+-            secret = base64.encodestring(os.urandom(1024))
++            secret = base64.encodebytes(os.urandom(1024))
+             self._write_secret_file(secret)
+             return secret
+ 
+diff --git a/nbformat/v1/nbjson.py b/nbformat/v1/nbjson.py
+index 6af14c6..fd234c3 100644
+--- a/nbformat/v1/nbjson.py
++++ b/nbformat/v1/nbjson.py
+@@ -16,7 +16,6 @@ Authors:
+ # Imports
+ #-----------------------------------------------------------------------------
+ 
+-from base64 import encodestring
+ from .rwbase import NotebookReader, NotebookWriter
+ from .nbbase import from_dict
+ import json
+diff --git a/nbformat/v1/rwbase.py b/nbformat/v1/rwbase.py
+index 3938604..62c9d38 100644
+--- a/nbformat/v1/rwbase.py
++++ b/nbformat/v1/rwbase.py
+@@ -16,7 +16,6 @@ Authors:
+ # Imports
+ #-----------------------------------------------------------------------------
+ 
+-from base64 import encodestring, decodestring
+ 
+ #-----------------------------------------------------------------------------
+ # Code
+diff --git a/nbformat/v2/nbxml.py b/nbformat/v2/nbxml.py
+index e851e52..eaf5444 100644
+--- a/nbformat/v2/nbxml.py
++++ b/nbformat/v2/nbxml.py
+@@ -16,7 +16,7 @@ Authors:
+ # Imports
+ #-----------------------------------------------------------------------------
+ 
+-from base64 import encodestring, decodestring
++from base64 import encodebytes, decodebytes
+ import warnings
+ from xml.etree import ElementTree as ET
+ 
+@@ -97,13 +97,13 @@ def _get_binary(e, tag):
+     if sub_e is None:
+         return None
+     else:
+-        return decodestring(sub_e.text)
++        return decodebytes(sub_e.text)
+ 
+ 
+ def _set_binary(nbnode, attr, parent, tag):
+     if attr in nbnode:
+         e = ET.SubElement(parent, tag)
+-        e.text = encodestring(nbnode[attr])
++        e.text = encodebytes(nbnode[attr])
+ 
+ 
+ class XMLReader(NotebookReader):
+diff --git a/nbformat/v2/rwbase.py b/nbformat/v2/rwbase.py
+index 07b7be3..f5dea6d 100644
+--- a/nbformat/v2/rwbase.py
++++ b/nbformat/v2/rwbase.py
+@@ -16,7 +16,7 @@ Authors:
+ # Imports
+ #-----------------------------------------------------------------------------
+ 
+-from base64 import encodestring, decodestring
++from base64 import encodebytes, decodebytes
+ import pprint
+ 
+ from ipython_genutils.py3compat import str_to_bytes, unicode_type, string_types
+@@ -112,11 +112,11 @@ def base64_decode(nb):
+                     if 'png' in output:
+                         if isinstance(output.png, unicode_type):
+                             output.png = output.png.encode('ascii')
+-                        output.png = decodestring(output.png)
++                        output.png = decodebytes(output.png)
+                     if 'jpeg' in output:
+                         if isinstance(output.jpeg, unicode_type):
+                             output.jpeg = output.jpeg.encode('ascii')
+-                        output.jpeg = decodestring(output.jpeg)
++                        output.jpeg = decodebytes(output.jpeg)
+     return nb
+ 
+ 
+@@ -132,9 +132,9 @@ def base64_encode(nb):
+             if cell.cell_type == 'code':
+                 for output in cell.outputs:
+                     if 'png' in output:
+-                        output.png = encodestring(output.png).decode('ascii')
++                        output.png = encodebytes(output.png).decode('ascii')
+                     if 'jpeg' in output:
+-                        output.jpeg = encodestring(output.jpeg).decode('ascii')
++                        output.jpeg = encodebytes(output.jpeg).decode('ascii')
+     return nb
+ 
+ 
+diff --git a/nbformat/v2/tests/nbexamples.py b/nbformat/v2/tests/nbexamples.py
+index 3e83e8e..ae1c2b0 100644
+--- a/nbformat/v2/tests/nbexamples.py
++++ b/nbformat/v2/tests/nbexamples.py
+@@ -1,5 +1,5 @@
+ import os
+-from base64 import encodestring
++from base64 import encodebytes
+ 
+ from ..nbbase import (
+     NotebookNode,
+@@ -8,8 +8,8 @@ from ..nbbase import (
+ )
+ 
+ # some random base64-encoded *bytes*
+-png = encodestring(os.urandom(5))
+-jpeg = encodestring(os.urandom(6))
++png = encodebytes(os.urandom(5))
++jpeg = encodebytes(os.urandom(6))
+ 
+ ws = new_worksheet(name='worksheet1')
+ 
+diff --git a/nbformat/v3/rwbase.py b/nbformat/v3/rwbase.py
+index 504f2aa..94a5bea 100644
+--- a/nbformat/v3/rwbase.py
++++ b/nbformat/v3/rwbase.py
+@@ -3,7 +3,7 @@
+ # Copyright (c) IPython Development Team.
+ # Distributed under the terms of the Modified BSD License.
+ 
+-from base64 import encodestring, decodestring
++from base64 import encodebytes, decodebytes
+ 
+ from ipython_genutils import py3compat
+ from ipython_genutils.py3compat import str_to_bytes, unicode_type, string_types
+@@ -114,11 +114,11 @@ def base64_decode(nb):
+                     if 'png' in output:
+                         if isinstance(output.png, unicode_type):
+                             output.png = output.png.encode('ascii')
+-                        output.png = decodestring(output.png)
++                        output.png = decodebytes(output.png)
+                     if 'jpeg' in output:
+                         if isinstance(output.jpeg, unicode_type):
+                             output.jpeg = output.jpeg.encode('ascii')
+-                        output.jpeg = decodestring(output.jpeg)
++                        output.jpeg = decodebytes(output.jpeg)
+     return nb
+ 
+ 
+@@ -134,9 +134,9 @@ def base64_encode(nb):
+             if cell.cell_type == 'code':
+                 for output in cell.outputs:
+                     if 'png' in output:
+-                        output.png = encodestring(output.png).decode('ascii')
++                        output.png = encodebytes(output.png).decode('ascii')
+                     if 'jpeg' in output:
+-                        output.jpeg = encodestring(output.jpeg).decode('ascii')
++                        output.jpeg = encodebytes(output.jpeg).decode('ascii')
+     return nb
+ 
+ 
+diff --git a/nbformat/v3/tests/nbexamples.py b/nbformat/v3/tests/nbexamples.py
+index 898a032..56f932f 100644
+--- a/nbformat/v3/tests/nbexamples.py
++++ b/nbformat/v3/tests/nbexamples.py
+@@ -1,7 +1,7 @@
+ # -*- coding: utf-8 -*-
+ 
+ import os
+-from base64 import encodestring
++from base64 import encodebytes
+ 
+ from ..nbbase import (
+     NotebookNode,
+@@ -10,8 +10,8 @@ from ..nbbase import (
+ )
+ 
+ # some random base64-encoded *text*
+-png = encodestring(os.urandom(5)).decode('ascii')
+-jpeg = encodestring(os.urandom(6)).decode('ascii')
++png = encodebytes(os.urandom(5)).decode('ascii')
++jpeg = encodebytes(os.urandom(6)).decode('ascii')
+ 
+ ws = new_worksheet()
+ 
+diff --git a/nbformat/v3/tests/test_json.py b/nbformat/v3/tests/test_json.py
+index de95ea0..a8e6e9f 100644
+--- a/nbformat/v3/tests/test_json.py
++++ b/nbformat/v3/tests/test_json.py
+@@ -1,6 +1,6 @@
+ import copy
+ import json
+-from base64 import decodestring
++from base64 import decodebytes
+ from unittest import TestCase
+ 
+ from ipython_genutils.py3compat import unicode_type
+@@ -77,7 +77,7 @@ class TestJSON(formattest.NBFormatTest, TestCase):
+                     self.assertEqual(type(pngdata), unicode_type)
+                     # test that it is valid b64 data
+                     b64bytes = pngdata.encode('ascii')
+-                    raw_bytes = decodestring(b64bytes)
++                    raw_bytes = decodebytes(b64bytes)
+         assert found_png, "never found png output"
+ 
+     def test_read_jpeg(self):
+@@ -95,7 +95,7 @@ class TestJSON(formattest.NBFormatTest, TestCase):
+                     self.assertEqual(type(jpegdata), unicode_type)
+                     # test that it is valid b64 data
+                     b64bytes = jpegdata.encode('ascii')
+-                    raw_bytes = decodestring(b64bytes)
++                    raw_bytes = decodebytes(b64bytes)
+         assert found_jpeg, "never found jpeg output"
+ 
+ 
+diff --git a/nbformat/v4/tests/nbexamples.py b/nbformat/v4/tests/nbexamples.py
+index e180095..8209135 100644
+--- a/nbformat/v4/tests/nbexamples.py
++++ b/nbformat/v4/tests/nbexamples.py
+@@ -1,7 +1,7 @@
+ # -*- coding: utf-8 -*-
+ 
+ import os
+-from base64 import encodestring
++from base64 import encodebytes
+ 
+ from ..nbbase import (
+     new_code_cell, new_markdown_cell, new_notebook,
+@@ -9,8 +9,8 @@ from ..nbbase import (
+ )
+ 
+ # some random base64-encoded *text*
+-png = encodestring(os.urandom(5)).decode('ascii')
+-jpeg = encodestring(os.urandom(6)).decode('ascii')
++png = encodebytes(os.urandom(5)).decode('ascii')
++jpeg = encodebytes(os.urandom(6)).decode('ascii')
+ 
+ cells = []
+ cells.append(new_markdown_cell(
+diff --git a/nbformat/v4/tests/test_json.py b/nbformat/v4/tests/test_json.py
+index b8090b4..5711c9c 100644
+--- a/nbformat/v4/tests/test_json.py
++++ b/nbformat/v4/tests/test_json.py
+@@ -1,4 +1,4 @@
+-from base64 import decodestring
++from base64 import decodebytes
+ import json
+ from unittest import TestCase
+ 
+@@ -76,7 +76,7 @@ class TestJSON(formattest.NBFormatTest, TestCase):
+                     self.assertEqual(type(pngdata), unicode_type)
+                     # test that it is valid b64 data
+                     b64bytes = pngdata.encode('ascii')
+-                    raw_bytes = decodestring(b64bytes)
++                    raw_bytes = decodebytes(b64bytes)
+         assert found_png, "never found png output"
+ 
+     def test_read_jpeg(self):
+@@ -96,5 +96,5 @@ class TestJSON(formattest.NBFormatTest, TestCase):
+                     self.assertEqual(type(jpegdata), unicode_type)
+                     # test that it is valid b64 data
+                     b64bytes = jpegdata.encode('ascii')
+-                    raw_bytes = decodestring(b64bytes)
++                    raw_bytes = decodebytes(b64bytes)
+         assert found_jpeg, "never found jpeg output"
+-- 
+2.37.3
+

@@ -1,0 +1,27 @@
+From 2621c0d3589749a8dbb31f93cae0504ba5c5af07 Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Fri, 21 Oct 2022 11:41:05 -0400
+Subject: [PATCH 2/2] notebooknode: Mapping is in collections.abc
+
+Since 3.10, the collection abstract base classes were moved to
+collections.abc instead of just collections.
+---
+ nbformat/notebooknode.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/nbformat/notebooknode.py b/nbformat/notebooknode.py
+index 5e1fded..b8b59fa 100644
+--- a/nbformat/notebooknode.py
++++ b/nbformat/notebooknode.py
+@@ -1,7 +1,7 @@
+ """NotebookNode - adding attribute access to dicts"""
+ 
+ from ipython_genutils.ipstruct import Struct
+-from collections import Mapping
++from collections.abc import Mapping
+ 
+ 
+ class NotebookNode(Struct):
+-- 
+2.37.3
+
