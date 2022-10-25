@@ -11,6 +11,9 @@ if [ -e ${TARGET_DIR}/etc/inittab ]; then
 tty1::respawn:/sbin/getty -L  tty1 0 vt100 # HDMI console' ${TARGET_DIR}/etc/inittab
 fi
 
+# rewrite cmdline.txt to remove console
+sed -i s/console=ttyAMA0,115200// ${BINARIES_DIR}/rpi-firmware/cmdline.txt
+
 # Write an fstab that will do our /var and bind mounts
 cat <<EOF > ${TARGET_DIR}/etc/fstab
 /dev/root / auto ro 0 0
@@ -47,26 +50,20 @@ mkdir -p ${TARGET_DIR}/boot
 #                       with the contents of the /boot dir in the active rootfs partition (2,3)
 #                       as determined by the 'ot2part' u-boot env variable.
 
-# copy the KernelRamfs + dtb to boot dir
+# copy the KernelRamfs + kernel to /boot
 cp ./kernelramfs_bin/kernelRamfs ${TARGET_DIR}/boot/
-cp ./kernelramfs_bin/kernelRamfs.dtb ${TARGET_DIR}/boot/
-# create copy of dtb so genimage can include it in the boot partition
-cp ./kernelramfs_bin/kernelRamfs.dtb ${BINARIES_DIR}/kernelRamfs.dtb
-
+cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel
 # create symlink of kernelRamfs so updating from pre-6.2 is possible
 ln -sf kernelRamfs ${TARGET_DIR}/boot/zImage
 
-# copy the actual kernel
-cp ${BINARIES_DIR}/zImage ${TARGET_DIR}/boot/kernel
+# copy boot files to binaries dir
+cp ./board/opentrons/ot2/config.txt ${BINARIES_DIR}/
+# create copy of dtb so genimage can include it in the boot partition
+cp ./kernelramfs_bin/kernelRamfs.dtb ${BINARIES_DIR}/kernelRamfs.dtb
 
-# copy the config.txt + boot.scr to boot dir
-cp ./board/opentrons/ot2/config.txt ${TARGET_DIR}/boot/
-cp ${BINARIES_DIR}/boot.scr ${TARGET_DIR}/boot/
-
-mkdir -p ${TARGET_DIR}/boot/overlays
-mkdir -p ${TARGET_DIR}/mnt/bootpart
-cp -r ${BINARIES_DIR}/rpi-firmware/overlays ${TARGET_DIR}/boot/overlays
-cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
+# create tar.xz of all our update files and copy it to the target
+(cd ${BINARIES_DIR} && tar -Jcf boot.tar.xz u-boot.bin *.dtb boot.scr -C rpi-firmware/ ./)
+cp ${BINARIES_DIR}/boot.tar.xz ${TARGET_DIR}/boot
 
 hostname_to_write=$(cat ${TARGET_DIR}/etc/hostname)
 

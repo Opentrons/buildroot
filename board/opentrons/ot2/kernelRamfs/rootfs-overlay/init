@@ -5,33 +5,35 @@
 ################################################################################################
 #
 # The KernelRamfs is a minimal kernel + initramfs whos purpose is to update
-# the boot partition. The primary use case for this is to update from out of 6.1
-# since we have update the kernel + dtb + overlays, and pre-6.2 systems dont have
-# these files in the boot partition, which causes the system to hang after post-6.2 update.
-#
-# When we are updating from pre-6.2, after the rootfs has been written to the
-# inactive partition and the device reboots u-boot will look for the kernel
-# /boot/zImage. Since /boot/zImage is now a symlink to 'kernelRamfs' the system
-# will boot into kernelRamfs, which starts the update process. Once we are in the
-# KernelRamfs, the init script will copy the dtb + overlays + config.txt + boot.scr
-# in the rootfs to the boot partition. Finally we reboot, since we updated the boot.scr
-# script this changes the boot logic. Now the new boot.scr looks for /boot/kernel
-# in the partition determined by the 'ot2part' u-boot env variable, which will boot
-# into the regular opentrons post-6.2 kernel. The 'kernelramfs' uboot env variable
-# changes the boot target based on the following values.
+# the boot partition with the contents of /boot/boot.tar.xz on the rootfs. 
+# The primary use case for this is to update out of 6.1, as well as provide
+# a mechanism to allow us to update the boot partition in the future.
+
+# There is a new u-boot env flag 'kernelramfs' which determines if we boot 
+# into kernelRamfs or the regular kernel, by default this is set to 0 so the system
+# boots into the normal kernel. However, it can be set to a different value
+# from userspace to change the logic as followed.
 #
 # kernelramfs = "0"   - load kernel at /boot/kernel
 # kernelramfs = "1"   - load kernelRamfs at /boot/kernelRamfs and drop into recovery shell
 # kernelramfs > "1"   - load kernelRamfs at /boot/kernelRamfs and update the boot partition
-#                       with the contents of the /boot dir in the active rootfs partition (2,3)
-#                       as determined by the 'ot2part' u-boot env variable.
+#                       with the contents of the /boot/boot.tar.xz file in the active rootfs
+#                       partition (2,3) as determined by the 'ot2part' u-boot env variable.
+#                       Automatically restarts the system and attempts to boot.
 ################################################################################################
 
 set -e pipefail
 trap reboot_system EXIT
 
 reboot_system() {
-   if [ $? -eq 1 ]; then echo "Something went wrong";fi
+   if [ $? -eq 1 ]; then
+      ot2part=$(fw_printenv -n ot2part)
+      echo "current partition ${ot2part}"
+      if [ $ot2part -eq 2 ]; then ot2part=3;
+      elif [ $ot2part -eq 3 ]; then ot2part=2; fi
+      echo "Something went wrong reverting to /dev/mmcblkp${ot2part}."
+      fw_setenv ot2part $ot2part
+   fi
 
    # reset the kernelramfs var so we dont boot back in here
    fw_setenv kernelramfs 0
@@ -44,6 +46,7 @@ reboot_system() {
    umount /dev/mmcblk0p1
 
    echo "Rebooting the system"
+   sleep 5
    exec reboot -nf
 }
 
@@ -74,7 +77,7 @@ mount $BOOTFS /boot
 # set u-boot variables to negative numbers directly, so we are
 # using a config file instead.
 if ! fw_printenv | grep kernelramfs > /dev/null; then
-   fw_setenv --config /etc/set-u-boot-vars
+   fw_setenv --script /etc/set-u-boot-vars
 fi
 
 # if kernelramfs env flag is set to "1" jump the shell
@@ -85,47 +88,45 @@ if [ $start_recovery -eq "1" ]; then
     reboot_system
 fi
 
-echo "Ramdisk setup, starting update"
-# find the active rootfs and mount it
-ROOTFS=$(cat /proc/cmdline | grep -o "/dev/mmcblk0p.")
+echo "Getting active rootfs partition"
+ROOTFS=$(grep -o "root=.*" /proc/cmdline | grep -o "/dev/mmcblk0p.")
 echo "Mounting active rootfs partiton - $ROOTFS"
 mount $ROOTFS /rootfs
 
 # create partitions incase they dont exist
 mkdir -p /rootfs/boot
-mkdir -p /rootfs/overlays/overlays
-mkdir -p /boot/overlays
 
-# use ls command to make sure the update files exist, if a file does not exist, ls will throw an error which will be caught by trap and the system will reboot.
-# redirect output to null so we arent flooded with messages
-# we dont have brace expansion so have to call ls multiple times.
-ls /rootfs/boot/*.dtb > /dev/null
-ls /rootfs/boot/overlays/overlays/*.dtbo > /dev/null
-ls /rootfs/boot/config.txt > /dev/null
-ls /rootfs/boot/boot.scr > /dev/null
+echo "Verifying that kernel files exist."
+# ls will throw a non-zero exit code if the files dont exist,
+# which will be captured by trap and the system will reboot
 ls /rootfs/boot/kernel > /dev/null
 ls /rootfs/boot/kernelRamfs > /dev/null
-ls /rootfs/boot/kernelRamfs.dtb > /dev/null
 ls /rootfs/boot/zImage > /dev/null
 
+echo "Veryfying boot.tar.xz contents"
+# check that the boot tarball exists
+ls /rootfs/boot/boot.tar.xz > /dev/null
+
+# list of files that need to be in the tarball
+required_boot_files="dtb dtbo kernelRamfs.dtb bootcode.bin \
+start.elf fixup.dat config.txt boot.scr u-boot.bin"
+
+# check that the boot.tar.xz contains the required files.
+# if a file does not exist grep will throw a non-zero exit code
+# which will be captured by trap and the system will reboot.
+bootfiles=$(tar -Jtf /rootfs/boot/boot.tar.xz)
+for file in $required_boot_files; do
+   echo "Checking if ${file} exists"
+   echo $bootfiles | grep -wqo "${file}"
+   echo "found ${file} file(s)"
+done
+
 # if we made it here, then all required files exist in the rootfs and we can continue.
-echo "Copying files to boot partition..."
-# copy the dtb(s) + overlays + config.txt + boot.scr from rootfs to boot
-cp /rootfs/boot/*.dtb /boot/
-cp /rootfs/boot/overlays/overlays/*.dtbo /boot/overlays/
-cp /rootfs/boot/config.txt /boot/
-cp /rootfs/boot/boot.scr /boot/
+echo "Extracting files to boot partition..."
+tar -Jxf /rootfs/boot/boot.tar.xz -C /boot/
 
-# The /boot/boot.env will be invalidate so we need to remove it so it gets regenerated
-# on the next boot.
-rm -f /boot/boot.env
-
-# We need to set the ot2part env variable so uboot does not revert to
-# the old partition once we restart. Since we want to boot on the same
-# partition but with updated kernel.
-boot_part=$(fw_printenv -n ot2part)
-echo "Setting ot2part to $boot_part"
-fw_setenv ot2part $boot_part
+# the dtb will have changed so delete the fdt_addr var so we recreate it in uboot
+fw_setenv fdt_addr
 
 echo "Boot partition update complete."
 reboot_system

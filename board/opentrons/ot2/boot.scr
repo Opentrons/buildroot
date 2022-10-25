@@ -4,6 +4,13 @@
 # - Point uboot at that partition
 # - Boot it
 
+# if we dont have device tree address, save the default
+if test -z $"fdt_addr"
+then
+    echo "Saving default environment to file"
+    saveenv
+fi
+
 # Check if we have an env var for whether we should jump into KernelRamfs
 # or regular kernel, this could be set from userspace but also missing.
 if test -z "$kernelramfs"
@@ -55,14 +62,8 @@ for arg in $fdtargs; do
     fi
 done
 
-fail_count=""
 while true; do
     echo "Try booting from partition $ot2part"
-
-    to_boot="$newargs root=/dev/mmcblk0p$ot2part"
-    echo "Boot args - ${to_boot}"
-
-    fdt set /chosen bootargs "$to_boot"
 
     # Boot into the regular kernel, if 'kernelramfs' is set boot into KernelRamfs
     if test "$kernelramfs" = "0"
@@ -71,25 +72,23 @@ while true; do
         ext4load mmc 0:$ot2part $kernel_addr_r /boot/kernel
     else
         echo "Loading Opentrons KernelRamfs"
-        # load the device tree from boot partition
-        fatload mmc 0:1 $fdt_addr /kernelRamfs.dtb
+        fatload mmc 0:1 $fdt_addr kernelRamfs.dtb
         ext4load mmc 0:$ot2part $kernel_addr_r /boot/kernelRamfs
     fi
 
-    # boot the corresponding kernel + device tree blob
+    echo "Setting Device Tree Blob + Bootargs"
+    fdt addr $fdt_addr
+    fdt resize
+
+    to_boot="$newargs root=/dev/mmcblk0p$ot2part"
+    fdt set /chosen bootargs "$to_boot"
+    echo "Boot args - ${to_boot}"
+
+    # boot the kernel
     bootz $kernel_addr_r - $fdt_addr
     echo "Boot failed! Switching"
     tmp=$ot2part
     setenv ot2part $ot2old
     saveenv
     ot2old=$tmp
-
-    # go to recovery if we fail to boot more than four times.
-    if test "$fail_count" = "ffff"
-    then
-        echo "Failed to boot into any partition, entering recovery mode..."
-        setenv kernelramfs 1
-        sleep 5
-    fi
-    fail_count="f${fail_count}"
 done
