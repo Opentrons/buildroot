@@ -50,7 +50,7 @@ version_dict = {'buildroot_version': br_version,
                 'buildroot_branch': br_branch,
                 'buildroot_buildid': build_id,
                 'build_type': os.getenv('OT_BUILD_TYPE', 'unknown/dev'),
-                'robotModel': os.getenv('ROBOT_MODEL', 'OT-2 Standard')}
+                'robot_model': os.getenv('ROBOT_MODEL', 'OT-2 Standard')}
 
 for f in args.in_versions:
     version_dict.update(json.load(f))
