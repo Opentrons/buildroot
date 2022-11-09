@@ -36,10 +36,5 @@ if [[ -n "${FILTER}" ]]; then
    done;
 fi
 
-if [[ -z "${filter}" ]]; then
-    echo "Unfiltered make"
-    BR2_EXTERNAL=/opentrons make -C /buildroot $@
-else
-    echo "Filtered make"
-    BR2_EXTERNAL=/opentrons make -C /buildroot $@ 2>${filtered_warnings_log} | awk "/^make/;{print $0 >>\"${filtered_build_log}\"}"
-fi
+echo "Unfiltered make"
+BR2_EXTERNAL=/opentrons make -C /buildroot $@

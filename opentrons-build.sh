@@ -33,18 +33,12 @@ DOCKER_BIND="${DOCKER_BIND_BR} ${DOCKER_BIND_OT}"
 heads=${@:1:$(($# - 1))}
 tail=${@:$#}
 
-if [[ -n "${CI}" ]]; then
-   filter_arg="--build-arg filter_output=true"
-fi
-
 if [[ -z "${DATADOG_API_KEY}" ]]; then
     export DATADOG_API_KEY=$(./get_parameter.py /buildroot-codebuild/datadog-api -)
 fi
 
-githubname="$(git describe --all --dirty --always | tr '[:upper:]' '[:lower:]')"
-imgname=opentrons-buildroot-${githubname}
 
-docker build ${filter_arg} -t ${imgname} .
+imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
 
 # Save codebuild-relevant env vars to get them inside docker
 env | grep 'CODEBUILD\|AWS\|DATADOG' > .env
