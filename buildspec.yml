@@ -8,9 +8,6 @@ env:
     DATADOG_API_KEY: /buildroot-codebuild/datadog-api
 
 phases:
-  pre_build:
-    commands:
-      - "docker build -t opentrons-buildroot ."
   build:
     commands:
       - ./opentrons-build.sh

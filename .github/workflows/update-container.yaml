@@ -1,0 +1,25 @@
+on:
+  push:
+    tags:
+      - "*"
+    branches_ignore:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  container-build-push:
+    runs-on: 'ubuntu-latest'
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: 'actions/checkout@v3'
+      - name: 'Build the container'
+        id: container-build
+        run: |
+          ./opentrons-build-container.sh build
+      - name: 'Deploy the container'
+        id: container-deploy
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+          ./opentrons-build-container.sh push
