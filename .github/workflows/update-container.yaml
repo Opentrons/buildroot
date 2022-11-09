@@ -1,0 +1,27 @@
+on:
+  push:
+    tags:
+      - "*"
+    # change this before merging - just need to test since workflow_dispatch
+    # only works once merged
+    branches:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  container-build-push:
+    runs-on: 'ubuntu-latest'
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: 'actions/checkout@v3'
+      - name: 'Build the container'
+        id: container-build
+        run: |
+          ./opentrons-build-container.sh build
+      - name: 'Deploy the container'
+        id: container-deploy
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+          ./opentrons-build-container.sh push
