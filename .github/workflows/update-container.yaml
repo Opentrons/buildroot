@@ -2,9 +2,7 @@ on:
   push:
     tags:
       - "*"
-    # change this before merging - just need to test since workflow_dispatch
-    # only works once merged
-    branches:
+    branches_ignore:
       - "*"
   workflow_dispatch:
 
