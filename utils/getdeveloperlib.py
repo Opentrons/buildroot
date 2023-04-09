@@ -1,7 +1,7 @@
-import os
 import re
 import glob
 import subprocess
+import os
 
 #
 # Patch parsing functions
