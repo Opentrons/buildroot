@@ -1,0 +1,92 @@
+name: 'Build OT2 image on github workflows'
+run-name: 'image: mono ${{ inputs.monorepo-ref }}, buildroot ${{ inputs.buildroot-ref }}'
+on:
+  workflow_dispatch:
+    inputs:
+      monorepo-ref:
+        description: |
+          Ref of https://github.com/opentrons/opentrons to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the oe-core ref if specified, and then default to edge.
+        required: true
+        default: '-'
+      oe-core-ref:
+        description: |
+          Ref of https://github.com/opentrons/oe-core to build. This is different from the ref specified in the github api/webUI when starting this workflow - that ref is what contains this workflow, this ref specifies what gets built. It MUST be a full ref, e.g. refs/heads/main, or '-' to indicate not-specified. If not specified, will be decided based on the monorepo ref; if that isn't specified, will be main.
+        required: true
+        default: '-'
+      infra-stage:
+        description: |
+          What infra stage to run on. This should almost always be prod; dev is useful when you explicitly want to test that stage.
+        required: true
+        type: choice
+        options:
+          - 'stage-prod'
+          - 'stage-dev'
+        default: 'stage-prod'
+
+jobs:
+  run-build:
+    strategy:
+      matrix:
+        build_env: [ '${{ inputs.infra-stage }}' ]
+    name: 'Building images on ${{ matrix.build_env }}'
+    timeout-minutes: 480
+    runs-on: ['self-hosted', '${{matrix.build_env}}']
+    steps:
+      - name: Fetch initial sources for action
+        uses: 'actions/checkout@v3'
+        with:
+          fetch-depth: 0
+          path: ./buildroot-for-workflow
+      - name: Decide refs to build
+        id: build-refs
+        uses: './buildroot-for-workflow/.github/actions/build-refs'
+        with:
+          token: ${{ github.token }}
+          monorepo: ${{ inputs.monorepo-ref }}
+          buildroot: ${{ inputs.buildroot-ref }}
+      - name: Fetch buildroot source
+        uses: 'actions/checkout@v3'
+        with:
+          fetch-depth: 0
+          ref: ${{steps.build-refs.outputs.buildroot}}
+          path: ./buildroot
+      - name: Fetch monorepo source
+        uses: 'actions/checkout@v3'
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.build-refs.outputs.monorepo }}
+          repository: Opentrons/opentrons
+          path: ./opentrons
+      - name: Configure AWS Credentials
+        uses: './buildroot-for-workflow/.github/actions/aws-credentials'
+        id: aws
+        with:
+          access_key_id: ${{ secrets.ROBOT_STACK_AWS_ACCESS_KEY_ID }}
+          secret_access_key: ${{ secrets.ROBOT_STACK_AWS_SECRET_ACCESS_KEY }}
+          region: us-east-2
+          stage: ${{ matrix.build_env }}
+      - name: Run build
+        run: |
+          cd buildroot
+          ./opentrons-build.sh
+
+      - name: Prune docker images
+        if: always()
+        run: docker image prune -af
+      - name: Upload results to S3
+        shell: bash
+        id: 'upload-results'
+        run: |
+          pushd buildroot/output/images/
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ./* s3://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}
+          root_url=https://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}
+          echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${S3_ARTIFACT_ARN/arn:aws:s3::::/}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
+          echo "version_file_url=$root_url/VERSION.json" >> $GITHUB_OUTPUT
+          echo "release_notes_file_url=$root_url/release-notes.md" >> $GITHUB_OUTPUT
+          echo "system_url=$root_url/ot3-system.zip" >> $GITHUB_OUTPUT
+          echo "fullimage_url=$root_url/ot3-fullimage.tar" >> $GITHUB_OUTPUT
+          popd
+      - name: remove build data
+        if: always()
+        run: |
+          rm -rf ./*

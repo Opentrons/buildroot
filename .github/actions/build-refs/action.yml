@@ -1,0 +1,30 @@
+name: "Decide Opentrons Refs"
+description: "Based on a subset of provided refs for an openembedded build, decide the rest."
+inputs:
+  token:
+    description: "gh token for api calls to resolve refs"
+    required: true
+  monorepo:
+    description: "ref of https://github.com/opentrons/opentrons to build"
+    required: false
+    default: "-"
+  oe-core:
+    description: "ref of https://github.com/opentrons/oe-core to build"
+    required: false
+    default: "-"
+  ot3-firmware:
+    description: "ref of https://github.com/opentrons/ot3-firmware to build"
+    required: false
+    default: "-"
+outputs:
+  monorepo:
+    description: "the ref of the monorepo to use"
+  oe-core:
+    description: "the ref of the oe-core to use"
+  ot3-firmware:
+    description: "the ref of the ot3-firmware to use"
+  build-type:
+    description: "the type of build oe-core will create (develop, release)"
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

@@ -1,0 +1,30 @@
+name: 'Start an OT2 image build on a git branch'
+run-name: 'Starting a branch build of OT2 software for ${{github.ref_name}}'
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+
+jobs:
+  start-build:
+    name: 'starting a build for branch ${{ github.ref }}'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'start build'
+        uses: octokit/request-action@v2.x
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          route: POST /repos/{owner}/{repo}/actions/workflows/{workflow-id}/dispatches
+          owner: opentrons
+          repo: buildroot
+          workflow-id: build.yml
+          ref: ${{github.ref}}
+          inputs: |
+            {
+              "buildroot-ref": "${{ github.ref }}",
+              "monorepo-ref": "-",
+              "infra-stage": "stage-prod"
+            }

@@ -1,0 +1,50 @@
+name: "Set AWS credentials for robot-stack"
+description: "Set role credentials for the infra used for builds"
+inputs:
+  access_key_id:
+    description: "access key id from secrets"
+    required: true
+  secret_access_key:
+    description: "secret access key from secrets"
+    required: true
+  region:
+    description: "aws region to use"
+    required: true
+  stage:
+    description: "which of stage-dev, stage-staging, or stage-prod this is"
+    required: true
+outputs:
+  profile_name:
+    description: "the name of the profile to use in aws cli commands"
+    value: "${{steps.decide-profile-name.outputs.profile_name}}"
+runs:
+  using: "composite"
+  steps:
+    - name: configure root creds
+      run: |
+        aws configure set aws_access_key_id ${{ inputs.access_key_id }} --profile identity
+        aws configure set aws_secret_access_key ${{ inputs.secret_access_key }} --profile identity
+        aws configure set region ${{ inputs.region }} --profile identity
+        aws configure set output json --profile identity
+      shell: bash
+    - name: configure dev creds
+      if: ${{ contains(inputs.stage, 'dev') }}
+      run: |
+        echo "setting creds for dev based on stage being ${{ inputs.stage }}"
+        aws configure set region us-east-2 --profile deploy
+        aws configure set role_arn arn:aws:iam::699250785121:role/administrator --profile deploy
+        aws configure set source_profile identity --profile deploy
+      shell: bash
+    - name: configure staging or prod creds
+      if: ${{ !contains(inputs.stage, 'dev') }}
+      run: |
+        echo "setting creds for prod and staging based on stage being ${{ inputs.stage }}"
+        aws configure set region us-east-2 --profile deploy
+        aws configure set role_arn arn:aws:iam::879285218407:role/administrator --profile deploy
+        aws configure set source_profile identity --profile deploy
+      shell: bash
+    - name: set output profile
+      id: decide-profile-name
+      run: |
+        echo "profile_name=deploy" >> $GITHUB_OUTPUT
+      shell: bash
