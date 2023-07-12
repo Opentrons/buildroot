@@ -22,9 +22,6 @@ on:
           - 'stage-prod'
           - 'stage-dev'
         default: 'stage-prod'
-  push:
-    branches:
-      - '*'
 
 jobs:
   run-build:
