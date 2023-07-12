@@ -22,9 +22,9 @@ on:
           - 'stage-prod'
           - 'stage-dev'
         default: 'stage-prod'
-    push:
-      branches:
-        - '*'
+  push:
+    branches:
+      - '*'
 
 jobs:
   run-build:
