@@ -9748,12 +9748,11 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
-const orderedRepos = ['monorepo', 'oe-core', 'ot3-firmware'];
+const orderedRepos = ['monorepo', 'buildroot'];
 function mainRefFor(input) {
     return {
         monorepo: 'refs/heads/edge',
-        'oe-core': 'refs/heads/main',
-        'ot3-firmware': 'refs/heads/main',
+        buildroot: 'refs/heads/opentrons-develop',
     }[input];
 }
 function restAPICompliantRef(input) {
@@ -9762,9 +9761,7 @@ function restAPICompliantRef(input) {
 function latestTagPrefixFor(repo) {
     if (repo === 'monorepo')
         return 'refs/tags/v';
-    if (repo === 'oe-core')
-        return 'refs/tags/v';
-    if (repo === 'ot3-firmware')
+    if (repo === 'buildroot')
         return 'refs/tags/v';
     throw new Error(`Unknown repo ${repo}`);
 }
@@ -9775,8 +9772,7 @@ function latestTag(tagRefs) {
 function restDetailsFor(input) {
     return {
         monorepo: { owner: 'Opentrons', repo: 'opentrons' },
-        'oe-core': { owner: 'Opentrons', repo: 'oe-core' },
-        'ot3-firmware': { owner: 'Opentrons', repo: 'ot3-firmware' },
+        buildroot: { owner: 'Opentrons', repo: 'buildroot' },
     }[input];
 }
 function refIsMain(input, repo) {
@@ -9865,7 +9861,7 @@ function resolveRefs(toAttempt) {
     });
 }
 function resolveBuildType(ref) {
-    return ref.includes('refs/tags/ot3') ? 'release' : 'develop';
+    return ref.includes('refs/tags/v') ? 'release' : 'develop';
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -9890,7 +9886,7 @@ function run() {
             // Determine the build-type based on the monorepo ref
             if (repo === 'monorepo') {
                 const buildType = resolveBuildType(ref);
-                _actions_core__WEBPACK_IMPORTED_MODULE_1__.info(`Resolved oe-core build-type to ${buildType}`);
+                _actions_core__WEBPACK_IMPORTED_MODULE_1__.info(`Resolved buildroot build-type to ${buildType}`);
                 _actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput('build-type', buildType);
             }
         });

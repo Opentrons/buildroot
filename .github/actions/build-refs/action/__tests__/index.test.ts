@@ -139,7 +139,7 @@ const BUILD_TYPE_TEST_SPECS: Array<[string, [Ref], BuildType]> = [
   ],
   [
     'when monorepo ref is a release tag is release',
-    ['refs/tags/ot3@0.0.0-dev'],
+    ['refs/tags/v0.0.0-dev'],
     'release',
   ],
 ]

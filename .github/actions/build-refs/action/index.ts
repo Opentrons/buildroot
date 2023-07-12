@@ -186,7 +186,7 @@ async function resolveRefs(toAttempt: AttemptableRefs): Promise<OutputRefs> {
 }
 
 export function resolveBuildType(ref: Ref): BuildType {
-  return ref.includes('refs/tags/ot3') ? 'release' : 'develop'
+  return ref.includes('refs/tags/v') ? 'release' : 'develop'
 }
 
 async function run() {
