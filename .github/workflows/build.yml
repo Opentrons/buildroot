@@ -86,8 +86,8 @@ jobs:
           echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${S3_ARTIFACT_ARN/arn:aws:s3::::/}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
           echo "version_file_url=$root_url/VERSION.json" >> $GITHUB_OUTPUT
           echo "release_notes_file_url=$root_url/release-notes.md" >> $GITHUB_OUTPUT
-          echo "system_url=$root_url/ot3-system.zip" >> $GITHUB_OUTPUT
-          echo "fullimage_url=$root_url/ot3-fullimage.tar" >> $GITHUB_OUTPUT
+          echo "system_url=$root_url/ot2-system.zip" >> $GITHUB_OUTPUT
+          echo "fullimage_url=$root_url/ot2-fullimage.zip" >> $GITHUB_OUTPUT
           popd
       - name: remove build data
         if: always()
