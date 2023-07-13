@@ -80,7 +80,7 @@ jobs:
         run: |
           cd buildroot
           imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
-          echo "image-name=$imagename" >> $GITHUB_OUTPUT
+          echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
       - name: Set up docker args
         id: docker-args
