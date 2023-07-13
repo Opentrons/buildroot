@@ -65,14 +65,50 @@ jobs:
           secret_access_key: ${{ secrets.ROBOT_STACK_AWS_SECRET_ACCESS_KEY }}
           region: us-east-2
           stage: ${{ matrix.build_env }}
+      - name: Set up docker environment file
+        id: docker-env
+        run: |
+          cat <<EOF >./docker-envfile
+          OT_BUILD_TYPE=${{steps.build-refs.outputs.build-type}}
+          FORCE_UNSAFE_CONFIGURE=1
+          BR2_DL_DIR=/downloads
+          EOF
+          echo "envfile=$(pwd)/docker-envfile" >> $GITHUB_OUTPUT
+
+      - name: Build or download docker container
+        id: get-image
+        run: |
+          cd buildroot
+          imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
+          echo "image-name=$imagename" >> $GITHUB_OUTPUT
+
+      - name: Set up docker args
+        id: docker-args
+        run: |
+          cachedir=${LOCAL_CACHE:-./cache}
+          mount_args="type=bind,consistency=delegated"
+          bind_br="--mount source=$(pwd)/buildroot,destination=/buildroot,${mount_args}"
+          bind_ot="--mount source=$(pwd)/opentrons,destination=/opentrons,${mount_args}"
+          bind_dl="--mount source=${cachedir}/downloads,destination=/downloads,${mount_args}"
+          bind_op="--mount source=${cachedir}/outputs,destination=/outputs,${mount_args}"
+          binds="${bind_br} ${bind_ot} ${bind_dl} ${bind_op}"
+          env="--env-file ${{steps.docker-env.outputs.envfile}}"
+          echo "run-binds=${binds}" >> $GITHUB_OUTPUT
+          echo "env=${env}" >> $GITHUB_OUTPUT
+          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/outputs"
+          echo "args=${args}" >> $GITHUB_OUTPUT
+      - name: Configure
+        run: |
+          cd buildroot
+          docker run ${{steps.docker-args.outputs.args}} ot2_defconfig
+      - name: Download package sources
+        run: |
+          cd buildroot
+          docker run ${{steps.docker-args.outputs.args}} source
       - name: Run build
         run: |
           cd buildroot
-          ./opentrons-build.sh
-
-      - name: Prune docker images
-        if: always()
-        run: docker image prune -af
+          docker run ${{steps.docker-args.outputs.args}} all
       - name: Upload results to S3
         shell: bash
         id: 'upload-results'
@@ -90,3 +126,4 @@ jobs:
         if: always()
         run: |
           rm -rf ./*
+          rm -rf ${LOCAL_CACHE:-./cache}/outputs
