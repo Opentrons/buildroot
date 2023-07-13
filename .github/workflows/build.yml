@@ -32,6 +32,11 @@ jobs:
     timeout-minutes: 480
     runs-on: ['self-hosted', '${{matrix.build_env}}']
     steps:
+      - name: Set up vm requirements
+        run: |
+          echo "fs.inotify.max_user_watches=1048576" >> /etc/sysctl.conf
+          echo "fs.file-max=100000" >> /etc/sysctl.conf
+          sysctl -p
       - name: Fetch initial sources for action
         uses: 'actions/checkout@v3'
         with:
