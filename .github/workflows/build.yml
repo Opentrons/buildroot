@@ -123,6 +123,12 @@ jobs:
         run: |
           cd buildroot
           docker run ${{steps.docker-args.outputs.args}} all
+      - name: Upload build log result
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: buildlog.txt
+          path: ./buildroot/buildlog.txt
       - name: Upload results to S3
         shell: bash
         id: 'upload-results'
