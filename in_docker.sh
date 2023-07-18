@@ -32,5 +32,5 @@ if [[ -z "${filter}" ]]; then
     BR2_EXTERNAL=/opentrons make -C /buildroot "$@"
 else
     echo "Filtered make"
-    BR2_EXTERNAL=/opentrons make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) | awk "/^make/;{print $0 >>\"${filtered_build_log}\"}"
+    BR2_EXTERNAL=/opentrons make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
 fi
