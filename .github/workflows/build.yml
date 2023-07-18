@@ -8,9 +8,9 @@ on:
           Ref of https://github.com/opentrons/opentrons to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the oe-core ref if specified, and then default to edge.
         required: true
         default: '-'
-      oe-core-ref:
+      buildroot-ref:
         description: |
-          Ref of https://github.com/opentrons/oe-core to build. This is different from the ref specified in the github api/webUI when starting this workflow - that ref is what contains this workflow, this ref specifies what gets built. It MUST be a full ref, e.g. refs/heads/main, or '-' to indicate not-specified. If not specified, will be decided based on the monorepo ref; if that isn't specified, will be main.
+          Ref of https://github.com/opentrons/buildroot to build. This is different from the ref specified in the github api/webUI when starting this workflow - that ref is what contains this workflow, this ref specifies what gets built. It MUST be a full ref, e.g. refs/heads/main, or '-' to indicate not-specified. If not specified, will be decided based on the monorepo ref; if that isn't specified, will be main.
         required: true
         default: '-'
       infra-stage:
@@ -22,9 +22,6 @@ on:
           - 'stage-prod'
           - 'stage-dev'
         default: 'stage-prod'
-  push:
-    branches:
-      - '*'
 
 jobs:
   run-build:
@@ -35,6 +32,12 @@ jobs:
     timeout-minutes: 480
     runs-on: ['self-hosted', '${{matrix.build_env}}']
     steps:
+      - name: Set up vm requirements
+        run: |
+          echo 'fs.inotify.max_user_watches=655360' | tee -a /etc/sysctl.conf
+          echo 'fs.inotify.max_user_instances=1280' | tee -a /etc/sysctl.conf
+          echo 'fs.file-max=100000' | tee -a /etc/sysctl.conf
+          sysctl -p
       - name: Fetch initial sources for action
         uses: 'actions/checkout@v3'
         with:
@@ -68,20 +71,71 @@ jobs:
           secret_access_key: ${{ secrets.ROBOT_STACK_AWS_SECRET_ACCESS_KEY }}
           region: us-east-2
           stage: ${{ matrix.build_env }}
+
+      - name: Pull or create cache locations
+        id: cache-setup
+        run: |
+          cachedir=${LOCAL_CACHE:-./cache}
+          for cachetype in downloads output ; do
+            mkdir -p ${cachedir}/${cachetype}
+            echo "${cachetype}=${cachedir}/${cachetype}" >> $GITHUB_OUTPUT
+          done
+      - name: Set up docker environment file
+        id: docker-env
+        run: |
+          cat <<EOF >./docker-envfile
+          OT_BUILD_TYPE=${{steps.build-refs.outputs.build-type}}
+          FORCE_UNSAFE_CONFIGURE=1
+          BR2_DL_DIR=/downloads
+          EOF
+          echo "envfile=$(pwd)/docker-envfile" >> $GITHUB_OUTPUT
+
+      - name: Build or download docker container
+        id: get-image
+        run: |
+          cd buildroot
+          imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
+          echo "image-name=$imgname" >> $GITHUB_OUTPUT
+
+      - name: Set up docker args
+        id: docker-args
+        run: |
+          mount_args="type=bind,consistency=delegated"
+          bind_br="--mount source=$(pwd)/buildroot,destination=/buildroot,${mount_args}"
+          bind_ot="--mount source=$(pwd)/opentrons,destination=/opentrons,${mount_args}"
+          bind_dl="--mount source=${{steps.cache-setup.outputs.downloads}},destination=/downloads,${mount_args}"
+          bind_op="--mount source=${{steps.cache-setup.outputs.output}},destination=/output,${mount_args}"
+          binds="${bind_br} ${bind_ot} ${bind_dl} ${bind_op}"
+          env="--env-file ${{steps.docker-env.outputs.envfile}}"
+          echo "run-binds=${binds}" >> $GITHUB_OUTPUT
+          echo "env=${env}" >> $GITHUB_OUTPUT
+          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output"
+          echo "args=${args}" >> $GITHUB_OUTPUT
+      - name: Configure
+        run: |
+          cd buildroot
+          docker run ${{steps.docker-args.outputs.args}} ot2_defconfig
+      - name: Download package sources
+        run: |
+          cd buildroot
+          docker run ${{steps.docker-args.outputs.args}} source
       - name: Run build
         run: |
           cd buildroot
-          ./opentrons-build.sh
-
-      - name: Prune docker images
+          docker run ${{steps.docker-args.outputs.args}} all
+      - name: Upload build log result
         if: always()
-        run: docker image prune -af
+        uses: actions/upload-artifact@v3
+        with:
+          name: buildlog.txt
+          path: ./buildroot/buildlog.txt
       - name: Upload results to S3
         shell: bash
         id: 'upload-results'
         run: |
-          pushd buildroot/output/images/
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ./* s3://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}
+          pushd ${{steps.cache-setup.outputs.output}}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read ./images/ s3://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}/
+
           root_url=https://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}
           echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${S3_ARTIFACT_ARN/arn:aws:s3::::/}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
           echo "version_file_url=$root_url/VERSION.json" >> $GITHUB_OUTPUT
@@ -93,3 +147,5 @@ jobs:
         if: always()
         run: |
           rm -rf ./*
+          output_check=${{steps.cache-setup.outputs.output}}
+          rm -rf ${output_check:-/does/not/exist}

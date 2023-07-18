@@ -7,17 +7,8 @@ set -o pipefail
 set -e
 set -v
 
-targets=$@
 filtered_build_log="/buildroot/buildlog.txt"
-filtered_warnings_log="/buildroot/warnings.txt"
 
-function finish {
-    if [[ -f "${filtered_warnings_log}" ]]; then
-        cat ${filtered_warnings_log}
-    fi
-}
-
-trap finish EXIT
 
 if [[ -n "${FILTER}" ]]; then
    echo "in ci"
@@ -36,5 +27,10 @@ if [[ -n "${FILTER}" ]]; then
    done;
 fi
 
-echo "Unfiltered make"
-BR2_EXTERNAL=/opentrons make -C /buildroot $@
+if [[ -z "${filter}" ]]; then
+    echo "Unfiltered make"
+    BR2_EXTERNAL=/opentrons make -C /buildroot "$@"
+else
+    echo "Filtered make"
+    BR2_EXTERNAL=/opentrons make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
+fi
