@@ -82,6 +82,10 @@ ln -s /var/lib/dropbear ${TARGET_DIR}/etc/dropbear
 # Syslog-ng extra setup:
 # - install the datadog api key
 
+if [ -z ${DATADOG_API_KEY+x} ] ; then
+    printf "Datadog API key is unknown, build will not be capable of upstreaming logs" >&2
+    DATADOG_API_KEY=""
+fi
 echo "@define datadog_api_key \"${DATADOG_API_KEY}\"" > ${TARGET_DIR}/etc/syslog-ng/api_key.conf
 mkdir -p ${TARGET_DIR}/etc/syslog-ng/certs.d/
 rm -rf ${TARGET_DIR}/etc/syslog-ng/certs.d/*
