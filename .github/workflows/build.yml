@@ -87,8 +87,17 @@ jobs:
           OT_BUILD_TYPE=${{steps.build-refs.outputs.build-type}}
           FORCE_UNSAFE_CONFIGURE=1
           BR2_DL_DIR=/downloads
+          DATADOG_API_KEY=${{secrets.DATADOG_API_KEY}}
           EOF
           echo "envfile=$(pwd)/docker-envfile" >> $GITHUB_OUTPUT
+
+
+      - name: Set up signing
+        id: signing
+        run: |
+          cat <<EOF >./buildroot/.signing-key
+          ${{secrets.ROBOT_SIGNING_KEY}}
+          EOF
 
       - name: Build or download docker container
         id: get-image
