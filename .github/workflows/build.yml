@@ -1,11 +1,11 @@
-name: 'Build OT2 image on github workflows'
+name: 'Build OT2 internal-release image on github workflows'
 run-name: 'image: mono ${{ inputs.monorepo-ref }}, buildroot ${{ inputs.buildroot-ref }}'
 on:
   workflow_dispatch:
     inputs:
       monorepo-ref:
         description: |
-          Ref of https://github.com/opentrons/opentrons to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the oe-core ref if specified, and then default to edge.
+          Ref of https://github.com/opentrons/opentrons to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the buildroot ref if specified, and then default to edge.
         required: true
         default: '-'
       buildroot-ref:
@@ -88,6 +88,7 @@ jobs:
           FORCE_UNSAFE_CONFIGURE=1
           BR2_DL_DIR=/downloads
           DATADOG_API_KEY=${{secrets.DATADOG_API_KEY}}
+          OPENTRONS_PROJECT=ot3
           EOF
           echo "envfile=$(pwd)/docker-envfile" >> $GITHUB_OUTPUT
 
