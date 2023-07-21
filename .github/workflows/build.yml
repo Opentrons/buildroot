@@ -48,6 +48,7 @@ jobs:
         uses: './buildroot-for-workflow/.github/actions/build-refs'
         with:
           token: ${{ github.token }}
+          channel: internal-release
           monorepo: ${{ inputs.monorepo-ref }}
           buildroot: ${{ inputs.buildroot-ref }}
       - name: Fetch buildroot source

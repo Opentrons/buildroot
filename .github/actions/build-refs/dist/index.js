@@ -9749,6 +9749,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 const orderedRepos = ['monorepo', 'buildroot'];
+const channels = ['full-release', 'internal-release'];
 function mainRefFor(input) {
     return {
         monorepo: 'refs/heads/edge',
@@ -9790,10 +9791,16 @@ function authoritativeRef(inputs) {
         .find(el => el !== null)) !== null && _a !== void 0 ? _a : ['refs/heads/edge', true]);
 }
 function getInputs() {
-    return orderedRepos.reduce((prev, inputName) => {
-        const input = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput(inputName);
-        return prev.set(inputName, input == '-' ? null : input);
-    }, new Map());
+    return {
+        channel: (() => {
+            const inputChan = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('channel');
+            return channels.includes(inputChan) ? inputChan : 'internal-release';
+        })(),
+        refs: orderedRepos.reduce((prev, inputName) => {
+            const input = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput(inputName);
+            return prev.set(inputName, input == '-' ? null : input);
+        }, new Map()),
+    };
 }
 function visitRefsByType(ref, ifBranch, ifTag) {
     if (ref.startsWith('refs/heads'))
@@ -9860,18 +9867,26 @@ function resolveRefs(toAttempt) {
         return resolved;
     });
 }
-function resolveBuildType(ref) {
+function resolveBuildTypeInternal(ref) {
+    return ref.includes('refs/tags/ot3@') ? 'release' : 'develop';
+}
+function resolveBuildTypeExternal(ref) {
     return ref.includes('refs/tags/v') ? 'release' : 'develop';
+}
+function resolveBuildType(ref, channel) {
+    return channel === 'internal-release'
+        ? resolveBuildTypeInternal(ref)
+        : resolveBuildTypeExternal(ref);
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const inputs = getInputs();
-        inputs.forEach((ref, repo) => {
+        inputs.refs.forEach((ref, repo) => {
             _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`found input for ${repo}: ${ref}`);
         });
-        const [authoritative, isMain] = authoritativeRef(inputs);
+        const [authoritative, isMain] = authoritativeRef(inputs.refs);
         _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`authoritative ref is ${authoritative} (main: ${isMain})`);
-        const attemptable = Array.from(inputs.entries()).reduce((prev, [repoName, inputRef]) => {
+        const attemptable = Array.from(inputs.refs.entries()).reduce((prev, [repoName, inputRef]) => {
             return prev.set(repoName, inputRef
                 ? [inputRef]
                 : refsToAttempt(authoritative, isMain, mainRefFor(repoName)));
@@ -9885,7 +9900,7 @@ function run() {
             _actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput(repo, ref);
             // Determine the build-type based on the monorepo ref
             if (repo === 'monorepo') {
-                const buildType = resolveBuildType(ref);
+                const buildType = resolveBuildType(ref, inputs.channel);
                 _actions_core__WEBPACK_IMPORTED_MODULE_1__.info(`Resolved buildroot build-type to ${buildType}`);
                 _actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput('build-type', buildType);
             }

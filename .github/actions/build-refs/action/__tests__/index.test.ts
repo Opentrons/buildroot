@@ -1,5 +1,5 @@
 import * as action from '../index'
-import type { InputRefs, Ref, Branch, BuildType } from '../index'
+import type { InputRefs, Ref, Branch, BuildType, Channel } from '../index'
 
 const AUTHORITATIVE_REF_TEST_SPECS: Array<
   [string, InputRefs, [string, boolean]]
@@ -126,30 +126,63 @@ REFS_TO_ATTEMPT_FAILURE_TEST_SPECS.forEach(
   }
 )
 
-const BUILD_TYPE_TEST_SPECS: Array<[string, [Ref], BuildType]> = [
+const BUILD_TYPE_TEST_SPECS: Array<[string, [Ref], BuildType, Channel]> = [
   [
-    'when monorepo ref is edge but is not a tag is develop',
+    'when monorepo ref is edge but is not a tag is develop on i-r',
     ['refs/heads/edge'],
     'develop',
+    'internal-release',
   ],
   [
-    'when monorepo ref is some branch but is not a tag is develop',
+    'when monorepo ref is some branch but is not a tag is develop on i-r',
     ['refs/heads/something'],
     'develop',
+    'internal-release',
   ],
   [
-    'when monorepo ref is a release tag is release',
+    'when monorepo ref is a ot3-prefix tag is release on i-r',
+    ['refs/tags/ot3@0.0.0-dev'],
+    'release',
+    'internal-release',
+  ],
+  [
+    'when monorepo ref is a v-tag is develop on i-r',
+    ['refs/tags/v0.0.0-dev'],
+    'develop',
+    'internal-release',
+  ],
+  [
+    'when monorepo ref is edge but is not a tag is develop on f-r',
+    ['refs/heads/edge'],
+    'develop',
+    'full-release',
+  ],
+  [
+    'when monorepo ref is some branch but is not a tag is develop on f-r',
+    ['refs/heads/something'],
+    'develop',
+    'full-release',
+  ],
+  [
+    'when monorepo ref is a v-prefix tag is release on f-r',
     ['refs/tags/v0.0.0-dev'],
     'release',
+    'full-release',
+  ],
+  [
+    'when monorepo ref is ot3-tag is develop on f-r',
+    ['refs/tags/ot3@0.0.0-dev'],
+    'develop',
+    'full-release',
   ],
 ]
 
 BUILD_TYPE_TEST_SPECS.forEach(
-  ([testNameFragment, [testMonorepoRef], testExpectedResult]) => {
+  ([testNameFragment, [testMonorepoRef], testExpectedResult, testChannel]) => {
     test(`buildType ${testNameFragment}`, () => {
-      expect(action.resolveBuildType(testMonorepoRef)).toStrictEqual(
-        testExpectedResult
-      )
+      expect(
+        action.resolveBuildType(testMonorepoRef, testChannel)
+      ).toStrictEqual(testExpectedResult)
     })
   }
 )
