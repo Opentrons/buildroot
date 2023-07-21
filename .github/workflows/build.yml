@@ -129,26 +129,6 @@ jobs:
         with:
           name: buildlog.txt
           path: ./buildroot/buildlog.txt
-      - name: Upload results to S3
-        shell: bash
-        id: 'upload-results'
-        run: |
-          pushd ${{steps.cache-setup.outputs.output}}
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read ./images/ s3://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}/
-
-          root_url=https://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}
-          echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${S3_ARTIFACT_ARN/arn:aws:s3::::/}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
-          echo "version_file_url=$root_url/VERSION.json" >> $GITHUB_OUTPUT
-          echo "release_notes_file_url=$root_url/release-notes.md" >> $GITHUB_OUTPUT
-          echo "system_url=$root_url/ot2-system.zip" >> $GITHUB_OUTPUT
-          echo "fullimage_url=$root_url/ot2-fullimage.zip" >> $GITHUB_OUTPUT
-          popd
-      - name: remove build data
-        if: always()
-        run: |
-          rm -rf ./*
-          output_check=${{steps.cache-setup.outputs.output}}
-          rm -rf ${output_check:-/does/not/exist}
       - name: Prep artifacts for upload
         if: steps.build-refs.outputs.build-type == 'release'
         id: artifacts
@@ -158,16 +138,67 @@ jobs:
           mkdir -p ${versioned_artifact_dir}
           _fulltag="${{steps.build-refs.outputs.monorepo}}
           _vers_tag=${_fulltag:14}
-          echo "monorepo_shorttag=${_fulltag:10}" >> $GIHTUB_OUTPUT
-          versioned_system_zip="ot2_system_${_vers_tag}.zip"
-          mv ${artifact_dir}/ot2_system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
+
+          echo "monorepo_shorttag=${_fulltag:10}" >> $GITHUB_OUTPUT
+
+          echo "ot2_system=${artifact_dir}/ot2-system.zip" >> $GITHUB_OUTPUT
+          echo "ot2_fullimage=${artifact_dir}/ot2-fullimage.zip" >> $GITHUB_OUTPUT
+          echo "version_json=${artifact_dir}/VERSION.json" >> $GITHUB_OUTPUT
+          echo "release_notes=${artifact_dir}release-notes.md" >> $GITHUB_OUTPUT
+
+          versioned_system_zip="ot2-system_${_vers_tag}.zip"
+          mv ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
           echo "ot2_system_versioned=${versioned_artifact_dir}/${versioned_system_zip}" >> $GITHUB_OUTPUT
-          versioned_fullimage_zip="ot2_fullimage_${_vers_tag}.zip
-          mv ${artifact_dir}/ot2_fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
+
+          versioned_fullimage_zip="ot2-fullimage_${_vers_tag}.zip
+          mv ${artifact_dir}/ot2-fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
           echo "ot2_fullimage_versioned=${versioned_artifact_dir}/${versioned_fullimage_zip}" >> $GITHUB_OUTPUT
+
           versioned_version_json="VERSION-${_vers_tag}.json"
           mv ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
           echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
+
+
+      - name: Upload results to S3
+        shell: bash
+        id: 'upload-results'
+        run: |
+          prefix=ot2-br
+          arnslug=${S3_ARTIFACT_ARN/arn:aws:s3:::/}
+          root_uri=${arnslug}/${prefix}/${{github.run_id}}
+
+          pushd ${{steps.cache-setup.outputs.output}}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read ./images/ s3://${root_uri}/
+
+          root_url=https://${root_uri}
+          echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${arnslug}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
+          echo "version_file_url=$root_url/VERSION.json" >> $GITHUB_OUTPUT
+          echo "release_notes_file_url=$root_url/release-notes.md" >> $GITHUB_OUTPUT
+          echo "system_url=$root_url/ot2-system.zip" >> $GITHUB_OUTPUT
+          echo "fullimage_url=$root_url/ot2-fullimage.zip" >> $GITHUB_OUTPUT
+          echo "arnslug=$arnslug" >> $GITHUB_OUTPUT
+          echo "root_uri=$root_uri" >> $GITHUB_OUTPUT
+          echo "root_url=$root_url" >> $GITHUB_OUTPUT
+          echo "root_prefix=ot2-br" >> $GITHUB_OUTPUT
+          popd
+      - name: Handle release manifest
+        if: ${{ steps.build-refs.outputs.build-type == 'release' }}
+        shell: bash
+        run: |
+          pushd buildroot
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read s3://$/releases.json releases.json
+          releases_uri=s3://
+          base_url=s3://${{steps.upload-results.outputs.arnslug}}/${{steps.upload-results.outputs.prefix}}/releases.json
+          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifacts.outputs.version_json}} --base-url $base_url
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json $base_url
+          popd
+
+      - name: remove build data
+        if: always()
+        run: |
+          rm -rf ./*
+          output_check=${{steps.cache-setup.outputs.output}}
+          rm -rf ${output_check:-/does/not/exist}
       - name: Upload system zip to monorepo release
         if: steps.build-refs.outputs.build-type == 'release'
         uses: 'ncipollo/release-action@v1.12.0'
