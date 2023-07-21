@@ -149,3 +149,58 @@ jobs:
           rm -rf ./*
           output_check=${{steps.cache-setup.outputs.output}}
           rm -rf ${output_check:-/does/not/exist}
+      - name: Prep artifacts for upload
+        if: steps.build-refs.outputs.build-type == 'release'
+        id: artifacts
+        run: |
+          artifact_dir="$(pwd)/buildroot/output/images"
+          versioned_artifact_dir="$(pwd)/versioned-artifacts"
+          mkdir -p ${versioned_artifact_dir}
+          _fulltag="${{steps.build-refs.outputs.monorepo}}
+          _vers_tag=${_fulltag:14}
+          echo "monorepo_shorttag=${_fulltag:10}" >> $GIHTUB_OUTPUT
+          versioned_system_zip="ot2_system_${_vers_tag}.zip"
+          mv ${artifact_dir}/ot2_system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
+          echo "ot2_system_versioned=${versioned_artifact_dir}/${versioned_system_zip}" >> $GITHUB_OUTPUT
+          versioned_fullimage_zip="ot2_fullimage_${_vers_tag}.zip
+          mv ${artifact_dir}/ot2_fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
+          echo "ot2_fullimage_versioned=${versioned_artifact_dir}/${versioned_fullimage_zip}" >> $GITHUB_OUTPUT
+          versioned_version_json="VERSION-${_vers_tag}.json"
+          mv ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
+          echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
+      - name: Upload system zip to monorepo release
+        if: steps.build-refs.outputs.build-type == 'release'
+        uses: 'ncipollo/release-action@v1.12.0'
+        with:
+          allowUpdates: true
+          omitBody: true
+          omitName: true
+          omitPrereleaseDuringUpdate: true
+          omitDraftDuringUpdate: true
+          repo: opentrons
+          tag: ${{ steps.artifacts.outputs.monorepo_shorttag }}
+          artifacts: ${{steps.artifacts.outputs.ot2_system_versioned}} ${{steps.artifacts.outputs.ot2_fullimage_versioned}}
+          artifactContentType: application/zip
+          token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
+      - name: Upload version json to monorepo release
+        if: steps.build-refs.outputs.build-type == 'release'
+        uses: 'ncipollo/release-action@v1.12.0'
+        with:
+          allowUpdates: true
+          omitBody: true
+          omitName: true
+          omitPrereleaseDuringUpdate: true
+          omitDraftDuringUpdate: true
+          repo: opentrons
+          tag: ${{ steps.artifacts.outputs.monorepo_shorttag }}
+          artifacts: ${{ steps.artifacts.outputs.version_json_versioned }}
+          artifactContentType: application/json
+          token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
+
+      - name: Post results
+        if: ${{ matrix.build_env == 'stage-prod' }}
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ steps.build-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ steps.build-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
