@@ -23,6 +23,9 @@ on:
           - 'stage-dev'
         default: 'stage-prod'
 
+env:
+  CI: true
+
 jobs:
   run-build:
     strategy:
