@@ -101,6 +101,11 @@ jobs:
           imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
+      - name: Set up signing
+        if: steps.build-refs.outputs.build-type == 'release'
+        run: |
+          echo "${{secrets.ROBOT_SIGNING_KEY}}" > ./buildroot/.signing-key
+
       - name: Set up docker args
         id: docker-args
         run: |
@@ -115,6 +120,7 @@ jobs:
           echo "env=${env}" >> $GITHUB_OUTPUT
           args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output"
           echo "args=${args}" >> $GITHUB_OUTPUT
+
       - name: Configure
         run: |
           cd buildroot
@@ -137,7 +143,7 @@ jobs:
         if: steps.build-refs.outputs.build-type == 'release'
         id: artifacts
         run: |
-          artifact_dir="$(pwd)/buildroot/output/images"
+          artifact_dir="${{steps.cache-setup.outputs.output}}/images"
           versioned_artifact_dir="$(pwd)/versioned-artifacts"
           mkdir -p ${versioned_artifact_dir}
           _fulltag="${{steps.build-refs.outputs.monorepo}}
