@@ -196,9 +196,8 @@ jobs:
         shell: bash
         run: |
           pushd buildroot
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read s3://$/releases.json releases.json
-          releases_uri=s3://
           base_url=s3://${{steps.upload-results.outputs.arnslug}}/${{steps.upload-results.outputs.prefix}}/releases.json
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read $base_url releases.json
           python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifacts.outputs.version_json}} --base-url $base_url
           aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json $base_url
           popd
