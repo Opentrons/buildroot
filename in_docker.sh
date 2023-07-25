@@ -29,8 +29,8 @@ fi
 
 if [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
-    BR2_EXTERNAL=/opentrons make -C /buildroot "$@"
+    LANG="en_US.UTF-8" BR2_EXTERNAL=/opentrons make -C /buildroot "$@"
 else
     echo "Filtered make"
-    BR2_EXTERNAL=/opentrons make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
+    LANG="en_US.UTF-8" BR2_EXTERNAL=/opentrons make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
 fi
