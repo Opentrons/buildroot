@@ -159,7 +159,7 @@ jobs:
           mv ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
           echo "ot2_system_versioned=${versioned_artifact_dir}/${versioned_system_zip}" >> $GITHUB_OUTPUT
 
-          versioned_fullimage_zip="ot2-fullimage_${_vers_tag}.zip
+          versioned_fullimage_zip="ot2-fullimage_${_vers_tag}.zip"
           mv ${artifact_dir}/ot2-fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
           echo "ot2_fullimage_versioned=${versioned_artifact_dir}/${versioned_fullimage_zip}" >> $GITHUB_OUTPUT
 
