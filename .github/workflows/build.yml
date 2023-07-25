@@ -140,8 +140,7 @@ jobs:
           name: buildlog.txt
           path: ./buildroot/buildlog.txt
       - name: Prep artifacts for upload
-        if: steps.build-refs.outputs.build-type == 'release'
-        id: artifacts
+        id: artifact-copy
         run: |
           artifact_dir="${{steps.cache-setup.outputs.output}}/images"
           versioned_artifact_dir="$(pwd)/versioned-artifacts"
@@ -198,7 +197,7 @@ jobs:
           pushd buildroot
           base_url=s3://${{steps.upload-results.outputs.arnslug}}/${{steps.upload-results.outputs.root_prefix}}/releases.json
           aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read $base_url releases.json
-          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifacts.outputs.version_json}} --base-url $base_url
+          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url $base_url
           aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json $base_url
           popd
 
@@ -218,8 +217,8 @@ jobs:
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
           repo: opentrons
-          tag: ${{ steps.artifacts.outputs.monorepo_shorttag }}
-          artifacts: ${{steps.artifacts.outputs.ot2_system_versioned}} ${{steps.artifacts.outputs.ot2_fullimage_versioned}}
+          tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
+          artifacts: ${{steps.artifact-copy.outputs.ot2_system_versioned}} ${{steps.artifact-copy.outputs.ot2_fullimage_versioned}}
           artifactContentType: application/zip
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
       - name: Upload version json to monorepo release
@@ -232,8 +231,8 @@ jobs:
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
           repo: opentrons
-          tag: ${{ steps.artifacts.outputs.monorepo_shorttag }}
-          artifacts: ${{ steps.artifacts.outputs.version_json_versioned }}
+          tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
+          artifacts: ${{ steps.artifact-copy.outputs.version_json_versioned }}
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
