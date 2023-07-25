@@ -145,7 +145,7 @@ jobs:
           artifact_dir="${{steps.cache-setup.outputs.output}}/images"
           versioned_artifact_dir="$(pwd)/versioned-artifacts"
           mkdir -p ${versioned_artifact_dir}
-          _fulltag="${{steps.build-refs.outputs.monorepo}}
+          _fulltag="${{steps.build-refs.outputs.monorepo}}"
           _vers_tag=${_fulltag:14}
 
           echo "monorepo_shorttag=${_fulltag:10}" >> $GITHUB_OUTPUT
