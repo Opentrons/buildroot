@@ -158,28 +158,28 @@ jobs:
           _vers_tag=${_fulltag:14}
           echo "monorepo_shorttag=${_fulltag:10}" >> $GITHUB_OUTPUT
 
-          mv ${artifact_dir}/ot2-system.zip ${prepped_artifact_dir}/ot2-system.zip
+          cp ${artifact_dir}/ot2-system.zip ${prepped_artifact_dir}/ot2-system.zip
           echo "ot2_system=${prepped_artifact_dir}/ot2-system.zip" >> $GITHUB_OUTPUT
 
-          mv ${artifact_dir}/ot2-fullimage.zip ${prepped_artifact_dir}/ot2-fullimage.zip
+          cp ${artifact_dir}/ot2-fullimage.zip ${prepped_artifact_dir}/ot2-fullimage.zip
           echo "ot2_fullimage=${prepped_artifact_dir}/ot2-fullimage.zip" >> $GITHUB_OUTPUT
 
-          mv ${artifact_dir}/VERSION.json ${prepped_artifact_dir}/VERSION.json
+          cp ${artifact_dir}/VERSION.json ${prepped_artifact_dir}/VERSION.json
           echo "version_json=${prepped_artifact_dir}/VERSION.json" >> $GITHUB_OUTPUT
 
-          mv ${artifact_dir}/release-notes.md ${prepped_artifact_dir}/release-notes.md
+          cp ${artifact_dir}/release-notes.md ${prepped_artifact_dir}/release-notes.md
           echo "release_notes=${prepped_artifact_dir}/release-notes.md" >> $GITHUB_OUTPUT
 
           versioned_system_zip="ot2-system_${_vers_tag}.zip"
-          mv ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
+          cp ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
           echo "ot2_system_versioned=${versioned_artifact_dir}/${versioned_system_zip}" >> $GITHUB_OUTPUT
 
           versioned_fullimage_zip="ot2-fullimage_${_vers_tag}.zip"
-          mv ${artifact_dir}/ot2-fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
+          cp ${artifact_dir}/ot2-fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
           echo "ot2_fullimage_versioned=${versioned_artifact_dir}/${versioned_fullimage_zip}" >> $GITHUB_OUTPUT
 
           versioned_version_json="VERSION-${_vers_tag}.json"
-          mv ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
+          cp ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
           echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
 
           echo "Prepared unversioned artifacts: $(ls ${prepped_artifact_dir}/)"
