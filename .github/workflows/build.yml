@@ -142,7 +142,9 @@ jobs:
       - name: Prep artifacts for upload
         id: artifact-copy
         run: |
+          echo "Artifact dir: $(ls ${{steps.cache-setup.outputs.output}})"
           artifact_dir="${{steps.cache-setup.outputs.output}}/images"
+          echo "Artifacts: $(ls ${artifact_dir})"
 
           prepped_artifact_dir="${{steps.cache-setup.outputs.output}}/unversioned_artifacts"
           mkdir -p ${prepped_artifact_dir}
