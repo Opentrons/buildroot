@@ -59,4 +59,5 @@ for f in args.in_versions:
         data = '{}'
     version_dict.update(json.loads(data))
 
+print("Writing version to {}".format(getattr(args.outfile, 'name', '<probably stdout>')))
 json.dump(version_dict, args.outfile)
