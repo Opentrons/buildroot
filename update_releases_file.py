@@ -27,16 +27,14 @@ def main(args):
             releases = json.load(fh)
 
     # Update the releases dict with the latest version
-    releases.get("production", {}).update(
-        {
-            f"{version}": {
-                "fullImage": f"{base_url}/ot2-fullimage.zip",
-                "system": f"{base_url}/ot2-system.zip",
-                "version": f"{base_url}/VERSION.json",
-                "releaseNotes": f"{base_url}/release-notes.md",
-            }
-        }
-    )
+    prod = releases.get('production', {})
+    prod[version] = {
+        "fullImage": f"{base_url}/ot2-fullimage.zip",
+        "system": f"{base_url}/ot2-system.zip",
+        "version": f"{base_url}/VERSION.json",
+        "releaseNotes": f"{base_url}/release-notes.md",
+    }
+    releases['production'] = prod
 
     # Save the new releases.json file
     with open(releases_file, "w") as fh:
