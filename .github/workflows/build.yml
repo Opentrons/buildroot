@@ -143,17 +143,30 @@ jobs:
         id: artifact-copy
         run: |
           artifact_dir="${{steps.cache-setup.outputs.output}}/images"
-          versioned_artifact_dir="$(pwd)/versioned-artifacts"
+
+          prepped_artifact_dir="${{steps.cache-setup.outputs.output}}/unversioned_artifacts"
+          mkdir -p ${prepped_artifact_dir}
+          echo "prepped_artifact_dir=${prepped_artifact_dir}" >> $GITHUB_OUTPUT
+
+          versioned_artifact_dir="${{steps.cache-setup.outputs.output}}/versioned_artifacts"
           mkdir -p ${versioned_artifact_dir}
+          echo "versioned_artifact_dir=${versioned_artifact_dir}" >> $GITHUB_OUTPUT
+
           _fulltag="${{steps.build-refs.outputs.monorepo}}"
           _vers_tag=${_fulltag:14}
-
           echo "monorepo_shorttag=${_fulltag:10}" >> $GITHUB_OUTPUT
 
-          echo "ot2_system=${artifact_dir}/ot2-system.zip" >> $GITHUB_OUTPUT
-          echo "ot2_fullimage=${artifact_dir}/ot2-fullimage.zip" >> $GITHUB_OUTPUT
-          echo "version_json=${artifact_dir}/VERSION.json" >> $GITHUB_OUTPUT
-          echo "release_notes=${artifact_dir}release-notes.md" >> $GITHUB_OUTPUT
+          mv ${artifact_dir}/ot2-system.zip ${prepped_artifact_dir}/ot2-system.zip
+          echo "ot2_system=${prepped_artifact_dir}/ot2-system.zip" >> $GITHUB_OUTPUT
+
+          mv ${artifact_dir}/ot2-fullimage.zip ${prepped_artifact_dir}/ot2-fullimage.zip
+          echo "ot2_fullimage=${prepped_artifact_dir}/ot2-fullimage.zip" >> $GITHUB_OUTPUT
+
+          mv ${artifact_dir}/VERSION.json ${prepped_artifact_dir}/VERSION.json
+          echo "version_json=${prepped_artifact_dir}/VERSION.json" >> $GITHUB_OUTPUT
+
+          mv ${artifact_dir}/release-notes.md ${prepped_artifact_dir}/release-notes.md
+          echo "release_notes=${prepped_artifact_dir}/release-notes.md" >> $GITHUB_OUTPUT
 
           versioned_system_zip="ot2-system_${_vers_tag}.zip"
           mv ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
@@ -167,6 +180,8 @@ jobs:
           mv ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
           echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
 
+          echo "Prepared unversioned artifacts: $(ls ${prepped_artifact_dir}/)"
+          echo "Prepared versioned artifacts: $(ls ${versioned_artifact_dir}/)"
 
       - name: Upload results to S3
         shell: bash
@@ -176,8 +191,8 @@ jobs:
           arnslug=${S3_ARTIFACT_ARN/arn:aws:s3:::/}
           root_uri=${arnslug}/${prefix}/${{github.run_id}}
 
-          pushd ${{steps.cache-setup.outputs.output}}
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read ./images/ s3://${root_uri}/
+          pushd ${{steps.artifact-copy.outputs.prepped_artifact_dir}}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read . s3://${root_uri}/
 
           root_url=https://${root_uri}
           echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${arnslug}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
