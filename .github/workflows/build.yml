@@ -153,10 +153,10 @@ jobs:
           mkdir -p ${prepped_artifact_dir}
           echo "prepped_artifact_dir=${prepped_artifact_dir}" >> $GITHUB_OUTPUT
 
-          versioned_artifact_dir="${{steps.cache-setup.outputs.output}}/versioned_artifacts"
+          versioned_artifact_dir="$(pwd)/versioned_artifacts"
           mkdir -p ${versioned_artifact_dir}
           echo "versioned_artifact_dir=${versioned_artifact_dir}" >> $GITHUB_OUTPUT
-          versioned_artifact_dir_rel="${{steps.cache-setup.outputs.output-rel}}/versioned_artifacts"
+          versioned_artifact_dir_rel="$./versioned_artifacts"
           echo "versioned_artifact_dir_rel=${versioned_artifact_dir_rel}" >> $GITHUB_OUTPUT
 
           _fulltag="${{steps.build-refs.outputs.monorepo}}"
