@@ -240,7 +240,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: ${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip
+          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir}}/ot2-*.zip"
           artifactContentType: application/zip
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
       - name: Upload version json to monorepo release
@@ -254,7 +254,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: ${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json
+          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir}}/VERSION-*.json"
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
