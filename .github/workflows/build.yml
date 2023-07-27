@@ -81,8 +81,13 @@ jobs:
         run: |
           cachedir=${LOCAL_CACHE:-./cache}
           for cachetype in downloads output ; do
-            mkdir -p ${cachedir}/${cachetype}
-            echo "${cachetype}=${cachedir}/${cachetype}" >> $GITHUB_OUTPUT
+            absdir="${cachedir}/${cachetype}"
+            mkdir -p ${absdir}
+            echo "${cachetype}=${absdir}" >> $GITHUB_OUTPUT
+            here=$(pwd)
+            reldir=$(realpath --relative-to=${here} ${cachedir}/${cachetype})
+            echo "Created ${cachetype} cache at ${absdir} (${reldir})"
+            echo "${cachetype}-rel=${reldir}" >> $GITHUB_OUTPUT
           done
       - name: Set up docker environment file
         id: docker-env
@@ -151,6 +156,8 @@ jobs:
           versioned_artifact_dir="${{steps.cache-setup.outputs.output}}/versioned_artifacts"
           mkdir -p ${versioned_artifact_dir}
           echo "versioned_artifact_dir=${versioned_artifact_dir}" >> $GITHUB_OUTPUT
+          versioned_artifact_dir_rel="${{steps.cache-setup.outputs.output-rel}}/versioned_artifacts"
+          echo "versioned_artifact_dir_rel=${versioned_artifact_dir_rel}" >> $GITHUB_OUTPUT
 
           _fulltag="${{steps.build-refs.outputs.monorepo}}"
           _vers_tag=${_fulltag:14}
@@ -180,8 +187,8 @@ jobs:
           cp ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
           echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
 
-          echo "Prepared unversioned artifacts: $(ls ${prepped_artifact_dir}/)"
-          echo "Prepared versioned artifacts: $(ls ${versioned_artifact_dir}/)"
+          echo "Prepared unversioned artifacts: $(find ${prepped_artifact_dir}/)"
+          echo "Prepared versioned artifacts: $(find ${versioned_artifact_dir}/)"
 
       - name: Upload results to S3
         shell: bash
@@ -233,7 +240,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: ${{steps.artifact-copy.outputs.versioned_artifact_dir}}/ot2-*.zip
+          artifacts: ${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip
           artifactContentType: application/zip
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
       - name: Upload version json to monorepo release
@@ -247,7 +254,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: ${{ steps.artifact-copy.outputs.version_artifact_dir }}/VERSION-*.json
+          artifacts: ${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
