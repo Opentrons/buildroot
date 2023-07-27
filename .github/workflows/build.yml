@@ -118,7 +118,7 @@ jobs:
           env="--env-file ${{steps.docker-env.outputs.envfile}}"
           echo "run-binds=${binds}" >> $GITHUB_OUTPUT
           echo "env=${env}" >> $GITHUB_OUTPUT
-          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output"
+          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output OPENTRONS_PROJECT=ot3"
           echo "args=${args}" >> $GITHUB_OUTPUT
 
       - name: Configure
@@ -168,11 +168,11 @@ jobs:
           cp ${artifact_dir}/release-notes.md ${prepped_artifact_dir}/release-notes.md
           echo "release_notes=${prepped_artifact_dir}/release-notes.md" >> $GITHUB_OUTPUT
 
-          versioned_system_zip="ot2-system_${_vers_tag}.zip"
+          versioned_system_zip="ot2-system-${_vers_tag}.zip"
           cp ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
           echo "ot2_system_versioned=${versioned_artifact_dir}/${versioned_system_zip}" >> $GITHUB_OUTPUT
 
-          versioned_fullimage_zip="ot2-fullimage_${_vers_tag}.zip"
+          versioned_fullimage_zip="ot2-fullimage-${_vers_tag}.zip"
           cp ${artifact_dir}/ot2-fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
           echo "ot2_fullimage_versioned=${versioned_artifact_dir}/${versioned_fullimage_zip}" >> $GITHUB_OUTPUT
 
@@ -210,10 +210,10 @@ jobs:
         shell: bash
         run: |
           pushd buildroot
-          base_url=s3://${{steps.upload-results.outputs.arnslug}}/${{steps.upload-results.outputs.root_prefix}}/releases.json
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read $base_url releases.json
+          base_url=s3://${{steps.upload-results.outputs.arnslug}}/${{steps.upload-results.outputs.root_prefix}}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ${base_url}/releases.json releases.json
           python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url $base_url
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json $base_url
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json ${base_url}/releases.json
           popd
 
       - name: remove build data
@@ -233,7 +233,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: ${{steps.artifact-copy.outputs.ot2_system_versioned}} ${{steps.artifact-copy.outputs.ot2_fullimage_versioned}}
+          artifacts: ${{steps.artifact-copy.outputs.versioned_artifact_dir}}/ot2-*.zip
           artifactContentType: application/zip
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
       - name: Upload version json to monorepo release
@@ -247,7 +247,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: ${{ steps.artifact-copy.outputs.version_json_versioned }}
+          artifacts: ${{ steps.artifact-copy.outputs.version_artifact_dir }}/VERSION-*.json
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
