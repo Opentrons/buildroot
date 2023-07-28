@@ -107,11 +107,11 @@ else
     system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json ${boot_files}"
 fi
 
-echo "Zipping system image..."
+echo "Zipping system image at ${BINARIES_DIR}/ot2-system.zip..."
 rm -f ${BINARIES_DIR}/ot2-system.zip
 zip -j ${BINARIES_DIR}/ot2-system.zip ${system_files} ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/release-notes.md
 
-echo "Zipping full sd card image..."
+echo "Zipping full sd card image at ${BINARIES_DIR}/ot2-fullimage.zip..."
 rm -f ${BINARIES_DIR}/ot2-fullimage.zip
 zip -j ${BINARIES_DIR}/ot2-fullimage.zip ${BINARIES_DIR}/sdcard.img ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/release-notes.md
 exit $?

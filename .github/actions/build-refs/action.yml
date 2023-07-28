@@ -4,6 +4,9 @@ inputs:
   token:
     description: "gh token for api calls to resolve refs"
     required: true
+  channel:
+    description: "which release channel, internal-release or full-release"
+    required: true
   monorepo:
     description: "ref of https://github.com/opentrons/opentrons to build"
     required: false
