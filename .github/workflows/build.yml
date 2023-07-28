@@ -222,12 +222,6 @@ jobs:
           aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json ${base_url}/releases.json
           popd
 
-      - name: remove build data
-        if: always()
-        run: |
-          rm -rf ./*
-          output_check=${{steps.cache-setup.outputs.output}}
-          rm -rf ${output_check:-/does/not/exist}
       - name: Upload system zip to monorepo release
         if: steps.build-refs.outputs.build-type == 'release'
         uses: 'ncipollo/release-action@v1.12.0'
@@ -264,3 +258,10 @@ jobs:
           payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ steps.build-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ steps.build-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+
+      - name: remove build data
+        if: always()
+        run: |
+          rm -rf ./*
+          output_check=${{steps.cache-setup.outputs.output}}
+          rm -rf ${output_check:-/does/not/exist}
