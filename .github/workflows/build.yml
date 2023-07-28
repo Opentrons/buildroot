@@ -156,7 +156,7 @@ jobs:
           versioned_artifact_dir="$(pwd)/versioned_artifacts"
           mkdir -p ${versioned_artifact_dir}
           echo "versioned_artifact_dir=${versioned_artifact_dir}" >> $GITHUB_OUTPUT
-          versioned_artifact_dir_rel="$./versioned_artifacts"
+          versioned_artifact_dir_rel="./versioned_artifacts"
           echo "versioned_artifact_dir_rel=${versioned_artifact_dir_rel}" >> $GITHUB_OUTPUT
 
           _fulltag="${{steps.build-refs.outputs.monorepo}}"
@@ -240,7 +240,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir}}/ot2-*.zip"
+          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip"
           artifactContentType: application/zip
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
       - name: Upload version json to monorepo release
@@ -254,7 +254,7 @@ jobs:
           omitDraftDuringUpdate: true
           repo: opentrons
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
-          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir}}/VERSION-*.json"
+          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
