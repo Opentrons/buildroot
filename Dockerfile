@@ -18,6 +18,7 @@ RUN wget http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-1.23.0.tar.x
   rm crosstool*.tar.xz
 
 ENV FILTER=${filter_output}
+ENV LANG="en_US.UTF-8"
 
 
 ENTRYPOINT ["/buildroot/in_docker.sh"]

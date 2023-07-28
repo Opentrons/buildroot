@@ -23,6 +23,9 @@ on:
           - 'stage-dev'
         default: 'stage-prod'
 
+env:
+  CI: true
+
 jobs:
   run-build:
     strategy:
@@ -48,6 +51,7 @@ jobs:
         uses: './buildroot-for-workflow/.github/actions/build-refs'
         with:
           token: ${{ github.token }}
+          channel: internal-release
           monorepo: ${{ inputs.monorepo-ref }}
           buildroot: ${{ inputs.buildroot-ref }}
       - name: Fetch buildroot source
@@ -77,8 +81,13 @@ jobs:
         run: |
           cachedir=${LOCAL_CACHE:-./cache}
           for cachetype in downloads output ; do
-            mkdir -p ${cachedir}/${cachetype}
-            echo "${cachetype}=${cachedir}/${cachetype}" >> $GITHUB_OUTPUT
+            absdir="${cachedir}/${cachetype}"
+            mkdir -p ${absdir}
+            echo "${cachetype}=${absdir}" >> $GITHUB_OUTPUT
+            here=$(pwd)
+            reldir=$(realpath --relative-to=${here} ${cachedir}/${cachetype})
+            echo "Created ${cachetype} cache at ${absdir} (${reldir})"
+            echo "${cachetype}-rel=${reldir}" >> $GITHUB_OUTPUT
           done
       - name: Set up docker environment file
         id: docker-env
@@ -97,6 +106,11 @@ jobs:
           imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
+      - name: Set up signing
+        if: steps.build-refs.outputs.build-type == 'release'
+        run: |
+          echo "${{secrets.ROBOT_SIGNING_KEY}}" > ./buildroot/.signing-key
+
       - name: Set up docker args
         id: docker-args
         run: |
@@ -109,8 +123,9 @@ jobs:
           env="--env-file ${{steps.docker-env.outputs.envfile}}"
           echo "run-binds=${binds}" >> $GITHUB_OUTPUT
           echo "env=${env}" >> $GITHUB_OUTPUT
-          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output"
+          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output OPENTRONS_PROJECT=ot3"
           echo "args=${args}" >> $GITHUB_OUTPUT
+
       - name: Configure
         run: |
           cd buildroot
@@ -129,20 +144,121 @@ jobs:
         with:
           name: buildlog.txt
           path: ./buildroot/buildlog.txt
+      - name: Prep artifacts for upload
+        id: artifact-copy
+        run: |
+          artifact_dir="${{steps.cache-setup.outputs.output}}/images"
+
+          prepped_artifact_dir="${{steps.cache-setup.outputs.output}}/unversioned_artifacts"
+          mkdir -p ${prepped_artifact_dir}
+          echo "prepped_artifact_dir=${prepped_artifact_dir}" >> $GITHUB_OUTPUT
+          versioned_artifact_dir_rel="./versioned_artifacts"
+          versioned_artifact_dir=$(realpath ${versioned_artifact_dir_rel})
+          mkdir -p ${versioned_artifact_dir}
+          echo "versioned_artifact_dir=${versioned_artifact_dir}" >> $GITHUB_OUTPUT
+          echo "versioned_artifact_dir_rel=${versioned_artifact_dir_rel}" >> $GITHUB_OUTPUT
+
+          _fulltag="${{steps.build-refs.outputs.monorepo}}"
+          _vers_tag=${_fulltag:14}
+          echo "monorepo_shorttag=${_fulltag:10}" >> $GITHUB_OUTPUT
+
+          cp ${artifact_dir}/ot2-system.zip ${prepped_artifact_dir}/ot2-system.zip
+          echo "ot2_system=${prepped_artifact_dir}/ot2-system.zip" >> $GITHUB_OUTPUT
+
+          cp ${artifact_dir}/ot2-fullimage.zip ${prepped_artifact_dir}/ot2-fullimage.zip
+          echo "ot2_fullimage=${prepped_artifact_dir}/ot2-fullimage.zip" >> $GITHUB_OUTPUT
+
+          cp ${artifact_dir}/VERSION.json ${prepped_artifact_dir}/VERSION.json
+          echo "version_json=${prepped_artifact_dir}/VERSION.json" >> $GITHUB_OUTPUT
+
+          cp ${artifact_dir}/release-notes.md ${prepped_artifact_dir}/release-notes.md
+          echo "release_notes=${prepped_artifact_dir}/release-notes.md" >> $GITHUB_OUTPUT
+
+          versioned_system_zip="ot2-system-${_vers_tag}.zip"
+          cp ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
+          echo "ot2_system_versioned=${versioned_artifact_dir}/${versioned_system_zip}" >> $GITHUB_OUTPUT
+
+          versioned_fullimage_zip="ot2-fullimage-${_vers_tag}.zip"
+          cp ${artifact_dir}/ot2-fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
+          echo "ot2_fullimage_versioned=${versioned_artifact_dir}/${versioned_fullimage_zip}" >> $GITHUB_OUTPUT
+
+          versioned_version_json="VERSION-${_vers_tag}.json"
+          cp ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
+          echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
+
+          echo "Prepared unversioned artifacts: $(find ${prepped_artifact_dir}/)"
+          echo "Prepared versioned artifacts: $(find ${versioned_artifact_dir}/)"
+
       - name: Upload results to S3
         shell: bash
         id: 'upload-results'
         run: |
-          pushd ${{steps.cache-setup.outputs.output}}
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read ./images/ s3://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}/
+          prefix=ot2-br
+          arnslug=${S3_ARTIFACT_ARN/arn:aws:s3:::/}
+          root_uri=${arnslug}/${prefix}/${{github.run_id}}
 
-          root_url=https://${S3_ARTIFACT_ARN/arn:aws:s3:::/}/ot2-br/${{github.run_id}}
-          echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${S3_ARTIFACT_ARN/arn:aws:s3::::/}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
+          pushd ${{steps.artifact-copy.outputs.prepped_artifact_dir}}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read . s3://${root_uri}/
+
+          root_url=https://${root_uri}
+          echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${arnslug}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
           echo "version_file_url=$root_url/VERSION.json" >> $GITHUB_OUTPUT
           echo "release_notes_file_url=$root_url/release-notes.md" >> $GITHUB_OUTPUT
           echo "system_url=$root_url/ot2-system.zip" >> $GITHUB_OUTPUT
           echo "fullimage_url=$root_url/ot2-fullimage.zip" >> $GITHUB_OUTPUT
+          echo "arnslug=$arnslug" >> $GITHUB_OUTPUT
+          echo "root_uri=$root_uri" >> $GITHUB_OUTPUT
+          echo "root_url=$root_url" >> $GITHUB_OUTPUT
+          echo "root_prefix=ot2-br" >> $GITHUB_OUTPUT
           popd
+      - name: Handle release manifest
+        if: ${{ steps.build-refs.outputs.build-type == 'release' }}
+        shell: bash
+        run: |
+          pushd buildroot
+          base_url=s3://${{steps.upload-results.outputs.arnslug}}/${{steps.upload-results.outputs.root_prefix}}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ${base_url}/releases.json releases.json
+          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url $base_url
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json ${base_url}/releases.json
+          popd
+
+      - name: Upload system zip to monorepo release
+        if: steps.build-refs.outputs.build-type == 'release'
+        uses: 'ncipollo/release-action@v1.12.0'
+        with:
+          allowUpdates: true
+          omitBody: true
+          omitName: true
+          omitPrereleaseDuringUpdate: true
+          omitDraftDuringUpdate: true
+          repo: opentrons
+          tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
+          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip"
+          artifactContentType: application/zip
+          token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
+      - name: Upload version json to monorepo release
+        if: steps.build-refs.outputs.build-type == 'release'
+        uses: 'ncipollo/release-action@v1.12.0'
+        with:
+          allowUpdates: true
+          omitBody: true
+          omitName: true
+          omitPrereleaseDuringUpdate: true
+          omitDraftDuringUpdate: true
+          repo: opentrons
+          tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
+          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
+          artifactContentType: application/json
+          token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
+
+      - name: Post results
+        if: ${{ matrix.build_env == 'stage-prod' }}
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ steps.build-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ steps.build-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+
       - name: remove build data
         if: always()
         run: |

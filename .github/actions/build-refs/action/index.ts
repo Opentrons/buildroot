@@ -3,14 +3,20 @@ import * as core from '@actions/core'
 
 export type Repo = 'buildroot' | 'monorepo'
 export type BuildType = 'develop' | 'release'
+export type Channel = 'full-release' | 'internal-release'
 
 const orderedRepos: Repo[] = ['monorepo', 'buildroot']
+const channels: Channel[] = ['full-release', 'internal-release']
 
 export type Branch = string
 export type Tag = string
 export type Ref = Branch | Tag
 
 export type InputRefs = Map<Repo, Ref | null>
+export interface Inputs {
+  channel: Channel
+  refs: InputRefs
+}
 
 export type AttemptableTag = Tag | ':latest:'
 export type AttemptableRef = AttemptableTag | Branch
@@ -68,11 +74,17 @@ export function authoritativeRef(inputs: InputRefs): [Ref, boolean] {
   )
 }
 
-function getInputs(): InputRefs {
-  return orderedRepos.reduce((prev: InputRefs, inputName: Repo): InputRefs => {
-    const input = core.getInput(inputName)
-    return prev.set(inputName, input == '-' ? null : input)
-  }, new Map())
+function getInputs(): Inputs {
+  return {
+    channel: (() => {
+      const inputChan = core.getInput('channel') as Channel
+      return channels.includes(inputChan) ? inputChan : 'internal-release'
+    })(),
+    refs: orderedRepos.reduce((prev: InputRefs, inputName: Repo): InputRefs => {
+      const input = core.getInput(inputName)
+      return prev.set(inputName, input == '-' ? null : input)
+    }, new Map()),
+  }
 }
 
 function visitRefsByType<T>(
@@ -185,18 +197,28 @@ async function resolveRefs(toAttempt: AttemptableRefs): Promise<OutputRefs> {
   return resolved
 }
 
-export function resolveBuildType(ref: Ref): BuildType {
+function resolveBuildTypeInternal(ref: Ref): BuildType {
+  return ref.includes('refs/tags/ot3@') ? 'release' : 'develop'
+}
+
+function resolveBuildTypeExternal(ref: Ref): BuildType {
   return ref.includes('refs/tags/v') ? 'release' : 'develop'
+}
+
+export function resolveBuildType(ref: Ref, channel: Channel): BuildType {
+  return channel === 'internal-release'
+    ? resolveBuildTypeInternal(ref)
+    : resolveBuildTypeExternal(ref)
 }
 
 async function run() {
   const inputs = getInputs()
-  inputs.forEach((ref, repo) => {
+  inputs.refs.forEach((ref, repo) => {
     core.debug(`found input for ${repo}: ${ref}`)
   })
-  const [authoritative, isMain] = authoritativeRef(inputs)
+  const [authoritative, isMain] = authoritativeRef(inputs.refs)
   core.debug(`authoritative ref is ${authoritative} (main: ${isMain})`)
-  const attemptable = Array.from(inputs.entries()).reduce(
+  const attemptable = Array.from(inputs.refs.entries()).reduce(
     (prev: AttemptableRefs, [repoName, inputRef]): AttemptableRefs => {
       return prev.set(
         repoName,
@@ -218,7 +240,7 @@ async function run() {
 
     // Determine the build-type based on the monorepo ref
     if (repo === 'monorepo') {
-      const buildType = resolveBuildType(ref)
+      const buildType = resolveBuildType(ref, inputs.channel)
       core.info(`Resolved buildroot build-type to ${buildType}`)
       core.setOutput('build-type', buildType)
     }
