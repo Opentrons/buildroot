@@ -210,16 +210,16 @@ jobs:
           echo "root_uri=$root_uri" >> $GITHUB_OUTPUT
           echo "root_url=$root_url" >> $GITHUB_OUTPUT
           echo "root_prefix=ot2-br" >> $GITHUB_OUTPUT
+          echo "machine_root=${arnslug}/${prefix}" >> $GITHUB_OUTPUT
           popd
       - name: Handle release manifest
         if: ${{ steps.build-refs.outputs.build-type == 'release' }}
         shell: bash
         run: |
           pushd buildroot
-          base_url=s3://${{steps.upload-results.outputs.arnslug}}/${{steps.upload-results.outputs.root_prefix}}
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ${base_url}/releases.json releases.json
-          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url $base_url
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json ${base_url}/releases.json
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ${{steps.upload-results.output.machine_root}}/releases.json releases.json
+          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url ${{ steps.upload-results.output.root_url }}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json ${{steps.upload-results.output.machine_root}}/releases.json
           popd
 
       - name: Upload system zip to monorepo release
