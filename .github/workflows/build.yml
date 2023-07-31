@@ -182,7 +182,7 @@ jobs:
           cp ${artifact_dir}/ot2-fullimage.zip ${versioned_artifact_dir}/${versioned_fullimage_zip}
           echo "ot2_fullimage_versioned=${versioned_artifact_dir}/${versioned_fullimage_zip}" >> $GITHUB_OUTPUT
 
-          versioned_version_json="VERSION-${_vers_tag}.json"
+          versioned_version_json="VERSION-ot2-${_vers_tag}.json"
           cp ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
           echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
 
