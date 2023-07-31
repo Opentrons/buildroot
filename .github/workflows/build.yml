@@ -217,9 +217,9 @@ jobs:
         shell: bash
         run: |
           pushd buildroot
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ${{steps.upload-results.output.machine_root}}/releases.json releases.json
-          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url ${{ steps.upload-results.output.root_url }}
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json ${{steps.upload-results.output.machine_root}}/releases.json
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read ${{steps.upload-results.outputs.machine_root}}/releases.json releases.json
+          python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url ${{ steps.upload-results.outputs.root_url }}
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json ${{steps.upload-results.outputs.machine_root}}/releases.json
           popd
 
       - name: Upload system zip to monorepo release
