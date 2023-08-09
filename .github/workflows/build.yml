@@ -27,13 +27,34 @@ env:
   CI: true
 
 jobs:
+  decide-refs:
+    name: 'Decide refs to build'
+    runs-on: 'ubuntu-latest'
+    outputs:
+      buildroot: ${{ steps.build-refs.outputs.buildroot }}
+      monorepo: ${{ steps.build-refs.outputs.monorepo }}
+      variant: ${{ steps.build-refs.outputs.variant }}
+      build-type: ${{ steps.build-refs.outputs.build-type }}
+
+    steps:
+      - name: Check out sources for action
+        uses: 'actions/checkout@v3'
+        path: ./buildroot-for-workflow
+      - name: Get the refs
+        id: build-refs
+        uses: './buildroot-for-workflow/.github/actions/build-refs'
+        with:
+          token: ${{ github.token }}
+          monorepo: ${{ inputs.monorepo-ref }}
+          buildroot: ${{ inputs.buildroot-ref }}
   run-build:
+    needs: decide-refs
     strategy:
       matrix:
-        build_env: [ '${{ inputs.infra-stage }}' ]
-    name: 'Building images on ${{ matrix.build_env }}'
+        build_env: [ '${{ inputs.infra-stage }}', ]
+    name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ matrix.build_env }}'
     timeout-minutes: 480
-    runs-on: ['self-hosted', '${{matrix.build_env}}']
+    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
     steps:
       - name: Set up vm requirements
         run: |
@@ -46,25 +67,17 @@ jobs:
         with:
           fetch-depth: 0
           path: ./buildroot-for-workflow
-      - name: Decide refs to build
-        id: build-refs
-        uses: './buildroot-for-workflow/.github/actions/build-refs'
-        with:
-          token: ${{ github.token }}
-          channel: internal-release
-          monorepo: ${{ inputs.monorepo-ref }}
-          buildroot: ${{ inputs.buildroot-ref }}
       - name: Fetch buildroot source
         uses: 'actions/checkout@v3'
         with:
           fetch-depth: 0
-          ref: ${{steps.build-refs.outputs.buildroot}}
+          ref: ${{needs.decide-refs.outputs.buildroot}}
           path: ./buildroot
       - name: Fetch monorepo source
         uses: 'actions/checkout@v3'
         with:
           fetch-depth: 0
-          ref: ${{ steps.build-refs.outputs.monorepo }}
+          ref: ${{ needs.decide-refs.outputs.monorepo }}
           repository: Opentrons/opentrons
           path: ./opentrons
       - name: Configure AWS Credentials
@@ -93,7 +106,7 @@ jobs:
         id: docker-env
         run: |
           cat <<EOF >./docker-envfile
-          OT_BUILD_TYPE=${{steps.build-refs.outputs.build-type}}
+          OT_BUILD_TYPE=${{needs.decide-refs.outputs.build-type}}
           FORCE_UNSAFE_CONFIGURE=1
           BR2_DL_DIR=/downloads
           EOF
@@ -107,7 +120,7 @@ jobs:
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
       - name: Set up signing
-        if: steps.build-refs.outputs.build-type == 'release'
+        if: needs.decide-refs.outputs.build-type == 'release'
         run: |
           echo "${{secrets.ROBOT_SIGNING_KEY}}" > ./buildroot/.signing-key
 
@@ -158,9 +171,9 @@ jobs:
           echo "versioned_artifact_dir=${versioned_artifact_dir}" >> $GITHUB_OUTPUT
           echo "versioned_artifact_dir_rel=${versioned_artifact_dir_rel}" >> $GITHUB_OUTPUT
 
-          _fulltag="${{steps.build-refs.outputs.monorepo}}"
-          _vers_tag=${_fulltag:14}
+          _fulltag="${{needs.decide-refs.outputs.monorepo}}"
           echo "monorepo_shorttag=${_fulltag:10}" >> $GITHUB_OUTPUT
+          _vers_tag=${{needs.decide-refs.outputs.variant == 'release' && '${_fulltag:11}' || '${_fulltag:14}'}}
 
           cp ${artifact_dir}/ot2-system.zip ${prepped_artifact_dir}/ot2-system.zip
           echo "ot2_system=${prepped_artifact_dir}/ot2-system.zip" >> $GITHUB_OUTPUT
@@ -213,7 +226,7 @@ jobs:
           echo "machine_root=${arnslug}/${prefix}" >> $GITHUB_OUTPUT
           popd
       - name: Handle release manifest
-        if: ${{ steps.build-refs.outputs.build-type == 'release' }}
+        if: ${{ needs.decide-refs.outputs.build-type == 'release' }}
         shell: bash
         run: |
           pushd buildroot
@@ -223,7 +236,7 @@ jobs:
           popd
 
       - name: Upload system zip to monorepo release
-        if: steps.build-refs.outputs.build-type == 'release'
+        if: needs.decide-refs.outputs.build-type == 'release'
         uses: 'ncipollo/release-action@v1.12.0'
         with:
           allowUpdates: true
@@ -237,7 +250,7 @@ jobs:
           artifactContentType: application/zip
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
       - name: Upload version json to monorepo release
-        if: steps.build-refs.outputs.build-type == 'release'
+        if: needs.decide-refs.outputs.build-type == 'release'
         uses: 'ncipollo/release-action@v1.12.0'
         with:
           allowUpdates: true
@@ -251,13 +264,21 @@ jobs:
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
-      - name: Post results
-        if: ${{ matrix.build_env == 'stage-prod' }}
+      - name: Post results as internal-release
+        if: ${{ matrix.build_env == 'stage-prod' }} && ${{ needs.decide-refs.outputs.variant == 'internal-release' }}
         uses: slackapi/slack-github-action@v1.14.0
         with:
-          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ steps.build-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ steps.build-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
+          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+
+      - name: Post results as release
+        if: ${{ matrix.build_env == 'stage-prod' }} && ${{ needs.decide-refs.outputs.variant == 'release' }}
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
 
       - name: remove build data
         if: always()
