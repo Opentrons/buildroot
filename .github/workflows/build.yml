@@ -39,7 +39,8 @@ jobs:
     steps:
       - name: Check out sources for action
         uses: 'actions/checkout@v3'
-        path: ./buildroot-for-workflow
+        with:
+          path: ./buildroot-for-workflow
       - name: Get the refs
         id: build-refs
         uses: './buildroot-for-workflow/.github/actions/build-refs'
