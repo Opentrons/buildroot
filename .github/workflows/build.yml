@@ -266,7 +266,7 @@ jobs:
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
       - name: Post results as internal-release
-        if: ${{ matrix.build_env == 'stage-prod' }} && ${{ needs.decide-refs.outputs.variant == 'internal-release' }}
+        if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'internal-release'
         uses: slackapi/slack-github-action@v1.14.0
         with:
           payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
@@ -274,7 +274,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
 
       - name: Post results as release
-        if: ${{ matrix.build_env == 'stage-prod' }} && ${{ needs.decide-refs.outputs.variant == 'release' }}
+        if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'release'
         uses: slackapi/slack-github-action@v1.14.0
         with:
           payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
