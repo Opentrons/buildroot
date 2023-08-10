@@ -4,9 +4,6 @@ inputs:
   token:
     description: "gh token for api calls to resolve refs"
     required: true
-  channel:
-    description: "which release channel, internal-release or full-release"
-    required: true
   monorepo:
     description: "ref of https://github.com/opentrons/opentrons to build"
     required: false
@@ -22,6 +19,8 @@ outputs:
     description: "the ref of the buildroot to use"
   build-type:
     description: "the type of build oe-core will create (develop, release)"
+  variant:
+    description: "Which variant to build (release, internal-release)"
 runs:
   using: 'node16'
   main: 'dist/index.js'
