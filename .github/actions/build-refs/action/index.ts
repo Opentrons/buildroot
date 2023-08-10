@@ -3,20 +3,15 @@ import * as core from '@actions/core'
 
 export type Repo = 'buildroot' | 'monorepo'
 export type BuildType = 'develop' | 'release'
-export type Channel = 'full-release' | 'internal-release'
+export type Variant = 'release' | 'internal-release'
 
 const orderedRepos: Repo[] = ['monorepo', 'buildroot']
-const channels: Channel[] = ['full-release', 'internal-release']
 
 export type Branch = string
 export type Tag = string
 export type Ref = Branch | Tag
 
-export type InputRefs = Map<Repo, Ref | null>
-export interface Inputs {
-  channel: Channel
-  refs: InputRefs
-}
+export type Inputs = Map<Repo, Ref | null>
 
 export type AttemptableTag = Tag | ':latest:'
 export type AttemptableRef = AttemptableTag | Branch
@@ -24,6 +19,23 @@ export type AttemptableRef = AttemptableTag | Branch
 export type AttemptableRefs = Map<Repo, AttemptableRef[]>
 
 export type OutputRefs = Map<Repo, Ref>
+
+export function variantForRef(ref: Ref): Variant {
+  if (ref.startsWith('refs/heads')) {
+    if (ref.includes('internal-release')) {
+      return 'internal-release'
+    } else {
+      return 'release'
+    }
+  } else if (ref.startsWith('refs/tags')) {
+    if (ref.includes('ot3@')) {
+      return 'internal-release'
+    } else if (ref.startsWith('refs/tags/v')) {
+      return 'release'
+    }
+  }
+  return 'internal-release'
+}
 
 function mainRefFor(input: Repo): Branch {
   return {
@@ -61,7 +73,7 @@ function refIsMain(input: Ref, repo: Repo): boolean {
   return mainRefFor(repo) === input
 }
 
-export function authoritativeRef(inputs: InputRefs): [Ref, boolean] {
+export function authoritativeRef(inputs: Inputs): [Ref, boolean] {
   return (
     orderedRepos
       .map((repoName): [Ref, boolean] | null => {
@@ -74,18 +86,11 @@ export function authoritativeRef(inputs: InputRefs): [Ref, boolean] {
   )
 }
 
-function getInputs(): Inputs {
-  return {
-    channel: (() => {
-      const inputChan = core.getInput('channel') as Channel
-      return channels.includes(inputChan) ? inputChan : 'internal-release'
-    })(),
-    refs: orderedRepos.reduce((prev: InputRefs, inputName: Repo): InputRefs => {
-      const input = core.getInput(inputName)
-      return prev.set(inputName, input == '-' ? null : input)
-    }, new Map()),
-  }
-}
+const getInputs = () =>
+  orderedRepos.reduce((prev: Inputs, inputName: Repo): Inputs => {
+    const input = core.getInput(inputName)
+    return prev.set(inputName, input == '-' ? null : input)
+  }, new Map())
 
 function visitRefsByType<T>(
   ref: Ref,
@@ -205,20 +210,20 @@ function resolveBuildTypeExternal(ref: Ref): BuildType {
   return ref.includes('refs/tags/v') ? 'release' : 'develop'
 }
 
-export function resolveBuildType(ref: Ref, channel: Channel): BuildType {
-  return channel === 'internal-release'
+export function resolveBuildType(ref: Ref, variant: Variant): BuildType {
+  return variant === 'internal-release'
     ? resolveBuildTypeInternal(ref)
     : resolveBuildTypeExternal(ref)
 }
 
 async function run() {
   const inputs = getInputs()
-  inputs.refs.forEach((ref, repo) => {
+  inputs.forEach((ref, repo) => {
     core.debug(`found input for ${repo}: ${ref}`)
   })
-  const [authoritative, isMain] = authoritativeRef(inputs.refs)
+  const [authoritative, isMain] = authoritativeRef(inputs)
   core.debug(`authoritative ref is ${authoritative} (main: ${isMain})`)
-  const attemptable = Array.from(inputs.refs.entries()).reduce(
+  const attemptable = Array.from(inputs.entries()).reduce(
     (prev: AttemptableRefs, [repoName, inputRef]): AttemptableRefs => {
       return prev.set(
         repoName,
@@ -240,9 +245,12 @@ async function run() {
 
     // Determine the build-type based on the monorepo ref
     if (repo === 'monorepo') {
-      const buildType = resolveBuildType(ref, inputs.channel)
+      const variant = variantForRef(ref)
+      core.info(`Resolved build variant to ${variant}`)
+      const buildType = resolveBuildType(ref, variant)
       core.info(`Resolved buildroot build-type to ${buildType}`)
       core.setOutput('build-type', buildType)
+      core.setOutput('variant', variant)
     }
   })
 }
