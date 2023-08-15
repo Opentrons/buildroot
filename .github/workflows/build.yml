@@ -128,6 +128,12 @@ jobs:
       - name: Set up docker args
         id: docker-args
         run: |
+          if [ ${{needs.decide-refs.outputs.variant}} = "release" ] ; then
+             _project=robot-stack
+          else
+            _project=ot3
+          fi
+          echo "Stack name ${_project} from variant ${{needs.decide-refs.outputs.variant}}"
           mount_args="type=bind,consistency=delegated"
           bind_br="--mount source=$(pwd)/buildroot,destination=/buildroot,${mount_args}"
           bind_ot="--mount source=$(pwd)/opentrons,destination=/opentrons,${mount_args}"
@@ -137,7 +143,7 @@ jobs:
           env="--env-file ${{steps.docker-env.outputs.envfile}}"
           echo "run-binds=${binds}" >> $GITHUB_OUTPUT
           echo "env=${env}" >> $GITHUB_OUTPUT
-          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output OPENTRONS_PROJECT=ot3"
+          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output OPENTRONS_PROJECT=${_project}"
           echo "args=${args}" >> $GITHUB_OUTPUT
 
       - name: Configure
