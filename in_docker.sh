@@ -27,6 +27,8 @@ if [[ -n "${FILTER}" ]]; then
    done;
 fi
 
+git config --global --add safe.directory /opentrons
+
 if [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
     LANG="en_US.UTF-8" BR2_EXTERNAL=/opentrons make -C /buildroot "$@"
