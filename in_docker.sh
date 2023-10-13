@@ -9,6 +9,9 @@ set -v
 
 filtered_build_log="/buildroot/buildlog.txt"
 
+git config --global --add safe.directory /opentrons
+git config --global --add safe.directory /buildroot
+
 
 if [[ -n "${FILTER}" ]]; then
    echo "in ci"

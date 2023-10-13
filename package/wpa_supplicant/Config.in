@@ -154,6 +154,11 @@ config BR2_PACKAGE_WPA_SUPPLICANT_PASSPHRASE
 	help
 	  Install wpa_passphrase command line utility.
 
+config BR2_PACKAGE_WPA_SUPPLICANT_CTRL_IFACE
+	bool "Enable the Unix-socket control interface"
+	help
+	  Enable support for the Unix-socket-based API.
+
 config BR2_PACKAGE_WPA_SUPPLICANT_DBUS
 	bool "Enable support for the DBus control interface"
 	depends on BR2_TOOLCHAIN_HAS_THREADS # dbus

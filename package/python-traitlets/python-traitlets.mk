@@ -10,10 +10,9 @@ PYTHON_TRAITLETS_SITE = https://files.pythonhosted.org/packages/56/48/0eb9935733
 PYTHON_TRAITLETS_LICENSE = BSD-3-Clause
 PYTHON_TRAITLETS_LICENSE_FILES = COPYING.md
 PYTHON_TRAITLETS_SETUP_TYPE = pep517
-PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling
 
-HOST_PYTHON_TRAITLETS_DEPENDENCIES = host-python-ipython-genutils host-python-six
-PYTHON_TRAITLETS_DEPENDENCIES = python-ipython-genutils python-six
+HOST_PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling host-python-ipython-genutils host-python-six
+PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling python-ipython-genutils python-six
 
 $(eval $(python-package))
 $(eval $(host-python-package))

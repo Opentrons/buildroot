@@ -32,7 +32,7 @@ cp -r ${BINARIES_DIR}/rpi-firmware/overlays ${TARGET_DIR}/boot/overlays
 cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
 
 # rewrite config.txt to boot u-boot
-sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.txt
+sed -i s/kernel=zImage/kernel=u-boot.bin/ ./board/opentrons/ot2/config.txt
 hostname_to_write=$(cat ${TARGET_DIR}/etc/hostname)
 
 if [ ${OT_BUILD_TYPE} != "release" ]; then

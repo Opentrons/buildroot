@@ -1,6 +1,7 @@
 config BR2_PACKAGE_PYTHON_CCHARDET
 	bool "python-cchardet"
 	depends on BR2_INSTALL_LIBSTDCPP
+	depends on BR2_PACKAGE_HOST_PYTHON_CYTHON
 	help
 	  cChardet is high speed universal character encoding
 	  detector.
