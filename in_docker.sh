@@ -28,6 +28,7 @@ if [[ -n "${FILTER}" ]]; then
 fi
 
 git config --global --add safe.directory /opentrons
+git config --global --add safe.directory /buildroot
 
 if [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
