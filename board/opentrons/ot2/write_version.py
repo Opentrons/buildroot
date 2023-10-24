@@ -55,7 +55,7 @@ version_dict = {'buildroot_version': br_version,
 for f in args.in_versions:
     data = f.read()
     print('Opening {}: {}'.format(f.name, data))
-    if not data:
+    if not data.strip():
         data = '{}'
     version_dict.update(json.loads(data))
 
