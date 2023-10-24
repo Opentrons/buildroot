@@ -53,6 +53,11 @@ version_dict = {'buildroot_version': br_version,
                 'robot_type': os.getenv('ROBOT_TYPE', 'OT-2 Standard')}
 
 for f in args.in_versions:
-    version_dict.update(json.load(f))
+    data = f.read()
+    print('Opening {}: {}'.format(f.name, data))
+    if not data:
+        data = '{}'
+    version_dict.update(json.loads(data))
 
+print("Writing version to {}".format(getattr(args.outfile, 'name', '<probably stdout>')))
 json.dump(version_dict, args.outfile)
