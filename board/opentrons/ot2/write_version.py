@@ -55,9 +55,11 @@ version_dict = {'buildroot_version': br_version,
 for f in args.in_versions:
     data = f.read()
     print('Opening {}: {}'.format(f.name, data))
-    if not data.strip():
-        data = '{}'
-    version_dict.update(json.loads(data))
+    try:
+        data_json = json.loads(data)
+    except Exception:
+        data_json = {}
+    version_dict.update(data_json)
 
 print("Writing version to {}".format(getattr(args.outfile, 'name', '<probably stdout>')))
 json.dump(version_dict, args.outfile)
