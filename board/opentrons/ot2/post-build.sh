@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -u
 set -e
 
 GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
