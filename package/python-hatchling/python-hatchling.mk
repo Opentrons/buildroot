@@ -14,6 +14,7 @@ HOST_PYTHON_HATCHLING_DEPENDENCIES = \
 	host-python-editables \
 	host-python-packaging \
 	host-python-pathspec \
-	host-python-pluggy
+	host-python-pluggy \
+	host-python-tomli
 
 $(eval $(host-python-package))
