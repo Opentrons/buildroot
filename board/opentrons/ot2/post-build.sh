@@ -91,6 +91,6 @@ mkdir -p ${TARGET_DIR}/etc/syslog-ng/certs.d/
 rm -rf ${TARGET_DIR}/etc/syslog-ng/certs.d/*
 curl https://docs.datadoghq.com/resources/crt/FULL_intake.logs.datadoghq.com.crt > ${TARGET_DIR}/etc/syslog-ng/certs.d/datadoghq.com.crt
 
-find ${TARGET_DIR}/usr/lib/python3.10/site-packages -name tests -or -name test -exec rm -rf {} +
-find ${TARGET_DIR} -type f -iname 'README*' -exec rm -rf {} + 
+find ${TARGET_DIR}/usr/lib/ -name tests -or -name test | xargs --verbose rm -rf
+find ${TARGET_DIR} -type f -iname 'README*' | xargs --verbose rm -rf
 rm -rf ${TARGET_DIR}/usr/share/doc
