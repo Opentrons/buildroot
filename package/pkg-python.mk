@@ -174,6 +174,12 @@ HOST_PKG_PYTHON_MATURIN_ENV = \
 	$(HOST_PKG_CARGO_ENV) \
 	PYO3_CROSS_LIB_DIR="$(HOST_DIR)/lib/python$(PYTHON3_VERSION_MAJOR)"
 
+HOST_PKG_PYTHON_MATURIN_BUILD_CMD = \
+	$(HOST_PKG_PYTHON_PEP517_BUILD_CMD)
+
+HOST_PKG_PYTHON_MATURIN_INSTALL_CMD = \
+	$(HOST_PKG_PYTHON_PEP517_INSTALL_CMD)
+
 ################################################################################
 # inner-python-package -- defines how the configuration, compilation
 # and installation of a Python package should be done, implements a
