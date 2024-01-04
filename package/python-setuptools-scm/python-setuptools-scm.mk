@@ -11,4 +11,8 @@ PYTHON_SETUPTOOLS_SCM_LICENSE = MIT
 PYTHON_SETUPTOOLS_SCM_LICENSE_FILES = LICENSE
 PYTHON_SETUPTOOLS_SCM_SETUP_TYPE = setuptools
 
+HOST_PYTHON_SETUPTOOLS_SCM_DEPENDENCIES = \
+	host-python-packaging \
+	host-python-typing-extensions
+
 $(eval $(host-python-package))

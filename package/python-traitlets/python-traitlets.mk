@@ -4,15 +4,15 @@
 #
 ################################################################################
 
-PYTHON_TRAITLETS_VERSION = 4.3.2
+PYTHON_TRAITLETS_VERSION = 5.8.0
 PYTHON_TRAITLETS_SOURCE = traitlets-$(PYTHON_TRAITLETS_VERSION).tar.gz
-PYTHON_TRAITLETS_SITE = https://pypi.python.org/packages/a5/98/7f5ef2fe9e9e071813aaf9cb91d1a732e0a68b6c44a32b38cb8e14c3f069
+PYTHON_TRAITLETS_SITE = https://files.pythonhosted.org/packages/56/48/0eb99357330a02974d537be8e4096bc58cfac1089e3153570119ccea7a40
 PYTHON_TRAITLETS_LICENSE = BSD-3-Clause
 PYTHON_TRAITLETS_LICENSE_FILES = COPYING.md
-PYTHON_TRAITLETS_SETUP_TYPE = distutils
+PYTHON_TRAITLETS_SETUP_TYPE = pep517
 
-HOST_PYTHON_TRAITLETS_DEPENDENCIES = host-python-ipython-genutils host-python-six
-PYTHON_TRAITLETS_DEPENDENCIES = python-ipython-genutils python-six
+HOST_PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling host-python-ipython-genutils host-python-six
+PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling python-ipython-genutils python-six
 
 $(eval $(python-package))
 $(eval $(host-python-package))

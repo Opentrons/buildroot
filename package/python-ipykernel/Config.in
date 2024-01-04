@@ -4,6 +4,7 @@ config BR2_PACKAGE_PYTHON_IPYKERNEL
 	select BR2_PACKAGE_PYTHON_TRAITLETS # runtime
 	select BR2_PACKAGE_PYTHON_JUPYTER_CLIENT # runtime
 	select BR2_PACKAGE_PYTHON_TORNADO # runtime
+    select BR2_PACKAGE_PYTHON3_SQLITE # runtime
 	help
 	  IPython Kernel for Jupyter.
 

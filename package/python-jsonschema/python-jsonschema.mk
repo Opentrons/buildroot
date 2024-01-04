@@ -10,6 +10,9 @@ PYTHON_JSONSCHEMA_SITE = https://files.pythonhosted.org/packages/92/d2/8768983d6
 PYTHON_JSONSCHEMA_SETUP_TYPE = setuptools
 PYTHON_JSONSCHEMA_LICENSE = MIT
 PYTHON_JSONSCHEMA_LICENSE_FILES = COPYING json/LICENSE
-PYTHON_JSONSCHEMA_DEPENDENCIES = host-python-vcversioner
+PYTHON_JSONSCHEMA_DEPENDENCIES = \
+	host-python-hatchling \
+	host-python-hatch-fancy-pypi-readme \
+	host-python-hatch-vcs
 
 $(eval $(python-package))

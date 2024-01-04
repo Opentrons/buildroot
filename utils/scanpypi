@@ -7,13 +7,8 @@ Utility for building Buildroot packages for existing PyPI packages
 Any package built by scanpypi should be manually checked for
 errors.
 """
-from __future__ import print_function
-from __future__ import absolute_import
 import argparse
 import json
-import six.moves.urllib.request
-import six.moves.urllib.error
-import six.moves.urllib.parse
 import sys
 import os
 import copy
@@ -29,6 +24,9 @@ import imp
 import configparser
 import inspect
 from functools import wraps
+import six.moves.urllib.request
+import six.moves.urllib.error
+import six.moves.urllib.parse
 from six.moves import map
 from six.moves import zip
 from six.moves import input
@@ -103,9 +101,10 @@ def pkg_buildroot_name(pkg_name):
     Keyword arguments:
     pkg_name -- String to rename
     """
-    name = re.sub('[^\w-]', '', pkg_name.lower())
+    name = re.sub(r'[^\w-]', '', pkg_name.lower())
+    name = name.replace('_', '-')
     prefix = 'python-'
-    pattern = re.compile('^(?!' + prefix + ')(.+?)$')
+    pattern = re.compile(r'^(?!' + prefix + ')(.+?)$')
     name = pattern.sub(r'python-\1', name)
     return name
 
@@ -232,6 +231,22 @@ class BuildrootPackage():
         self.filename = self.used_url['filename']
         self.url = self.used_url['url']
 
+    def check_archive(self, members):
+        """
+        Check archive content before extracting
+
+        Keyword arguments:
+        members -- list of archive members
+        """
+        # Protect against https://github.com/snyk/zip-slip-vulnerability
+        # Older python versions do not validate that the extracted files are
+        # inside the target directory. Detect and error out on evil paths
+        evil = [e for e in members if os.path.relpath(e).startswith(('/', '..'))]
+        if evil:
+            print('ERROR: Refusing to extract {} with suspicious members {}'.format(
+                self.filename, evil))
+            sys.exit(1)
+
     def extract_package(self, tmp_path):
         """
         Extract the package contents into a directrory
@@ -256,6 +271,7 @@ class BuildrootPackage():
                     print('Removing {pkg}...'.format(pkg=tmp_pkg))
                     shutil.rmtree(tmp_pkg)
                     os.makedirs(tmp_pkg)
+                self.check_archive(as_zipfile.namelist())
                 as_zipfile.extractall(tmp_pkg)
                 pkg_filename = self.filename.split(".zip")[0]
         else:
@@ -271,6 +287,7 @@ class BuildrootPackage():
                     print('Removing {pkg}...'.format(pkg=tmp_pkg))
                     shutil.rmtree(tmp_pkg)
                     os.makedirs(tmp_pkg)
+                self.check_archive(as_tarfile.getnames())
                 as_tarfile.extractall(tmp_pkg)
                 pkg_filename = self.filename.split(".tar")[0]
 
@@ -416,13 +433,14 @@ class BuildrootPackage():
             version=self.version)
         lines.append(version_line)
 
-        targz = self.filename.replace(
-            self.version,
-            '$({name}_VERSION)'.format(name=self.mk_name))
-        targz_line = '{name}_SOURCE = {filename}\n'.format(
-            name=self.mk_name,
-            filename=targz)
-        lines.append(targz_line)
+        if self.buildroot_name != self.real_name:
+            targz = self.filename.replace(
+                self.version,
+                '$({name}_VERSION)'.format(name=self.mk_name))
+            targz_line = '{name}_SOURCE = {filename}\n'.format(
+                name=self.mk_name,
+                filename=targz)
+            lines.append(targz_line)
 
         if self.filename not in self.url:
             # Sometimes the filename is in the url, sometimes it's not
@@ -487,7 +505,7 @@ class BuildrootPackage():
                 "Mozilla Public License 2.0": "MPL-2.0",
                 "Zope Public License": "ZPL"
                 }
-            regexp = re.compile('^License :* *.* *:+ (.*)( \(.*\))?$')
+            regexp = re.compile(r'^License :* *.* *:+ (.*)( \(.*\))?$')
             classifiers_licenses = [regexp.sub(r"\1", lic)
                                     for lic in self.metadata['info']['classifiers']
                                     if regexp.match(lic)]
@@ -497,6 +515,7 @@ class BuildrootPackage():
                       ' likely wrong, please change it if need be'.format(
                           license=', '.join(licenses)))
                 licenses = [self.metadata['info']['license']]
+            licenses = set(licenses)
             license_line = '{name}_LICENSE = {license}\n'.format(
                 name=self.mk_name,
                 license=', '.join(licenses))
@@ -509,6 +528,7 @@ class BuildrootPackage():
                     license_names.append(match.license.id)
                 else:
                     license_names.append("FIXME: license id couldn't be detected")
+            license_names = set(license_names)
 
             if len(license_names) > 0:
                 license_line = ('{name}_LICENSE ='
@@ -529,8 +549,8 @@ class BuildrootPackage():
         """
         lines = []
 
-        filenames = ['LICENCE', 'LICENSE', 'LICENSE.RST', 'LICENSE.TXT',
-                     'COPYING', 'COPYING.TXT']
+        filenames = ['LICENCE', 'LICENSE', 'LICENSE.MD', 'LICENSE.RST',
+                     'LICENCE.TXT', 'LICENSE.TXT', 'COPYING', 'COPYING.TXT']
         self.license_files = list(find_file_upper_case(filenames, self.tmp_extract))
 
         lines.append(self.__get_license_names(self.license_files))
@@ -602,12 +622,12 @@ class BuildrootPackage():
             hash_header = '# md5, sha256 from {url}\n'.format(
                 url=self.metadata_url)
             lines.append(hash_header)
-            hash_line = '{method}\t{digest}  {filename}\n'.format(
+            hash_line = '{method}  {digest}  {filename}\n'.format(
                 method='md5',
                 digest=self.used_url['digests']['md5'],
                 filename=self.filename)
             lines.append(hash_line)
-            hash_line = '{method}\t{digest}  {filename}\n'.format(
+            hash_line = '{method}  {digest}  {filename}\n'.format(
                 method='sha256',
                 digest=self.used_url['digests']['sha256'],
                 filename=self.filename)
@@ -623,7 +643,7 @@ class BuildrootPackage():
                     if not data:
                         break
                     sha256.update(data)
-            hash_line = '{method}\t{digest}  {filename}\n'.format(
+            hash_line = '{method}  {digest}  {filename}\n'.format(
                 method='sha256',
                 digest=sha256.hexdigest(),
                 filename=license_file.replace(self.tmp_extract, '')[1:])
@@ -646,6 +666,7 @@ class BuildrootPackage():
         bool_line = '\tbool "{name}"\n'.format(name=self.buildroot_name)
         lines.append(bool_line)
         if self.pkg_req:
+            self.pkg_req.sort()
             for dep in self.pkg_req:
                 dep_line = '\tselect BR2_PACKAGE_{req} # runtime\n'.format(
                     req=dep.upper().replace('-', '_'))
@@ -653,7 +674,8 @@ class BuildrootPackage():
 
         lines.append('\thelp\n')
 
-        help_lines = textwrap.wrap(self.metadata['info']['summary'], 62,
+        md_info = self.metadata['info']
+        help_lines = textwrap.wrap(md_info['summary'], 62,
                                    initial_indent='\t  ',
                                    subsequent_indent='\t  ')
 
@@ -661,11 +683,15 @@ class BuildrootPackage():
         if help_lines[-1][-1] != '.':
             help_lines[-1] += '.'
 
-        # \t + two spaces is 3 char long
-        help_lines.append('')
-        help_lines.append('\t  ' + self.metadata['info']['home_page'])
-        help_lines = [x + '\n' for x in help_lines]
-        lines += help_lines
+        home_page = md_info.get('home_page', None) or \
+                    md_info.get('project_urls', {}).get('Homepage', None)  # noqa: E127
+
+        if home_page:
+            # \t + two spaces is 3 char long
+            help_lines.append('')
+            help_lines.append('\t  ' + home_page)
+            help_lines = [x + '\n' for x in help_lines]
+            lines += help_lines
 
         with open(path_to_config, 'w') as config_file:
             config_file.writelines(lines)
@@ -732,12 +758,12 @@ def main():
             try:
                 package.load_setup()
             except ImportError as err:
-                if 'buildutils' in err.message:
+                if 'buildutils' in str(err):
                     print('This package needs buildutils')
                 else:
                     raise
                 continue
-            except AttributeError as error:
+            except (AttributeError, KeyError) as error:
                 print('Error: Could not install package {pkg}: {error}'.format(
                     pkg=package.real_name, error=error))
                 continue
@@ -773,6 +799,8 @@ def main():
             package.create_hash_file()
 
             package.create_config_in()
+            print("NOTE: Remember to also make an update to the DEVELOPERS file")
+            print("      and include an entry for the pkg in packages/Config.in")
             print()
             # printing an empty line for visual confort
     finally:

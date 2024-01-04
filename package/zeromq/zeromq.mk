@@ -4,21 +4,23 @@
 #
 ################################################################################
 
-ZEROMQ_VERSION = 4.2.5
+ZEROMQ_VERSION = 4.3.4
 ZEROMQ_SITE = https://github.com/zeromq/libzmq/releases/download/v$(ZEROMQ_VERSION)
 ZEROMQ_INSTALL_STAGING = YES
-ZEROMQ_DEPENDENCIES = util-linux
-ZEROMQ_CONF_OPTS = --without-documentation
+ZEROMQ_CONF_OPTS = --disable-Werror --without-documentation
 ZEROMQ_LICENSE = LGPL-3.0+ with exceptions
 ZEROMQ_LICENSE_FILES = COPYING COPYING.LESSER
-# 0001-configure.ac-serach-for-dladdr-only-on-libunwind.patch touches configure.ac
-ZEROMQ_AUTORECONF = YES
+ZEROMQ_CPE_ID_VENDOR = zeromq
+ZEROMQ_CPE_ID_PRODUCT = libzmq
 
 # Assume these flags are always available. It is true, at least for
 # SOCK_CLOEXEC, since linux v2.6.27.
 # Note: the flag TCP_KEEPALIVE is NOT available so we do not include it.
 ZEROMQ_CONF_ENV = libzmq_cv_sock_cloexec=yes \
+	libzmq_cv_o_cloexec=yes \
 	libzmq_cv_so_keepalive=yes \
+	libzmq_cv_so_priority=yes \
+	libzmq_cv_so_bindtodevice=yes \
 	libzmq_cv_tcp_keepcnt=yes \
 	libzmq_cv_tcp_keepidle=yes \
 	libzmq_cv_tcp_keepintvl=yes
@@ -47,6 +49,39 @@ ZEROMQ_DEPENDENCIES += host-pkgconf openpgm
 ZEROMQ_CONF_OPTS += --with-pgm
 else
 ZEROMQ_CONF_OPTS += --without-pgm
+endif
+
+ifeq ($(BR2_PACKAGE_ZEROMQ_DRAFTS),y)
+ZEROMQ_CONF_OPTS += --enable-drafts
+else
+ZEROMQ_CONF_OPTS += --disable-drafts
+endif
+
+ifeq ($(BR2_PACKAGE_ZEROMQ_WEBSOCKET),y)
+ZEROMQ_CONF_OPTS += --enable-ws
+else
+ZEROMQ_CONF_OPTS += --disable-ws
+endif
+
+ifeq ($(BR2_PACKAGE_GNUTLS),y)
+ZEROMQ_DEPENDENCIES += host-pkgconf gnutls
+ZEROMQ_CONF_OPTS += --with-tls
+else
+ZEROMQ_CONF_OPTS += --without-tls
+endif
+
+ifeq ($(BR2_PACKAGE_LIBBSD),y)
+ZEROMQ_DEPENDENCIES += host-pkgconf libbsd
+ZEROMQ_CONF_OPTS += --enable-libbsd
+else
+ZEROMQ_CONF_OPTS += --disable-libbsd
+endif
+
+ifeq ($(BR2_PACKAGE_LIBNSS),y)
+ZEROMQ_DEPENDENCIES += host-pkgconf libnss
+ZEROMQ_CONF_OPTS += --with-nss
+else
+ZEROMQ_CONF_OPTS += --without-nss
 endif
 
 # ZeroMQ uses libsodium if it's available.

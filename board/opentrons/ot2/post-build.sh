@@ -32,7 +32,7 @@ cp -r ${BINARIES_DIR}/rpi-firmware/overlays ${TARGET_DIR}/boot/overlays
 cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
 
 # rewrite config.txt to boot u-boot
-sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BINARIES_DIR}/rpi-firmware/config.txt
+sed -i s/kernel=zImage/kernel=u-boot.bin/ ./board/opentrons/ot2/config.txt
 hostname_to_write=$(cat ${TARGET_DIR}/etc/hostname)
 
 if [ ${OT_BUILD_TYPE} != "release" ]; then
@@ -91,3 +91,6 @@ mkdir -p ${TARGET_DIR}/etc/syslog-ng/certs.d/
 rm -rf ${TARGET_DIR}/etc/syslog-ng/certs.d/*
 curl https://docs.datadoghq.com/resources/crt/FULL_intake.logs.datadoghq.com.crt > ${TARGET_DIR}/etc/syslog-ng/certs.d/datadoghq.com.crt
 
+find ${TARGET_DIR}/usr/lib/ -name tests -or -name test | xargs --verbose rm -rf
+find ${TARGET_DIR} -type f -iname 'README*' | xargs --verbose rm -rf
+rm -rf ${TARGET_DIR}/usr/share/doc

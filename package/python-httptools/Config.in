@@ -1,6 +1,7 @@
 config BR2_PACKAGE_PYTHON_HTTPTOOLS
 	bool "python-httptools"
 	depends on BR2_PACKAGE_PYTHON3
+    depends on BR2_PACKAGE_HOST_PYTHON_CYTHON
 	help
 	  A collection of framework independent HTTP protocol utils.
 

@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-FAKEROOT_VERSION = 1.20.2
-FAKEROOT_SOURCE = fakeroot_$(FAKEROOT_VERSION).orig.tar.bz2
+FAKEROOT_VERSION = 1.30.1
+FAKEROOT_SOURCE = fakeroot_$(FAKEROOT_VERSION).orig.tar.gz
 FAKEROOT_SITE = http://deb.debian.org/debian/pool/main/f/fakeroot
 
 HOST_FAKEROOT_DEPENDENCIES = host-acl
@@ -15,7 +15,6 @@ HOST_FAKEROOT_DEPENDENCIES = host-acl
 HOST_FAKEROOT_CONF_ENV = \
 	ac_cv_header_sys_capability_h=no \
 	ac_cv_func_capset=no
-
 FAKEROOT_LICENSE = GPL-3.0+
 FAKEROOT_LICENSE_FILES = COPYING
 

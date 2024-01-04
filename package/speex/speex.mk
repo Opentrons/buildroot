@@ -4,10 +4,11 @@
 #
 ################################################################################
 
-SPEEX_VERSION = 1.2.0
+SPEEX_VERSION = 1.2.1
 SPEEX_SITE = https://downloads.xiph.org/releases/speex
 SPEEX_LICENSE = BSD-3-Clause
 SPEEX_LICENSE_FILES = COPYING
+SPEEX_CPE_ID_VENDOR = xiph
 SPEEX_INSTALL_STAGING = YES
 SPEEX_DEPENDENCIES = host-pkgconf libogg
 SPEEX_CONF_OPTS = \
@@ -23,6 +24,10 @@ endif
 
 ifeq ($(BR2_PACKAGE_SPEEX_ARM5E),y)
 SPEEX_CONF_OPTS += --enable-arm5e-asm
+endif
+
+ifeq ($(BR2_ARM_INSTRUCTIONS_THUMB),y)
+SPEEX_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -marm"
 endif
 
 define SPEEX_LIBTOOL_FIXUP

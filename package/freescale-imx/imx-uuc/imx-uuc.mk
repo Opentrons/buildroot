@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-IMX_UUC_VERSION = 79e9798eee9cd972d92ed2b18f170de856d153c9
+IMX_UUC_VERSION = d6afb27e55d73d7ad08cd2dd51c784d8ec9694dc
 IMX_UUC_SITE = $(call github,NXPmicro,imx-uuc,$(IMX_UUC_VERSION))
 IMX_UUC_LICENSE = GPL-2.0+
 IMX_UUC_LICENSE_FILES = COPYING
@@ -14,7 +14,7 @@ IMX_UUC_LICENSE_FILES = COPYING
 IMX_UUC_DEPENDENCIES = host-dosfstools
 
 define IMX_UUC_BUILD_CMDS
-	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) CC=$(TARGET_CC)
+	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) $(TARGET_CONFIGURE_OPTS)
 endef
 
 define IMX_UUC_INSTALL_TARGET_CMDS
@@ -33,9 +33,6 @@ endef
 define IMX_UUC_INSTALL_INIT_SYSTEMD
 	$(INSTALL) -D -m 0644 package/freescale-imx/imx-uuc/imx-uuc.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/imx-uuc.service
-	mkdir -p $(TARGET_DIR)/etc/systemd/system/multi-user.target.wants/
-	ln -fs ../../../../usr/lib/systemd/system/imx-uuc.service \
-		$(TARGET_DIR)/etc/systemd/system/multi-user.target.wants/imx-uuc.service
 endef
 
 $(eval $(generic-package))

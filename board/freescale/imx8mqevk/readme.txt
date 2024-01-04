@@ -10,7 +10,13 @@ Build
 
 First, configure Buildroot for the i.MX8MQ EVK board:
 
+If you want to use the NXP kernel:
+
   make freescale_imx8mqevk_defconfig
+
+Or if you want to use a mainline kernel:
+
+  make imx8mqevk_defconfig
 
 Build all components:
 
@@ -21,7 +27,7 @@ You will find in output/images/ the following files:
   - boot.vfat
   - fsl-imx8mq-evk.dtb
   - Image
-  - imx-boot-imx8mqevk-sd.bin
+  - imx8-boot-sd.bin
   - lpddr4_pmu_train_fw.bin
   - rootfs.ext2
   - rootfs.ext4
@@ -69,7 +75,7 @@ Enable HDMI output
 
 To enable HDMI output at boot you must provide the video kernel boot
 argument.  To set the video boot argument from U-Boot run after
-stoping in U-Boot prompt:
+stopping in U-Boot prompt:
 
 setenv mmcargs 'setenv bootargs console=${console} root=${mmcroot} video=HDMI-A-1:1920x1080-32@60'
 saveenv

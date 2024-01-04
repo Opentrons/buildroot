@@ -98,15 +98,6 @@ static char *predef_args[] = {
 #if defined(BR_MIPS_TARGET_BIG_ENDIAN) || defined(BR_ARC_TARGET_BIG_ENDIAN)
 	"-EB",
 #endif
-#ifdef BR_SSP_REGULAR
-	"-fstack-protector",
-#endif
-#ifdef BR_SSP_STRONG
-	"-fstack-protector-strong",
-#endif
-#ifdef BR_SSP_ALL
-	"-fstack-protector-all",
-#endif
 #ifdef BR_ADDITIONAL_CFLAGS
 	BR_ADDITIONAL_CFLAGS
 #endif
@@ -138,6 +129,8 @@ static const struct str_len_s unsafe_paths[] = {
 	STR_LEN(/usr/lib),
 	STR_LEN(/usr/local/include),
 	STR_LEN(/usr/local/lib),
+	STR_LEN(/usr/X11R6/include),
+	STR_LEN(/usr/X11R6/lib),
 	{ NULL, 0 },
 };
 
@@ -161,12 +154,9 @@ static const struct str_len_s unsafe_opts[] = {
  * or separated (e.g. -I /foo/bar). In the first case, we need only print
  * the argument as it already contains the path (arg_has_path), while in
  * the second case we need to print both (!arg_has_path).
- *
- * If paranoid, exit in error instead of just printing a warning.
  */
 static void check_unsafe_path(const char *arg,
 			      const char *path,
-			      int paranoid,
 			      int arg_has_path)
 {
 	const struct str_len_s *p;
@@ -175,17 +165,16 @@ static void check_unsafe_path(const char *arg,
 		if (strncmp(path, p->str, p->len))
 			continue;
 		fprintf(stderr,
-			"%s: %s: unsafe header/library path used in cross-compilation: '%s%s%s'\n",
+			"%s: ERROR: unsafe header/library path used in cross-compilation: '%s%s%s'\n",
 			program_invocation_short_name,
-			paranoid ? "ERROR" : "WARNING",
 			arg,
 			arg_has_path ? "" : "' '", /* close single-quote, space, open single-quote */
 			arg_has_path ? "" : path); /* so that arg and path are properly quoted. */
-		if (paranoid)
-			exit(1);
+		exit(1);
 	}
 }
 
+#ifdef BR_NEED_SOURCE_DATE_EPOCH
 /* Returns false if SOURCE_DATE_EPOCH was not defined in the environment.
  *
  * Returns true if SOURCE_DATE_EPOCH is in the environment and represent
@@ -239,6 +228,15 @@ bool parse_source_date_epoch_from_env(void)
 	}
 	return true;
 }
+#else
+bool parse_source_date_epoch_from_env(void)
+{
+	/* The compiler is recent enough to handle SOURCE_DATE_EPOCH itself
+	 * so we do not need to do anything here.
+	 */
+	return false;
+}
+#endif
 
 int main(int argc, char **argv)
 {
@@ -247,9 +245,24 @@ int main(int argc, char **argv)
 	char *progpath = argv[0];
 	char *basename;
 	char *env_debug;
-	char *paranoid_wrapper;
-	int paranoid;
-	int ret, i, count = 0, debug, found_shared = 0;
+	int ret, i, count = 0, debug = 0, found_shared = 0;
+
+	/* Debug the wrapper to see arguments it was called with.
+	 * If environment variable BR2_DEBUG_WRAPPER is:
+	 * unset, empty, or 0: do not trace
+	 * set to 1          : trace all arguments on a single line
+	 * set to 2          : trace one argument per line
+	 */
+	if ((env_debug = getenv("BR2_DEBUG_WRAPPER"))) {
+		debug = atoi(env_debug);
+	}
+	if (debug > 0) {
+		fprintf(stderr, "Toolchain wrapper was called with:");
+		for (i = 0; i < argc; i++)
+			fprintf(stderr, "%s'%s'",
+				(debug == 2) ? "\n    " : " ", argv[i]);
+		fprintf(stderr, "\n");
+	}
 
 	/* Calculate the relative paths */
 	basename = strrchr(progpath, '/');
@@ -376,7 +389,7 @@ int main(int argc, char **argv)
 		*cur++ = "-Wno-builtin-macro-redefined";
 	}
 
-#ifdef BR2_RELRO_FULL
+#ifdef BR2_PIC_PIE
 	/* Patterned after Fedora/Gentoo hardening approaches.
 	 * https://fedoraproject.org/wiki/Changes/Harden_All_Packages
 	 * https://wiki.gentoo.org/wiki/Hardened/Toolchain#Position_Independent_Executables_.28PIEs.29
@@ -426,7 +439,7 @@ int main(int argc, char **argv)
 		/* Both args below can be set at compile/link time
 		 * and are ignored correctly when not used
 		 */
-		if(i == argc)
+		if (i == argc)
 			*cur++ = "-fPIE";
 
 		if (!found_shared)
@@ -450,12 +463,6 @@ int main(int argc, char **argv)
 #endif
 	}
 
-	paranoid_wrapper = getenv("BR_COMPILER_PARANOID_UNSAFE_PATH");
-	if (paranoid_wrapper && strlen(paranoid_wrapper) > 0)
-		paranoid = 1;
-	else
-		paranoid = 0;
-
 	/* Check for unsafe library and header paths */
 	for (i = 1; i < argc; i++) {
 		const struct str_len_s *opt;
@@ -472,9 +479,9 @@ int main(int argc, char **argv)
 				i++;
 				if (i == argc)
 					break;
-				check_unsafe_path(argv[i-1], argv[i], paranoid, 0);
+				check_unsafe_path(argv[i-1], argv[i], 0);
 			} else
-				check_unsafe_path(argv[i], argv[i] + opt->len, paranoid, 1);
+				check_unsafe_path(argv[i], argv[i] + opt->len, 1);
 		}
 	}
 
@@ -487,50 +494,49 @@ int main(int argc, char **argv)
 
 	exec_args = args;
 #ifdef BR_CCACHE
-	if (getenv("BR_NO_CCACHE"))
-		/* Skip the ccache call */
+	/* If BR2_USE_CCACHE is set and its value is 1, enable ccache
+	 * usage */
+	char *br_use_ccache = getenv("BR2_USE_CCACHE");
+	bool ccache_enabled = br_use_ccache && !strncmp(br_use_ccache, "1", strlen("1"));
+
+	if (ccache_enabled) {
+#ifdef BR_CCACHE_HASH
+		/* Allow compilercheck to be overridden through the environment */
+		if (setenv("CCACHE_COMPILERCHECK", "string:" BR_CCACHE_HASH, 0)) {
+			perror(__FILE__ ": Failed to set CCACHE_COMPILERCHECK");
+			return 3;
+		}
+#endif
+#ifdef BR_CCACHE_BASEDIR
+		/* Allow compilercheck to be overridden through the environment */
+		if (setenv("CCACHE_BASEDIR", BR_CCACHE_BASEDIR, 0)) {
+			perror(__FILE__ ": Failed to set CCACHE_BASEDIR");
+			return 3;
+		}
+#endif
+	} else
+		/* ccache is disabled, skip it */
 		exec_args++;
 #endif
 
-	/* Debug the wrapper to see actual arguments passed to
-	 * the compiler:
-	 * unset, empty, or 0: do not trace
-	 * set to 1          : trace all arguments on a single line
-	 * set to 2          : trace one argument per line
-	 */
-	if ((env_debug = getenv("BR2_DEBUG_WRAPPER"))) {
-		debug = atoi(env_debug);
-		if (debug > 0) {
-			fprintf(stderr, "Toolchain wrapper executing:");
+	/* Debug the wrapper to see final arguments passed to the real compiler. */
+	if (debug > 0) {
+		fprintf(stderr, "Toolchain wrapper executing:");
 #ifdef BR_CCACHE_HASH
+		if (ccache_enabled)
 			fprintf(stderr, "%sCCACHE_COMPILERCHECK='string:" BR_CCACHE_HASH "'",
 				(debug == 2) ? "\n    " : " ");
 #endif
 #ifdef BR_CCACHE_BASEDIR
+		if (ccache_enabled)
 			fprintf(stderr, "%sCCACHE_BASEDIR='" BR_CCACHE_BASEDIR "'",
 				(debug == 2) ? "\n    " : " ");
 #endif
-			for (i = 0; exec_args[i]; i++)
-				fprintf(stderr, "%s'%s'",
-					(debug == 2) ? "\n    " : " ", exec_args[i]);
-			fprintf(stderr, "\n");
-		}
+		for (i = 0; exec_args[i]; i++)
+			fprintf(stderr, "%s'%s'",
+				(debug == 2) ? "\n    " : " ", exec_args[i]);
+		fprintf(stderr, "\n");
 	}
-
-#ifdef BR_CCACHE_HASH
-	/* Allow compilercheck to be overridden through the environment */
-	if (setenv("CCACHE_COMPILERCHECK", "string:" BR_CCACHE_HASH, 0)) {
-		perror(__FILE__ ": Failed to set CCACHE_COMPILERCHECK");
-		return 3;
-	}
-#endif
-#ifdef BR_CCACHE_BASEDIR
-	/* Allow compilercheck to be overridden through the environment */
-	if (setenv("CCACHE_BASEDIR", BR_CCACHE_BASEDIR, 0)) {
-		perror(__FILE__ ": Failed to set CCACHE_BASEDIR");
-		return 3;
-	}
-#endif
 
 	if (execv(exec_args[0], exec_args))
 		perror(path);

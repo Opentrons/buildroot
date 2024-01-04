@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-PYTHON_NETWORKMANAGER_VERSION = 2.0.1
-PYTHON_NETWORKMANAGER_SITE = https://pypi.python.org/packages/d7/f9/5cbd99fd24a072875ce048e48d1754285f137aab447de8fee63b6cba990a
+PYTHON_NETWORKMANAGER_VERSION = 2.2
+PYTHON_NETWORKMANAGER_SITE = https://files.pythonhosted.org/packages/f2/3d/0924d03117636b80a88af783f857fb101e4c47953a8bb0f733b964d50af4
 PYTHON_NETWORKMANAGER_SETUP_TYPE = setuptools
 PYTHON_NETWORKMANAGER_LICENSE = Zlib
 PYTHON_NETWORKMANAGER_LICENSE_FILES = COPYING

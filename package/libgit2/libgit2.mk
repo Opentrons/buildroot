@@ -4,19 +4,27 @@
 #
 ################################################################################
 
-LIBGIT2_VERSION = v0.27.4
-LIBGIT2_SITE = $(call github,libgit2,libgit2,$(LIBGIT2_VERSION))
-LIBGIT2_LICENSE = GPL-2.0 with linking exception
+LIBGIT2_VERSION = 1.5.1
+LIBGIT2_SITE = $(call github,libgit2,libgit2,v$(LIBGIT2_VERSION))
+LIBGIT2_LICENSE = \
+	GPL-2.0 with linking exception, \
+	MIT (sha1), \
+	BSD-3-Clause (sha256), \
+	wildmatch license (wildmatch), \
+	CC0-1.0 (xoroshiro256)
 LIBGIT2_LICENSE_FILES = COPYING
+LIBGIT2_CPE_ID_VENDOR = libgit2_project
 LIBGIT2_INSTALL_STAGING = YES
 
 LIBGIT2_CONF_OPTS = \
 	-DUSE_GSSAPI=OFF \
-	-DBUILD_CLAR=OFF \
 	-DUSE_ICONV=ON \
-	-DTHREADSAFE=$(if $(BR2_TOOLCHAIN_HAS_THREADS),ON,OFF)
+	-DREGEX_BACKEND=regcomp \
+	-DUSE_HTTP_PARSER=system \
+	-DUSE_NTLMCLIENT=OFF \
+	-DUSE_THREADS=$(if $(BR2_TOOLCHAIN_HAS_THREADS),ON,OFF)
 
-LIBGIT2_DEPENDENCIES = zlib
+LIBGIT2_DEPENDENCIES = zlib libhttpparser
 
 # If libiconv is available (for !locale toolchains), then we can use
 # it for iconv support. Note that USE_ICONV=ON is still correct even
@@ -41,11 +49,16 @@ else
 LIBGIT2_CONF_OPTS += -DUSE_HTTPS=OFF
 endif
 
-ifeq ($(BR2_PACKAGE_LIBCURL),y)
-LIBGIT2_DEPENDENCIES += libcurl
-LIBGIT2_CONF_OPTS += -DCURL=ON
+ifeq ($(BR2_PACKAGE_LIBGIT2_CLI),y)
+LIBGIT2_CONF_OPTS += -DBUILD_CLI=ON
 else
-LIBGIT2_CONF_OPTS += -DCURL=OFF
+LIBGIT2_CONF_OPTS += -DBUILD_CLI=OFF
+endif
+
+ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
+LIBGIT2_CONF_OPTS += \
+	-DCMAKE_EXE_LINKER_FLAGS=-latomic \
+	-DCMAKE_SHARED_LINKER_FLAGS=-latomic
 endif
 
 $(eval $(cmake-package))

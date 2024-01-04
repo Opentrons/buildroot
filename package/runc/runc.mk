@@ -4,21 +4,27 @@
 #
 ################################################################################
 
-# docker-engine/hack/dockerfile/install/runc.installer:4 RUNC_COMMIT=...
-RUNC_VERSION = 69663f0bd4b60df09991c08812a60108003fa340
-RUNC_SITE = $(call github,opencontainers,runc,$(RUNC_VERSION))
-RUNC_LICENSE = Apache-2.0
+RUNC_VERSION = 1.1.7
+RUNC_SITE = $(call github,opencontainers,runc,v$(RUNC_VERSION))
+RUNC_LICENSE = Apache-2.0, LGPL-2.1 (libseccomp)
 RUNC_LICENSE_FILES = LICENSE
+RUNC_CPE_ID_VENDOR = linuxfoundation
 
-RUNC_WORKSPACE = Godeps/_workspace
-
-RUNC_LDFLAGS = -X main.gitCommit=$(RUNC_VERSION)
-
+RUNC_LDFLAGS = -X main.version=$(RUNC_VERSION)
 RUNC_TAGS = cgo static_build
+
+ifeq ($(BR2_PACKAGE_LIBAPPARMOR),y)
+RUNC_DEPENDENCIES += libapparmor
+RUNC_TAGS += apparmor
+endif
 
 ifeq ($(BR2_PACKAGE_LIBSECCOMP),y)
 RUNC_TAGS += seccomp
 RUNC_DEPENDENCIES += libseccomp host-pkgconf
 endif
 
+HOST_RUNC_LDFLAGS = $(RUNC_LDFLAGS)
+HOST_RUNC_TAGS = cgo static_build
+
 $(eval $(golang-package))
+$(eval $(host-golang-package))

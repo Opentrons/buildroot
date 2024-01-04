@@ -1,7 +1,5 @@
-# From https://lists.x.org/archives/xorg-announce/2018-March/002849.html
-md5 08def461f135832136624855763b20fa  viewres-1.0.5.tar.bz2
-sha1 d03832456dde6c2a91086e6563d52fd936425948  viewres-1.0.5.tar.bz2
-sha256 5ed818e84c39bcf26dadc885c9860432b85843caad3621e26d99edea660ae3d7  viewres-1.0.5.tar.bz2
-sha512 fe573e9b5ae679b65eee95733cbea20c86c92089c3a2dadfe977bc9c54d1f58c5e5f4663e51a1cf206543a43592b3a3c266da1769279f08be85c66b0aa5b0f7f  viewres-1.0.5.tar.bz2
+# From https://lists.x.org/archives/xorg-announce/2022-October/003219.html
+sha256  b15a62085b1a10f55ae1cf17b7ded75b72b21be240c68071685db377c4afc628  viewres-1.0.7.tar.xz
+sha512  75878faee001163891adf8472c79b31273f794e23dd775c80b33acdd1ce76df708eb27a49c20f79b7101ad676e1d50d9c857c2e2e0930c6209eeb7af8a11397c  viewres-1.0.7.tar.xz
 # Locally computed
-sha256 aefb540c54bc95c68702cd2ae668c559e63cc1a84f55ae5c0e78547e7d75d2d5  COPYING
+sha256  aefb540c54bc95c68702cd2ae668c559e63cc1a84f55ae5c0e78547e7d75d2d5  COPYING

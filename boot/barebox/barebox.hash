@@ -1,5 +1,8 @@
-# http://www.barebox.org/download/barebox-2018.10.0.tar.bz2.md5
-md5 f4c89bc92903425c960aa41e997b2251 barebox-2018.10.0.tar.bz2
+# From https://www.barebox.org/download/barebox-2022.12.0.tar.bz2.md5
+md5  e4bf25cbf1e0b0c9a67ee56214617b9c  barebox-2022.12.0.tar.bz2
 
 # Locally calculated
-sha256 c25bfeaff7dda8862defd8d9011e7e6d23216ee4fc4e8bb5b91a1efd833a6d1c barebox-2018.10.0.tar.bz2
+sha256  9f570d4ae089560bd6c17b2b7d21cdb6557ecb00612c77ecee72ac47575a6b74  barebox-2022.12.0.tar.bz2
+
+# License files, locally computed
+sha256  ab1122aa9f9073ad1ec824edcd970b16a6a7881a34a18fd56c080debb2dca5d4  COPYING
