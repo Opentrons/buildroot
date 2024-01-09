@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_FASTJSONSCHEMA
+	bool "python-fastjsonschema"
+	help
+	  An implementation of fast JSON Schema validation for Python.
+
+	  https://github.com/horejsek/python-fastjsonschema/
