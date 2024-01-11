@@ -1,3 +1,3 @@
 # md5, sha256 from https://pypi.org/pypi/ipykernel/json
-md5	3e140bba8c9380b4770950dd67b61bec  ipykernel-6.25.2.tar.gz
-sha256	f468ddd1f17acb48c8ce67fcfa49ba6d46d4f9ac0438c1f441be7c3d1372230b  ipykernel-6.25.2.tar.gz
+md5	0b6f0964f61f2aad5f72829ee930805e  ipykernel-6.20.2.tar.gz
+sha256	1893c5b847033cd7a58f6843b04a9349ffb1031bc6588401cadc9adb58da428e  ipykernel-6.20.2.tar.gz
