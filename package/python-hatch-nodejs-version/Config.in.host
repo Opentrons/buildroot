@@ -1,0 +1,6 @@
+config BR2_PACKAGE_HOST_PYTHON_HATCH_NODEJS_VERSION
+	bool "host python-hatch-nodejs-version"
+	help
+	  Version source plugin that reads/writes the package version from the version field of the Node.js
+
+	  https://github.com/agoose77/hatch-nodejs-version
