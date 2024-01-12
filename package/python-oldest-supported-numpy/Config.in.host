@@ -1,0 +1,9 @@
+config BR2_PACKAGE_HOST_PYTHON_OLDEST_SUPPORTED_NUMPY
+	bool "host python-oldest-supported-numpy"
+	help
+	  This is a meta-package which can be used in pyproject.toml files to
+	  automatically provide as a build-time dependency the oldest version
+	  of NumPy that supports the given Python version and platform.
+	  
+	  https://github.com/scipy/oldest-supported-numpy
+	  

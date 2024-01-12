@@ -1,0 +1,7 @@
+config BR2_HOST_PACKAGE_PYTHON_PYTHON_VERSION
+	bool "host python-python_version"
+	help
+	  This package provides a basic python version checking utility.
+	  
+	  https://gitlab.com/halfak/python_version
+	  

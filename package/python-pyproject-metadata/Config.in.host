@@ -1,0 +1,9 @@
+config BR2_PACKAGE_HOST_PYTHON_PYPROJECT_METADATA
+	bool "host python-pyproject-metadata"
+	help
+	  This project does not implement the parsing of pyproject.toml containing PEP 621 metadata.
+	  Instead, given a Python data structure representing PEP 621 metadata (already parsed), 
+	  it will validate this input and generate a PEP 643-compliant metadata file (e.g. PKG-INFO). 
+	  
+	  https://github.com/FFY00/python-pyproject-metadata
+	  

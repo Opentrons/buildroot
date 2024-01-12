@@ -1,0 +1,7 @@
+config BR2_PACKAGE_HOST_PYTHON_MESON_PYTHON
+	bool "host python-meson-python"
+	help
+	  meson-python is a Python build backend built on top of the Meson build system
+	  
+	  https://github.com/mesonbuild/meson-python
+	  

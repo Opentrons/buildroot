@@ -5,6 +5,11 @@ config BR2_PACKAGE_PYTHON_PANDAS
 	select BR2_PACKAGE_PYTHON_NUMPY # runtime
 	select BR2_PACKAGE_PYTHON_TZDATA # runtime
 	select BR2_PACKAGE_PYTHON3_BZIP2 # runtime
+	select BR2_PACKAGE_HOST_PYTHON_MESON # build time for headers
+	select BR2_PACKAGE_HOST_PYTHON_PYPROJECT_METADATA # build time for headers
+	select BR2_PACKAGE_HOST_PYTHON_WHEEL # build time for headers
+	select BR2_PACKAGE_HOST_PYTHON_VERSIONEER # build time for headers
+	select BR2_PACKAGE_HOST_PYTHON_OLDESET_SUPPORTED_NUMPY # build time for headers
 	select BR2_PACKAGE_HOST_PYTHON_NUMPY # build time for headers
 	select BR2_PACKAGE_HOST_PYTHON_CYTHON  # build time for cython compilation
 	help

@@ -1,0 +1,7 @@
+config BR2_HOST_PACKAGE_PYTHON_WHEEL
+	bool "host python-wheel"
+	help
+	  Meson is a cross-platform build system designed to be both as fast and as user friendly as possible. 
+	  
+	 https://github.com/pypa/wheel
+	  

@@ -7,8 +7,8 @@
 PYTHON_PANDAS_VERSION = 2.1.1
 PYTHON_PANDAS_SOURCE = pandas-$(PYTHON_PANDAS_VERSION).tar.gz
 PYTHON_PANDAS_SITE = https://files.pythonhosted.org/packages/3d/0e/2c225d7a5de6ca0ec7d729aff6ef560544596f3a9bfed77f6dbc1713dbb5
-PYTHON_PANDAS_DEPENDENCIES = host-python-numpy host-python-cython
-PYTHON_PANDAS_SETUP_TYPE = setuptools
+PYTHON_PANDAS_DEPENDENCIES = host-python-numpy host-python-cython host-python-pyproject-metadata host-python-meson host-python-meson-python host-python-oldest-supported-numpy host-python-wheel host-python-versioneer
+PYTHON_PANDAS_SETUP_TYPE = pep517
 PYTHON_PANDAS_LICENSE = BSD
 PYTHON_PANDAS_LICENSE_FILES = LICENSE
 
