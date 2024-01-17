@@ -1,0 +1,6 @@
+config BR2_PACKAGE_HOST_PYTHON_HATCHLING
+	bool "host python-hatchling"
+	help
+	  This is the extensible, standards compliant build backend used by Hatch.
+
+	  https://hatch.pypa.io/latest/

@@ -7,6 +7,7 @@ config BR2_PACKAGE_PYTHON_PANDAS
 	select BR2_PACKAGE_PYTHON3_BZIP2 # runtime
 	select BR2_PACKAGE_HOST_PYTHON_NUMPY # build time for headers
 	select BR2_PACKAGE_HOST_PYTHON_CYTHON  # build time for cython compilation
+	select BR2_PACKAGE_HOST_PYTHON_VERSIONEER # build time for pacakge settings
 	help
 	  Powerful data structures for data analysis, time series,
 	  and statistics.
