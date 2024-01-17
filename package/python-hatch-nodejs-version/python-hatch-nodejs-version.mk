@@ -10,5 +10,5 @@ PYTHON_HATCH_NODEJS_VERSION_SITE = https://files.pythonhosted.org/packages/af/b6
 PYTHON_HATCH_NODEJS_VERSION_SETUP_TYPE = pep517
 PYTHON_HATCH_NODEJS_VERSION_LICENSE = BSD-3-Clause
 
-PYTHON_HATCH_NODEJS_VERSION_DEPENDENCIES = host-python-hatchling host-python-hatch-vcs
+HOST_PYTHON_HATCH_NODEJS_VERSION_DEPENDENCIES = host-python-hatchling host-python-hatch-vcs
 $(eval $(host-python-package))
