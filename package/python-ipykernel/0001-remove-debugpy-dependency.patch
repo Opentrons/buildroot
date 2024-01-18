@@ -1,0 +1,12 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 1730197..64b382f 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -25,7 +25,6 @@ classifiers = [
+ urls = {Homepage = "https://ipython.org"}
+ requires-python = ">=3.8"
+ dependencies = [
+-    "debugpy>=1.0",
+     "ipython>=7.23.1",
+     "comm>=0.1.1",
+     "traitlets>=5.4.0",

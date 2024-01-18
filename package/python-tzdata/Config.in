@@ -1,6 +1,0 @@
-config BR2_PACKAGE_PYTHON_TZDATA
-	bool "python-tzdata"
-	help
-	  This is a Python package containing zic-compiled binaries for the IANA time zone database. 
-
-	  https://github.com/python/tzdata
