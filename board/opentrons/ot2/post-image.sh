@@ -22,6 +22,7 @@ do
 arm_64bit=1
 __EOF__
 		fi
+		;;
 		--gpu_mem_256=*|--gpu_mem_512=*|--gpu_mem_1024=*)
 		# Set GPU memory
 		gpu_mem="${arg:2}"
@@ -35,6 +36,9 @@ done
 dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/gpio-revision-bits.dtbo" "${BOARD_DIR}/gpio-revision-bits.dts"
 
 dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/i2c-rtc-rv3028.dtbo" "${BOARD_DIR}/i2c-rtc-rv3028.dts"
+
+dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/ot2-disable-bt.dtbo" "${BOARD_DIR}/ot2-disable-bt.dts"
+dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/ot2-miniuart-bt.dtbo" "${BOARD_DIR}/ot2-miniuart-bt.dts"
 
 
 echo "Generating fs and sd card images..."
