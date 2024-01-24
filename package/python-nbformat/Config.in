@@ -2,8 +2,11 @@ config BR2_PACKAGE_PYTHON_NBFORMAT
 	bool "python-nbformat"
 	select BR2_PACKAGE_PYTHON_IPYTHON_GENUTILS # runtime
 	select BR2_PACKAGE_PYTHON_TRAITLETS # runtime
+	select BR2_PACKAGE_PYTHON_FASTJSONSCHEMA # runtime
+	select BR2_PACKAGE_PYTHON_NEST_ASYNCIO # runtime
 	select BR2_PACKAGE_PYTHON_JSONSCHEMA # runtime
 	select BR2_PACKAGE_PYTHON_JUPYTER_CORE # runtime
+	select BR2_PACKAGE_HOST_PYTHON_HATCH_NODEJS_VERSION  # build time for version
 	help
 	  The Jupyter Notebook format.
 

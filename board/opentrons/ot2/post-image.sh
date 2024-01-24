@@ -12,16 +12,6 @@ sed -i -e 's/console=ttyAMA0,115200//' "${BINARIES_DIR}/rpi-firmware/cmdline.txt
 for arg in "$@"
 do
 	case "${arg}" in
-		--add-pi3-miniuart-bt-overlay)
-		if ! grep -qE '^dtoverlay=' "${BINARIES_DIR}/rpi-firmware/config.txt"; then
-			echo "Adding 'dtoverlay=pi3-miniuart-bt' to config.txt (fixes ttyAMA0 serial console)."
-			cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-
-# fixes rpi3 ttyAMA0 serial console
-dtoverlay=pi3-miniuart-bt
-__EOF__
-		fi
-		;;
 		--aarch64)
 		# Run a 64bits kernel (armv8)
 		sed -e '/^kernel=/s,=.*,=Image,' -i "${BINARIES_DIR}/rpi-firmware/config.txt"
@@ -30,15 +20,6 @@ __EOF__
 
 # enable 64bits support
 arm_64bit=1
-__EOF__
-		fi
-
-		# Enable uart console
-		if ! grep -qE '^enable_uart=1' "${BINARIES_DIR}/rpi-firmware/config.txt"; then
-			cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-
-# enable rpi3 ttyS0 serial console
-enable_uart=1
 __EOF__
 		fi
 		;;
@@ -51,19 +32,14 @@ __EOF__
 
 done
 
-cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-dtparam=audio=on
-__EOF__
 
 dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/gpio-revision-bits.dtbo" "${BOARD_DIR}/gpio-revision-bits.dts"
-cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-dtoverlay=gpio-revision-bits
-__EOF__
 
 dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/i2c-rtc-rv3028.dtbo" "${BOARD_DIR}/i2c-rtc-rv3028.dts"
-cat << __EOF__ >> "${BINARIES_DIR}/rpi-firmware/config.txt"
-dtoverlay=i2c-rtc-rv3028
-__EOF__
+
+dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/ot2-disable-bt.dtbo" "${BOARD_DIR}/ot2-disable-bt.dts"
+dtc -@ -I dts -O dtb -o "${BINARIES_DIR}/rpi-firmware/overlays/ot2-miniuart-bt.dtbo" "${BOARD_DIR}/ot2-miniuart-bt.dts"
+
 
 echo "Generating fs and sd card images..."
 

@@ -147,6 +147,15 @@ Buildroot includes a TUI application for modifying the defconfig file. Please no
 # 3. save the changes to .config back into configs/ot2_defconfig
 ./opentrons-build.sh -it savedefconfig
 ```
+Buildroot also provides a menuconfig for editing linux kernel options, you need to build the project since the kernel makefiles are downloaded and live in output/build/linux-custom
+
+```shell
+# 1. open the kernel .config file in menuconfig
+./opentrons-build.sh -it linux-menuconfig
+
+# 2. save the changes to board/opentrons/ot2/kernel.config
+./opentrons-build.sh -it linux-savedefconfig
+```
 
 ## Provisioning an SD Card and Booting
 

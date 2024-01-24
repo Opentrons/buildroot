@@ -13,8 +13,15 @@ kernel=u-boot.bin
 # If the text shown on the screen disappears off the edge, comment this out
 disable_overscan=1
 
+
 # How much memory in MB to assign to the GPU on Pi models having
 # 256, 512 or 1024 MB total memory
 gpu_mem_256=100
 gpu_mem_512=100
 gpu_mem_1024=100
+
+dtoverlay=ot2-disable-bt
+enable_uart=1
+dtparam=audio=on
+dtoverlay=gpio-revision-bits
+dtoverlay=i2c-rtc-rv3028
