@@ -78,19 +78,6 @@ cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
 rm -f ${TARGET_DIR}/etc/dropbear
 ln -s /var/lib/dropbear ${TARGET_DIR}/etc/dropbear
 
-
-# Syslog-ng extra setup:
-# - install the datadog api key
-
-if [ -z ${DATADOG_API_KEY+x} ] ; then
-    printf "Datadog API key is unknown, build will not be capable of upstreaming logs" >&2
-    DATADOG_API_KEY=""
-fi
-echo "@define datadog_api_key \"${DATADOG_API_KEY}\"" > ${TARGET_DIR}/etc/syslog-ng/api_key.conf
-mkdir -p ${TARGET_DIR}/etc/syslog-ng/certs.d/
-rm -rf ${TARGET_DIR}/etc/syslog-ng/certs.d/*
-curl https://docs.datadoghq.com/resources/crt/FULL_intake.logs.datadoghq.com.crt > ${TARGET_DIR}/etc/syslog-ng/certs.d/datadoghq.com.crt
-
 find ${TARGET_DIR}/usr/lib/ -name tests -or -name test | xargs --verbose rm -rf
 find ${TARGET_DIR} -type f -iname 'README*' | xargs --verbose rm -rf
 rm -rf ${TARGET_DIR}/usr/share/doc
