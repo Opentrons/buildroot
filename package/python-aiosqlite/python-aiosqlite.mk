@@ -4,11 +4,12 @@
 #
 ################################################################################
 
-PYTHON_AIOSQLITE_VERSION = 0.17.0
+PYTHON_AIOSQLITE_VERSION = 0.19.0
 PYTHON_AIOSQLITE_SOURCE = aiosqlite-$(PYTHON_AIOSQLITE_VERSION).tar.gz
-PYTHON_AIOSQLITE_SITE = https://files.pythonhosted.org/packages/40/e0/ad1edd74311831ca71b32a5b83352b490d78d11a90a1cde04e1b6830e018
-PYTHON_AIOSQLITE_SETUP_TYPE = distutils
+PYTHON_AIOSQLITE_SITE = https://files.pythonhosted.org/packages/ea/51/060efa10a814145acd4e42c6e5ed540b8714cad52ca026c5930e7c473049
+PYTHON_AIOSQLITE_SETUP_TYPE = flit
 PYTHON_AIOSQLITE_LICENSE = MIT
 PYTHON_AIOSQLITE_LICENSE_FILES = LICENSE
+PYTHON_AIOSQLITE_DEPENDENCIES = host-python-toml sqlite
 
 $(eval $(python-package))
