@@ -1,5 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/anyio/json
-md5	04263a93b14e836678363e561347dc58  anyio-3.6.1.tar.gz
-sha256	413adf95f93886e442aea925f3ee43baa5a765a64a0f52c6081894f9992fdd0b  anyio-3.6.1.tar.gz
+md5	58d288dd84e28e2507ff9ce7e4620010  anyio-3.7.1.tar.gz
+sha256	44a3c9aba0f5defa43261a8b3efb97891f2bd7d804e0e1f56419befa1adfc780  anyio-3.7.1.tar.gz
 # Locally computed sha256 checksums
 sha256	5361ac9dc58f2ef5fd2e9b09c68297c17f04950909bbc8023bdb82eacf22c2b0  LICENSE
