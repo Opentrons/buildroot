@@ -1,5 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/typing-extensions/json
-md5	3cd9b7b9a465afbcca8548e11668ca64  typing_extensions-4.1.1.tar.gz
-sha256	1a9462dcc3347a79b1f1c0271fbe79e844580bb598bafa1ed208b94da3cdcd42  typing_extensions-3.10.0.0.tar.gz
+md5	2bcafbd6817cb0d7a29ed7a7f1bb1e5d  typing_extensions-4.9.0.tar.gz
+sha256	23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783  typing_extensions-4.9.0.tar.gz
 # Locally computed sha256 checksums
 sha256	ff17ce94e102024deb68773eb1cc74ca76da4e658f373531f0ac22d68a6bb1ad  LICENSE
