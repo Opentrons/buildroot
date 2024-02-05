@@ -1,5 +1,5 @@
-# md5, sha256 from https://pypi.org/pypi/python-multipart/json
-md5	4c0f8475a23eb5f28704bb3cbce9253a  python-multipart-0.0.5.tar.gz
-sha256	f7bb5f611fc600d15fa47b3974c8aa16e93724513b49b5f95c81e6624c83fa43  python-multipart-0.0.5.tar.gz
+# md5, sha256 from https://pypi.org/pypi/python_multipart/json
+md5	a61a045b7f5e64d44dc53c73522ac4d2  python_multipart-0.0.6.tar.gz
+sha256	e9925a80bb668529f1b67c7fdb0a5dacdd7cbfc6fb0bff3ea443fe22bdd62132  python_multipart-0.0.6.tar.gz
 # Locally computed sha256 checksums
 sha256	76807e64643c38a4b1cf29fd3163c18dcbd46a0ac8697d97dac865f1e0da8fcb  LICENSE.txt
