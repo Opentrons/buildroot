@@ -1,5 +1,5 @@
 # md5 from https://pypi.python.org/pypi/SQLAlchemy/json
-md5    7b007bbd6b94af591de1b9ae0c74a3a5  SQLAlchemy-1.4.32.tar.gz
-sha256 6fdd2dc5931daab778c2b65b03df6ae68376e028a3098eb624d0909d999885bc  SQLAlchemy-1.4.32.tar.gz
+md5    13aea4c37f1fd99bab74bfbccb0e28b3  SQLAlchemy-1.4.51.tar.gz
+sha256 e7908c2025eb18394e32d65dd02d2e37e17d733cdbe7d78231c2b6d7eb20cdb9  SQLAlchemy-1.4.51.tar.gz
 # Locally computed sha256 checksums
 sha256 859ded25da34c1eb73e6e736df4c5f8ce3ed2ed5290663176f06e7720d9c9a20  LICENSE
