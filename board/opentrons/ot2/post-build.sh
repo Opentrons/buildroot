@@ -78,6 +78,9 @@ cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
 rm -f ${TARGET_DIR}/etc/dropbear
 ln -s /var/lib/dropbear ${TARGET_DIR}/etc/dropbear
 
+# Remove tests and README
+# NOTE: DO NOT REMOVE 'README_STARTUP' as this is required by IPython and
+# causes jupyter-notebook to not work without it.
 find ${TARGET_DIR}/usr/lib/ -name tests -or -name test | xargs --verbose rm -rf
-find ${TARGET_DIR} -type f -iname 'README*' | xargs --verbose rm -rf
+find ${TARGET_DIR} -type f -iname 'README*' ! -name 'README_STARTUP' | xargs --verbose rm -rf
 rm -rf ${TARGET_DIR}/usr/share/doc
