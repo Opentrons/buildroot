@@ -19,4 +19,4 @@ endef
 PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_REMOVE_TESTS
 endif
 
-$(eval $(meson-package))
+$(eval $(python-package))
