@@ -1,5 +1,6 @@
 [Unit]
 Description=Mosquitto MQTT broker
+Before=opentrons-robot-server.service
 
 [Service]
 ExecStart=/usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
