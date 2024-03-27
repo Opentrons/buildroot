@@ -1,0 +1,18 @@
+# Creates alsactl's state saving directory if necessary, and uses the lack of such
+# a directory as an indication that this is a first-run and we should tweak up the
+# volume.
+[Unit]
+Description=Create ALSA config file and set initial volume
+ConditionPathExists=!/var/lib/alsa/asound.state
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mkdir -p /var/lib/alsa/
+ExecStart=/usr/bin/amixer set PCM 100%
+ExecStart=/usr/bin/amixer set PCM unmute
+ExecStart=/usr/sbin/alsactl store
+Before=alsa-restore.service
+
+[Install]
+WantedBy=alsa-restore.service
+WantedBy=sound.target
