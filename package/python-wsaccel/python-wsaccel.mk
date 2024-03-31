@@ -10,5 +10,6 @@ PYTHON_WSACCEL_SITE = https://files.pythonhosted.org/packages/77/0b/a44df15382a7
 PYTHON_WSACCEL_LICENSE = Apache-2.0
 PYTHON_WSACCEL_LICENSE_FILES = LICENSE
 PYTHON_WSACCEL_SETUP_TYPE = setuptools
+PYTHON_WSACCEL_BUILD_OPTS = --skip-dependency-check
 
 $(eval $(python-package))
