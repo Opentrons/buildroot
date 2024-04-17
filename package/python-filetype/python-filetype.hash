@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/project/filetype/
+md5  915c437718ad93c2cd347eb5aa465af1  filetype-1.2.0.tar.gz
+sha256  66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb  filetype-1.2.0.tar.gz
+# Locally computed sha256 checksums
+sha256  8e44e2aa35b371bdcc856bcf0d2442a410dd55fde66b0dfc2fcdf076d97946ac  LICENSE
