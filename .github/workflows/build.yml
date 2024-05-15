@@ -56,6 +56,9 @@ jobs:
     name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ matrix.build_env }}'
     timeout-minutes: 480
     runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    concurrency:
+      group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
+      cancel-in-progress: false
     steps:
       - name: Set up vm requirements
         run: |
