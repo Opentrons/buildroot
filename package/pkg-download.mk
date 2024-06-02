@@ -117,8 +117,8 @@ define DOWNLOAD
 		-d '$($(2)_DL_DIR)' \
 		-D '$(DL_DIR)' \
 		-f '$(notdir $(1))' \
-		-H '$($(2)_HASH_FILE)' \
-		-n '$($(2)_BASENAME_RAW)' \
+		$(foreach f,$($(2)_HASH_FILES),-H '$(f)') \
+		-n '$($(2)_DL_SUBDIR)-$($(2)_VERSION)' \
 		-N '$($(2)_RAWNAME)' \
 		-o '$($(2)_DL_DIR)/$(notdir $(1))' \
 		$(if $($(2)_GIT_SUBMODULES),-r) \
