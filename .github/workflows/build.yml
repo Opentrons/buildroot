@@ -47,7 +47,7 @@ jobs:
           token: ${{ github.token }}
           monorepo: ${{ inputs.monorepo-ref }}
           buildroot: ${{ inputs.buildroot-ref }}
-      - name: Add refs to job summary
+      - name: Add refs to the summary
         run: |
           echo "### Decide refs" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
