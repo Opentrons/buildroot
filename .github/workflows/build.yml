@@ -35,10 +35,9 @@ jobs:
       monorepo: ${{ steps.build-refs.outputs.monorepo }}
       variant: ${{ steps.build-refs.outputs.variant }}
       build-type: ${{ steps.build-refs.outputs.build-type }}
-
     steps:
       - name: Check out sources for action
-        uses: 'actions/checkout@v3'
+        uses: 'actions/checkout@v4'
         with:
           path: ./buildroot-for-workflow
       - name: Get the refs
@@ -48,6 +47,17 @@ jobs:
           token: ${{ github.token }}
           monorepo: ${{ inputs.monorepo-ref }}
           buildroot: ${{ inputs.buildroot-ref }}
+      - name: Add refs to job summary
+        run: |
+          echo "### Decide refs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **buildroot** | ${{ steps.build-refs.outputs.buildroot }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **monorepo** | ${{ steps.build-refs.outputs.monorepo }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **variant** | ${{ steps.build-refs.outputs.variant }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **build type** | ${{ steps.build-refs.outputs.build-type }} |" >> $GITHUB_STEP_SUMMARY
+
   run-build:
     needs: decide-refs
     strategy:
@@ -163,7 +173,7 @@ jobs:
           docker run ${{steps.docker-args.outputs.args}} all
       - name: Upload build log result
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: buildlog.txt
           path: ./buildroot/buildlog.txt
