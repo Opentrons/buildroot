@@ -1,9 +1,9 @@
 on:
   push:
     tags:
-      - "*"
+      - "**"
     branches_ignore:
-      - "*"
+      - "**"
   workflow_dispatch:
 
 jobs:

@@ -3,9 +3,9 @@ run-name: 'Starting a branch build of OT2 software for ${{github.ref_name}}'
 on:
   push:
     branches:
-      - '*'
+      - '**'
     tags-ignore:
-      - '*'
+      - '**'
 
 jobs:
   start-build:
