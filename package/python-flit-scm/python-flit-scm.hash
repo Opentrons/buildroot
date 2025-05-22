@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/flit_scm/json
+md5  591a310a0cb7488094f7f8e0d041195f  flit_scm-1.7.0.tar.gz
+sha256  961bd6fb24f31bba75333c234145fff88e6de0a90fc0f7e5e7c79deca69f6bb2  flit_scm-1.7.0.tar.gz
+# Locally computed sha256 checksums
+sha256  9f27f826a9702fffe58210a69c9116cd2e902ebe52545d7dcb1e5513f144f226  LICENSE

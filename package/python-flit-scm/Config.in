@@ -1,0 +1,3 @@
+config BR2_PACKAGE_PYTHON_FLIT_SCM
+	bool "python-flit-scm"
+	help
