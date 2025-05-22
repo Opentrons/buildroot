@@ -12,10 +12,6 @@ PYTHON_JUPYTER_CLIENT_LICENSE = BSD-3-Clause
 
 PYTHON_JUPYTER_CLIENT_DEPENDENCIES = python-traitlets python-jupyter_core python-pyzmq python-dateutil python-entrypoints python-tornado
 
-HOST_PYTHON_JUPYTER_CLIENT_INSTALL_OPTS += bdist_egg
-PYTHON_JUPYTER_CLIENT_INSTALL_STAGING_OPTS += bdist_egg
-PYTHON_JUPYTER_CLIENT_INSTALL_TARGET_OPTS += bdist_egg
-
 HOST_PYTHON_JUPYTER_CLIENT_DEPENDENCIES = host-python-tornado host-python-dateutil host-python-pyzmq host-python-jupyter_core
 PYTHON_JUPYTER_CLIENT_DEPENDENCIES = python-tornado python-dateutil python-pyzmq python-jupyter_core
 
