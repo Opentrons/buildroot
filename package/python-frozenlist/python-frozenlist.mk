@@ -10,5 +10,6 @@ PYTHON_FROZENLIST_SITE = https://files.pythonhosted.org/packages/cf/3d/2102257e7
 PYTHON_FROZENLIST_SETUP_TYPE = setuptools
 PYTHON_FROZENLIST_LICENSE = Apache-2.0
 PYTHON_FROZENLIST_LICENSE_FILES = LICENSE
+PYTHON_FROZENLIST_DEPENDENCIES = host-python-expandvars
 
 $(eval $(python-package))
