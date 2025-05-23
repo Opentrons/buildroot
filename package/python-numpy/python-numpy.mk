@@ -16,8 +16,8 @@ PYTHON_NUMPY_LICENSE_FILES = \
 	tools/npy_tempita/license.txt
 
 PYTHON_NUMPY_SETUP_TYPE = setuptools
-PYTHON_NUMPY_DEPENDENCIES = host-python-cython
-HOST_PYTHON_NUMPY_DEPENDENCIES = host-python-cython
+PYTHON_NUMPY_DEPENDENCIES = host-python-cython host-python3 python3
+HOST_PYTHON_NUMPY_DEPENDENCIES = host-python-cython host-python3
 
 ifeq ($(BR2_PACKAGE_LAPACK),y)
 PYTHON_NUMPY_DEPENDENCIES += lapack
@@ -32,12 +32,8 @@ else
 PYTHON_NUMPY_BUILD_OPTS = --fcompiler=None
 endif
 
-define PYTHON_NUMPY_CONFIGURE_CMDS
-	-rm -f $(@D)/site.cfg
-	echo "[DEFAULT]" >> $(@D)/site.cfg
-	echo "library_dirs = $(STAGING_DIR)/usr/lib" >> $(@D)/site.cfg
-	echo "include_dirs = $(STAGING_DIR)/usr/include" >> $(@D)/site.cfg
-endef
+PYTHON_NUMPY_ENV += SETUPTOOLS_USE_DISTUTILS=stdlib
+
 
 # Fixup the npymath.ini prefix path with actual target staging area where
 # numpy core was built. Without this, target builds using numpy distutils
@@ -63,5 +59,64 @@ endef
 PYTHON_NUMPY_POST_INSTALL_TARGET_HOOKS += PYTHON_NUMPY_REMOVE_TESTS
 endif
 
+define PYTHON_NUMPY_CONFIGURE_CMDS
+	-rm -f $(@D)/site.cfg
+	echo "[DEFAULT]" >> $(@D)/site.cfg
+	echo "library_dirs = $(STAGING_DIR)/usr/lib" >> $(@D)/site.cfg
+	echo "include_dirs = $(STAGING_DIR)/usr/include" >> $(@D)/site.cfg
+endef
+
+
 $(eval $(python-package))
 $(eval $(host-python-package))
+
+# note: these are inlined here because they are what used to be in pkg-python for the setuptools build
+# variant. this version of numpy can only build and install by having its setup.py executed, which
+# python -m build (the command buildroot runs for setuptools) will not do since it is only a pep517
+# build frontend. once we update numpy, which we should do by taking a new recipe from upstream, this
+# code should be deleted.
+
+define PYTHON_NUMPY_BUILD_CMDS
+	(cd $(PYTHON_NUMPY_BUILDDIR)/; \
+		$(PKG_PYTHON_ENV) \
+        $(PYTHON_NUMPY_ENV) \
+		$(HOST_DIR)/bin/python3 setup.py build\
+		--executable=/usr/bin/python\
+		$(PYTHON_NUMPY_BUILD_OPTS))
+endef
+
+define HOST_PYTHON_NUMPY_BUILD_CMDS
+	(cd $(HOST_PYTHON_NUMPY_BUILDDIR)/; \
+		$(HOST_PKG_PYTHON_ENV) \
+		$(HOST_DIR)/bin/python3 setup.py build)
+endef
+
+LEGACY_INSTALL_OPTS = \
+	--install-headers=/usr/include/python$(PYTHON3_VERSION_MAJOR) \
+	--prefix=/usr \
+	--executable=/usr/bin/python \
+	--single-version-externally-managed
+
+define PYTHON_NUMPY_INSTALL_STAGING_CMDS
+	(cd $(PYTHON_NUMPY_BUILDDIR)/; \
+		$(PKG_PYTHON_ENV) \
+        $(PYTHON_NUMPY_ENV) $(HOST_DIR)/bin/python3 setup.py install\
+		$(LEGACY_INSTALL_OPTS) \
+		--root=$(STAGING_DIR))
+endef
+
+define PYTHON_NUMPY_INSTALL_TARGET_CMDS
+	(cd $(PYTHON_NUMPY_BUILDDIR)/; \
+		$(PKG_PYTHON_ENV) \
+        $(PYTHON_NUMPY_ENV) $(HOST_DIR)/bin/python3 setup.py install\
+		$(LEGACY_INSTALL_OPTS) \
+		--root=$(TARGET_DIR))
+endef
+
+define HOST_PYTHON_NUMPY_INSTALL_CMDS
+	(cd $(HOST_PYTHON_NUMPY_BUILDDIR)/; \
+        $(PYTHON_NUMPY_ENV) $(HOST_DIR)/bin/python3 setup.py install\
+        --prefix=$(HOST_DIR) \
+	    --root=/ \
+	    --single-version-externally-managed)
+endef
