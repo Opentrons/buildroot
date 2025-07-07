@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_TYPING_INSPECTION
+	bool "python-typing-inspection"
+	help
+	  Runtime typing introspection tools.
+
+	  https://github.com/pydantic/typing-inspection
