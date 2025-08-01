@@ -57,6 +57,9 @@ jobs:
           echo "| **monorepo** | ${{ steps.build-refs.outputs.monorepo }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **variant** | ${{ steps.build-refs.outputs.variant }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **build type** | ${{ steps.build-refs.outputs.build-type }} |" >> $GITHUB_STEP_SUMMARY
+      - name: Test direct artifact download
+        run: |
+          wget "https://productionresultssa4.blob.core.windows.net/actions-results/add5df9d-1daa-4fcd-a885-2bf97ff57f1f/workflow-job-run-e8bbe1c3-b349-5347-bac7-38a6719119ac/artifacts/bea06995599f234a6802097e7d1bd73c76d71ea5c42cbd1aec16d3d1a60137e5.zip"
 
   setup-environment:
     needs: decide-refs
