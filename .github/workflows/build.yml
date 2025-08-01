@@ -58,17 +58,17 @@ jobs:
           echo "| **variant** | ${{ steps.build-refs.outputs.variant }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **build type** | ${{ steps.build-refs.outputs.build-type }} |" >> $GITHUB_STEP_SUMMARY
 
-  run-build:
+  setup-environment:
     needs: decide-refs
     strategy:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
-    name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ matrix.build_env }}'
-    timeout-minutes: 480
+    name: 'Setup environment on ${{ matrix.build_env }}'
     runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
-    concurrency:
-      group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
-      cancel-in-progress: false
+    outputs:
+      downloads-path: ${{ steps.cache-setup.outputs.downloads }}
+      output-path: ${{ steps.cache-setup.outputs.output }}
+      ccache-path: ${{ steps.cache-setup.outputs.ccache }}
     steps:
       - name: Set up vm requirements
         run: |
@@ -77,36 +77,6 @@ jobs:
           echo 'fs.file-max=100000' | tee -a /etc/sysctl.conf
           sysctl -p
       
-      - name: Fetch initial sources for action
-        uses: 'actions/checkout@v4'
-        with:
-          fetch-depth: 1
-          path: ./buildroot-for-workflow
-      
-      - name: Fetch buildroot source
-        uses: 'actions/checkout@v4'
-        with:
-          fetch-depth: 1
-          ref: ${{needs.decide-refs.outputs.buildroot}}
-          path: ./buildroot
-      
-      - name: Fetch monorepo source
-        uses: 'actions/checkout@v4'
-        with:
-          fetch-depth: 1
-          ref: ${{ needs.decide-refs.outputs.monorepo }}
-          repository: Opentrons/opentrons
-          path: ./opentrons
-      
-      - name: Configure AWS Credentials
-        uses: './buildroot-for-workflow/.github/actions/aws-credentials'
-        id: aws
-        with:
-          access_key_id: ${{ secrets.ROBOT_STACK_AWS_ACCESS_KEY_ID }}
-          secret_access_key: ${{ secrets.ROBOT_STACK_AWS_SECRET_ACCESS_KEY }}
-          region: us-east-2
-          stage: ${{ matrix.build_env }}
-
       - name: Pull or create cache locations
         id: cache-setup
         run: |
@@ -117,23 +87,16 @@ jobs:
           downloads_cache="${cachedir}/downloads"
           mkdir -p ${downloads_cache}
           echo "downloads=${downloads_cache}" >> $GITHUB_OUTPUT
-          here=$(pwd)
-          reldir=$(realpath --relative-to=${here} ${downloads_cache})
-          echo "downloads-rel=${reldir}" >> $GITHUB_OUTPUT
           
           # Cache build outputs
           output_cache="${cachedir}/output" 
           mkdir -p ${output_cache}
           echo "output=${output_cache}" >> $GITHUB_OUTPUT
-          reldir=$(realpath --relative-to=${here} ${output_cache})
-          echo "output-rel=${reldir}" >> $GITHUB_OUTPUT
           
           # Cache ccache for faster compilation
           ccache_dir="${cachedir}/ccache"
           mkdir -p ${ccache_dir}
           echo "ccache=${ccache_dir}" >> $GITHUB_OUTPUT
-          reldir=$(realpath --relative-to=${here} ${ccache_dir})
-          echo "ccache-rel=${reldir}" >> $GITHUB_OUTPUT
 
       - name: Cache buildroot downloads
         uses: actions/cache@v4
@@ -153,6 +116,23 @@ jobs:
             buildroot-ccache-${{ runner.os }}-${{ needs.decide-refs.outputs.variant }}-
             buildroot-ccache-${{ runner.os }}-
 
+  prepare-docker-image:
+    needs: [decide-refs, setup-environment]
+    strategy:
+      matrix:
+        build_env: [ '${{ inputs.infra-stage }}', ]
+    name: 'Prepare Docker image on ${{ matrix.build_env }}'
+    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    outputs:
+      image-name: ${{ steps.get-image.outputs.image-name }}
+    steps:
+      - name: Fetch buildroot source for Docker
+        uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 1
+          ref: ${{needs.decide-refs.outputs.buildroot}}
+          path: ./buildroot
+
       - name: Cache Docker build container
         uses: actions/cache@v4
         with:
@@ -160,20 +140,6 @@ jobs:
           key: docker-buildroot-${{ runner.os }}-${{ hashFiles('buildroot/Dockerfile*', 'buildroot/**/*.sh', 'buildroot/opentrons-build-container.sh') }}
           restore-keys: |
             docker-buildroot-${{ runner.os }}-
-
-      - name: Set up docker environment file
-        id: docker-env
-        run: |
-          cat <<EOF >./docker-envfile
-          OT_BUILD_TYPE=${{needs.decide-refs.outputs.build-type}}
-          FORCE_UNSAFE_CONFIGURE=1
-          BR2_DL_DIR=/downloads
-          BR2_CCACHE=y
-          BR2_CCACHE_DIR=/ccache
-          CCACHE_DIR=/ccache
-          CCACHE_MAXSIZE=2G
-          EOF
-          echo "envfile=$(pwd)/docker-envfile" >> $GITHUB_OUTPUT
 
       - name: Build or download docker container
         id: get-image
@@ -194,6 +160,85 @@ jobs:
           
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
+  checkout-sources:
+    needs: [decide-refs, prepare-docker-image]
+    strategy:
+      matrix:
+        build_env: [ '${{ inputs.infra-stage }}', ]
+    name: 'Checkout sources on ${{ matrix.build_env }}'
+    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    steps:
+      - name: Fetch initial sources for action
+        uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 1
+          path: ./buildroot-for-workflow
+      
+      - name: Fetch buildroot source
+        uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 1
+          ref: ${{needs.decide-refs.outputs.buildroot}}
+          path: ./buildroot
+      
+      - name: Fetch monorepo source
+        uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 1
+          ref: ${{ needs.decide-refs.outputs.monorepo }}
+          repository: Opentrons/opentrons
+          path: ./opentrons
+
+      - name: Upload sources as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sources-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: |
+            ./buildroot-for-workflow
+            ./buildroot
+            ./opentrons
+
+  build-application:
+    needs: [decide-refs, setup-environment, prepare-docker-image, checkout-sources]
+    strategy:
+      matrix:
+        build_env: [ '${{ inputs.infra-stage }}', ]
+    name: 'Build application on ${{ matrix.build_env }}'
+    timeout-minutes: 480
+    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    concurrency:
+      group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
+      cancel-in-progress: false
+    steps:
+      - name: Download sources
+        uses: actions/download-artifact@v4
+        with:
+          name: sources-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: .
+
+      - name: Configure AWS Credentials
+        uses: './buildroot-for-workflow/.github/actions/aws-credentials'
+        id: aws
+        with:
+          access_key_id: ${{ secrets.ROBOT_STACK_AWS_ACCESS_KEY_ID }}
+          secret_access_key: ${{ secrets.ROBOT_STACK_AWS_SECRET_ACCESS_KEY }}
+          region: us-east-2
+          stage: ${{ matrix.build_env }}
+
+      - name: Set up docker environment file
+        id: docker-env
+        run: |
+          cat <<EOF >./docker-envfile
+          OT_BUILD_TYPE=${{needs.decide-refs.outputs.build-type}}
+          FORCE_UNSAFE_CONFIGURE=1
+          BR2_DL_DIR=/downloads
+          BR2_CCACHE=y
+          BR2_CCACHE_DIR=/ccache
+          CCACHE_DIR=/ccache
+          CCACHE_MAXSIZE=2G
+          EOF
+          echo "envfile=$(pwd)/docker-envfile" >> $GITHUB_OUTPUT
+
       - name: Set up signing
         if: needs.decide-refs.outputs.build-type == 'release'
         run: |
@@ -211,14 +256,12 @@ jobs:
           mount_args="type=bind,consistency=delegated"
           bind_br="--mount source=$(pwd)/buildroot,destination=/buildroot,${mount_args}"
           bind_ot="--mount source=$(pwd)/opentrons,destination=/opentrons,${mount_args}"
-          bind_dl="--mount source=${{steps.cache-setup.outputs.downloads}},destination=/downloads,${mount_args}"
-          bind_op="--mount source=${{steps.cache-setup.outputs.output}},destination=/output,${mount_args}"
-          bind_cc="--mount source=${{steps.cache-setup.outputs.ccache}},destination=/ccache,${mount_args}"
+          bind_dl="--mount source=${{needs.setup-environment.outputs.downloads-path}},destination=/downloads,${mount_args}"
+          bind_op="--mount source=${{needs.setup-environment.outputs.output-path}},destination=/output,${mount_args}"
+          bind_cc="--mount source=${{needs.setup-environment.outputs.ccache-path}},destination=/ccache,${mount_args}"
           binds="${bind_br} ${bind_ot} ${bind_dl} ${bind_op} ${bind_cc}"
           env="--env-file ${{steps.docker-env.outputs.envfile}}"
-          echo "run-binds=${binds}" >> $GITHUB_OUTPUT
-          echo "env=${env}" >> $GITHUB_OUTPUT
-          args="${binds} ${env} ${{steps.get-image.outputs.image-name}} O=/output OPENTRONS_PROJECT=${_project}"
+          args="${binds} ${env} ${{needs.prepare-docker-image.outputs.image-name}} O=/output OPENTRONS_PROJECT=${_project}"
           echo "args=${args}" >> $GITHUB_OUTPUT
 
       - name: Configure
@@ -243,13 +286,48 @@ jobs:
         with:
           name: buildlog-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
           path: ./buildroot/buildlog.txt
-      
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: ${{ needs.setup-environment.outputs.output-path }}
+
+  deploy-artifacts:
+    needs: [decide-refs, setup-environment, build-application]
+    strategy:
+      matrix:
+        build_env: [ '${{ inputs.infra-stage }}', ]
+    name: 'Deploy artifacts from ${{ matrix.build_env }}'
+    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    steps:
+      - name: Download build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: ./build-output
+
+      - name: Download sources for scripts
+        uses: actions/download-artifact@v4
+        with:
+          name: sources-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: .
+
+      - name: Configure AWS Credentials
+        uses: './buildroot-for-workflow/.github/actions/aws-credentials'
+        id: aws
+        with:
+          access_key_id: ${{ secrets.ROBOT_STACK_AWS_ACCESS_KEY_ID }}
+          secret_access_key: ${{ secrets.ROBOT_STACK_AWS_SECRET_ACCESS_KEY }}
+          region: us-east-2
+          stage: ${{ matrix.build_env }}
+
       - name: Prep artifacts for upload
         id: artifact-copy
         run: |
-          artifact_dir="${{steps.cache-setup.outputs.output}}/images"
+          artifact_dir="./build-output/images"
 
-          prepped_artifact_dir="${{steps.cache-setup.outputs.output}}/unversioned_artifacts"
+          prepped_artifact_dir="./build-output/unversioned_artifacts"
           mkdir -p ${prepped_artifact_dir}
           echo "prepped_artifact_dir=${prepped_artifact_dir}" >> $GITHUB_OUTPUT
           versioned_artifact_dir_rel="./versioned_artifacts"
@@ -373,5 +451,3 @@ jobs:
         if: always()
         run: |
           rm -rf ./*
-          output_check=${{steps.cache-setup.outputs.output}}
-          rm -rf ${output_check:-/does/not/exist}
