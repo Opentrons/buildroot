@@ -196,14 +196,23 @@ jobs:
           repository: Opentrons/opentrons
           path: ./opentrons
 
-      - name: Upload sources as artifact
+      - name: Upload sources part 1
         uses: actions/upload-artifact@v4
         with:
-          name: sources-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
-          path: |
-            ./buildroot-for-workflow
-            ./buildroot
-            ./opentrons
+          name: sources-part1-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: ./buildroot-for-workflow
+  
+      - name: Upload sources part 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: sources-part2-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: ./buildroot
+  
+      - name: Upload sources part 3
+        uses: actions/upload-artifact@v4
+        with:
+          name: sources-part3-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: ./opentrons
 
   build-application:
     needs: [decide-refs, setup-environment, prepare-docker-image, checkout-sources]
@@ -222,10 +231,22 @@ jobs:
         with:
           path: ./buildroot-for-workflow
 
-      - name: Download sources
+      - name: Download sources part 1
         uses: actions/download-artifact@v4
         with:
-          name: sources-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          name: sources-part1-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: .
+
+      - name: Download sources part 2
+        uses: actions/download-artifact@v4
+        with:
+          name: sources-part2-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: .
+
+      - name: Download sources part 3
+        uses: actions/download-artifact@v4
+        with:
+          name: sources-part3-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
           path: .
 
       - name: Configure AWS Credentials
@@ -324,10 +345,22 @@ jobs:
           name: build-outputs-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
           path: ./build-output
 
-      - name: Download sources for scripts
+      - name: Download sources part 1 for scripts
         uses: actions/download-artifact@v4
         with:
-          name: sources-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          name: sources-part1-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: .
+
+      - name: Download sources part 2 for scripts
+        uses: actions/download-artifact@v4
+        with:
+          name: sources-part2-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
+          path: .
+
+      - name: Download sources part 3 for scripts
+        uses: actions/download-artifact@v4
+        with:
+          name: sources-part3-${{ matrix.build_env }}-${{ needs.decide-refs.outputs.variant }}
           path: .
 
       - name: Configure AWS Credentials
