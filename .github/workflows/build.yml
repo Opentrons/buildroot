@@ -65,7 +65,7 @@ jobs:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Setup environment on ${{ matrix.build_env }}'
-    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    runs-on: 'ubuntu-latest'
     outputs:
       downloads-path: ${{ steps.cache-setup.outputs.downloads }}
       output-path: ${{ steps.cache-setup.outputs.output }}
@@ -123,7 +123,7 @@ jobs:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Prepare Docker image on ${{ matrix.build_env }}'
-    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    runs-on: 'ubuntu-latest'
     outputs:
       image-name: ${{ steps.get-image.outputs.image-name }}
     steps:
@@ -167,7 +167,7 @@ jobs:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Checkout sources on ${{ matrix.build_env }}'
-    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    runs-on: 'ubuntu-latest'
     steps:
       - name: Fetch initial sources for action
         uses: 'actions/checkout@v4'
@@ -206,7 +206,7 @@ jobs:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Build application on ${{ matrix.build_env }}'
     timeout-minutes: 480
-    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    runs-on: 'ubuntu-latest'
     concurrency:
       group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
       cancel-in-progress: false
@@ -300,7 +300,7 @@ jobs:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Deploy artifacts from ${{ matrix.build_env }}'
-    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    runs-on: 'ubuntu-latest'
     steps:
       - name: Download build outputs
         uses: actions/download-artifact@v4
