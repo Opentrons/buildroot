@@ -29,7 +29,7 @@ env:
 jobs:
   decide-refs:
     name: 'Decide refs to build'
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     outputs:
       buildroot: ${{ steps.build-refs.outputs.buildroot }}
       monorepo: ${{ steps.build-refs.outputs.monorepo }}
@@ -37,7 +37,7 @@ jobs:
       build-type: ${{ steps.build-refs.outputs.build-type }}
     steps:
       - name: Check out sources for action
-        uses: 'actions/checkout@v4'
+        uses: actions/checkout@v4
         with:
           path: ./buildroot-for-workflow
       - name: Get the refs
@@ -58,14 +58,13 @@ jobs:
           echo "| **variant** | ${{ steps.build-refs.outputs.variant }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **build type** | ${{ steps.build-refs.outputs.build-type }} |" >> $GITHUB_STEP_SUMMARY
 
-
   setup-environment:
     needs: decide-refs
     strategy:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Setup environment on ${{ matrix.build_env }}'
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     outputs:
       downloads-path: ${{ steps.cache-setup.outputs.downloads }}
       output-path: ${{ steps.cache-setup.outputs.output }}
@@ -82,7 +81,7 @@ jobs:
         id: cache-setup
         run: |
           # Use runner temp for better performance
-          cachedir=${LOCAL_CACHE:-${{ runner.temp }}/buildroot-cache}
+          cachedir=${{ runner.temp }}/buildroot-cache
           
           # Cache buildroot downloads (packages, sources)
           downloads_cache="${cachedir}/downloads"
@@ -98,6 +97,13 @@ jobs:
           ccache_dir="${cachedir}/ccache"
           mkdir -p ${ccache_dir}
           echo "ccache=${ccache_dir}" >> $GITHUB_OUTPUT
+
+      - name: Checkout buildroot for cache key
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ${{needs.decide-refs.outputs.buildroot}}
+          path: ./buildroot
 
       - name: Cache buildroot downloads
         uses: actions/cache@v4
@@ -123,12 +129,12 @@ jobs:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Prepare Docker image on ${{ matrix.build_env }}'
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     outputs:
       image-name: ${{ steps.get-image.outputs.image-name }}
     steps:
       - name: Fetch buildroot source for Docker
-        uses: 'actions/checkout@v4'
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           ref: ${{needs.decide-refs.outputs.buildroot}}
@@ -167,23 +173,23 @@ jobs:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Checkout sources on ${{ matrix.build_env }}'
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     steps:
       - name: Fetch initial sources for action
-        uses: 'actions/checkout@v4'
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           path: ./buildroot-for-workflow
       
       - name: Fetch buildroot source
-        uses: 'actions/checkout@v4'
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           ref: ${{needs.decide-refs.outputs.buildroot}}
           path: ./buildroot
       
       - name: Fetch monorepo source
-        uses: 'actions/checkout@v4'
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           ref: ${{ needs.decide-refs.outputs.monorepo }}
@@ -206,11 +212,16 @@ jobs:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Build application on ${{ matrix.build_env }}'
     timeout-minutes: 480
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
       cancel-in-progress: false
     steps:
+      - name: Check out sources for action
+        uses: actions/checkout@v4
+        with:
+          path: ./buildroot-for-workflow
+
       - name: Download sources
         uses: actions/download-artifact@v4
         with:
@@ -269,18 +280,18 @@ jobs:
         run: |
           cd buildroot
           docker run ${{steps.docker-args.outputs.args}} ot2_defconfig
-      
+
       - name: Download package sources
         run: |
           cd buildroot
           docker run ${{steps.docker-args.outputs.args}} source
-      
+
       - name: Run build
         run: |
           cd buildroot
           # Use all available cores for parallel compilation
           docker run ${{steps.docker-args.outputs.args}} -j$(nproc) all
-      
+
       - name: Upload build log result
         if: always()
         uses: actions/upload-artifact@v4
@@ -300,8 +311,13 @@ jobs:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Deploy artifacts from ${{ matrix.build_env }}'
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
     steps:
+      - name: Check out sources for action
+        uses: actions/checkout@v4
+        with:
+          path: ./buildroot-for-workflow
+
       - name: Download build outputs
         uses: actions/download-artifact@v4
         with:
