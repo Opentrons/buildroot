@@ -163,6 +163,33 @@ jobs:
         run: |
           cd buildroot
           docker run ${{steps.docker-args.outputs.args}} ot2_defconfig
+
+      - name: Hackily delete incorrectly-cached module firmwares
+        # the arduino module firmwares do not have their versions as part of their filenames, which means
+        # that buildroot will not detect previously-downloaded (and previously-versioned) module firmware packages
+        # as stale and update them. Since they are also tiny, just neatly brush them away before doing a build to
+        # force a redownload.
+        # because buildroot is Like That, brushing them away requires manually poking in the output build directory
+        # and removing the cache there too; removing the downloaded artifact isn't enough. There also isn't a
+        # per-recipe clean step.
+        run: |
+          echo "Downloads before delete"
+          ls ${{steps.cache-setup.outputs.downloads}}
+          rm -rf ${{steps.cache-setup.outputs.downloads}}/opentrons-temperature-module-firmware
+          rm -rf ${{steps.cache-setup.outputs.downloads}}/opentrons-magnetic-module-firmware
+          echo "Downloads after delete"
+          ls ${{steps.cache-setup.outputs.downloads}}
+          if [ -d ${{steps.cache-setup.outputs.output}}/build ] ; then
+            echo "Build before delete"
+            ls ${{steps.cache-setup.outputs.output}}/build
+            rm -rf ${{steps.cache-setup.outputs.output}}/build/opentrons-temperature-module-firmware-*
+            rm -rf ${{steps.cache-setup.outputs.output}}/build/opentrons-magnetic-module-firmware-*
+            echo "Build after delete"
+            ls ${{steps.cache-setup.outputs.output}}/build
+          else
+            echo "No output/builds in"
+            ls ${{steps.cache-setup.outputs.output}}
+          fi
       - name: Download package sources
         run: |
           cd buildroot
