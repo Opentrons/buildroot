@@ -12,6 +12,8 @@ PYTHON_PIP_LICENSE = MIT
 PYTHON_PIP_LICENSE_FILES = LICENSE.txt
 PYTHON_PIP_CPE_ID_VENDOR = pypa
 PYTHON_PIP_CPE_ID_PRODUCT = pip
+PYTHON_PIP_KEEP_PY_FILES += usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/pip/__pip-runner__.py \
+                            usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/pip/_vendor/pep517/in_process/_in_process.py
 # Disputed CVE: things work as designed, and only affects the
 # --extra-index-url option. This CVE will never be fixed.
 PYTHON_PIP_IGNORE_CVES += CVE-2018-20225
