@@ -1,5 +1,6 @@
 import { getOctokit } from '@actions/github'
 import * as core from '@actions/core'
+import * as semver from 'semver'
 
 export type Repo = 'buildroot' | 'monorepo'
 export type BuildType = 'develop' | 'release'
@@ -68,29 +69,52 @@ function latestTagPrefixFor(repo: Repo, variant: Variant): string[] {
 export function latestTag(tagRefs: GitHubApiTag[]): Tag | null {
   if (tagRefs.length === 0) return null
   
-  // Sort tags by version number (semantic versioning)
-  const sortedTags = tagRefs
-    .map(tag => tag.ref)
-    .sort((a, b) => {
-      // Extract version numbers from refs like "refs/tags/v1.19.4"
-      const versionA = a.replace('refs/tags/v', '').replace('refs/tags/', '')
-      const versionB = b.replace('refs/tags/v', '').replace('refs/tags/', '')
-      
-      // Simple semantic version comparison
-      const partsA = versionA.split('.').map(Number)
-      const partsB = versionB.split('.').map(Number)
-      
-      for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-        const partA = partsA[i] || 0
-        const partB = partsB[i] || 0
-        if (partA !== partB) {
-          return partA - partB
-        }
-      }
-      return 0
-    })
+  // Extract and parse version numbers from tag refs, grouped by type
+  const tagGroups = {
+    v: [] as Array<{ tag: string; version: string }>,
+    internal: [] as Array<{ tag: string; version: string }>,
+    ot3: [] as Array<{ tag: string; version: string }>
+  }
   
-  return sortedTags[sortedTags.length - 1]
+  tagRefs.forEach(tag => {
+    const tagName = tag.ref.replace('refs/tags/', '')
+    
+    // Handle v* tags (e.g., "v1.19.4")
+    if (tagName.startsWith('v')) {
+      const version = tagName.substring(1)
+      if (semver.valid(version)) {
+        tagGroups.v.push({ tag: tag.ref, version })
+      }
+    }
+    // Handle internal@* tags (e.g., "internal@1.2.0-alpha.0")
+    else if (tagName.startsWith('internal@')) {
+      const version = tagName.substring(9) // Remove "internal@"
+      if (semver.valid(version)) {
+        tagGroups.internal.push({ tag: tag.ref, version })
+      }
+    }
+    // Handle ot3@* tags (e.g., "ot3@1.2.0-alpha.0")
+    else if (tagName.startsWith('ot3@')) {
+      const version = tagName.substring(4) // Remove "ot3@"
+      if (semver.valid(version)) {
+        tagGroups.ot3.push({ tag: tag.ref, version })
+      }
+    }
+  })
+  
+  // Find the latest tag in each group
+  const latestByGroup = {
+    v: tagGroups.v.length > 0 ? tagGroups.v.sort((a, b) => semver.compare(a.version, b.version)).pop() : null,
+    internal: tagGroups.internal.length > 0 ? tagGroups.internal.sort((a, b) => semver.compare(a.version, b.version)).pop() : null,
+    ot3: tagGroups.ot3.length > 0 ? tagGroups.ot3.sort((a, b) => semver.compare(a.version, b.version)).pop() : null
+  }
+  
+  // Priority order: v* tags first, then internal@* tags, then ot3@* tags
+  if (latestByGroup.v) return latestByGroup.v.tag
+  if (latestByGroup.internal) return latestByGroup.internal.tag
+  if (latestByGroup.ot3) return latestByGroup.ot3.tag
+  
+  return null
 }
 
 function restDetailsFor(input: Repo): { owner: string; repo: string } {
