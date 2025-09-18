@@ -66,7 +66,31 @@ function latestTagPrefixFor(repo: Repo, variant: Variant): string[] {
 }
 
 export function latestTag(tagRefs: GitHubApiTag[]): Tag | null {
-  return (tagRefs.at(-1)?.ref as Tag | null | undefined) ?? null
+  if (tagRefs.length === 0) return null
+  
+  // Sort tags by version number (semantic versioning)
+  const sortedTags = tagRefs
+    .map(tag => tag.ref)
+    .sort((a, b) => {
+      // Extract version numbers from refs like "refs/tags/v1.19.4"
+      const versionA = a.replace('refs/tags/v', '').replace('refs/tags/', '')
+      const versionB = b.replace('refs/tags/v', '').replace('refs/tags/', '')
+      
+      // Simple semantic version comparison
+      const partsA = versionA.split('.').map(Number)
+      const partsB = versionB.split('.').map(Number)
+      
+      for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+        const partA = partsA[i] || 0
+        const partB = partsB[i] || 0
+        if (partA !== partB) {
+          return partA - partB
+        }
+      }
+      return 0
+    })
+  
+  return sortedTags[sortedTags.length - 1]
 }
 
 function restDetailsFor(input: Repo): { owner: string; repo: string } {

@@ -10,6 +10,7 @@ fi
 githubname="$(git describe --all --dirty --always | tr '[:upper:]' '[:lower:]')"
 imgname=ghcr.io/opentrons/buildroot
 noheads=${githubname/heads//}
+noheads=${noheads/tags//}
 imgtag=${noheads:2}
 
 
