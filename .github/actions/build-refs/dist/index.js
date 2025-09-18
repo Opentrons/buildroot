@@ -33915,50 +33915,34 @@ function latestTagPrefixFor(repo, variant) {
 function latestTag(tagRefs) {
     if (tagRefs.length === 0)
         return null;
-    // Extract and parse version numbers from tag refs, grouped by type
-    const tagGroups = {
-        v: [],
-        internal: [],
-        ot3: []
-    };
-    tagRefs.forEach(tag => {
+    // Extract and parse version numbers from tag refs
+    const tagVersions = tagRefs
+        .map(tag => {
         const tagName = tag.ref.replace('refs/tags/', '');
         // Handle v* tags (e.g., "v1.19.4")
         if (tagName.startsWith('v')) {
             const version = tagName.substring(1);
-            if (semver__WEBPACK_IMPORTED_MODULE_2__.valid(version)) {
-                tagGroups.v.push({ tag: tag.ref, version });
-            }
+            return { tag: tag.ref, version, isValid: semver__WEBPACK_IMPORTED_MODULE_2__.valid(version) };
         }
         // Handle internal@* tags (e.g., "internal@1.2.0-alpha.0")
-        else if (tagName.startsWith('internal@')) {
+        if (tagName.startsWith('internal@')) {
             const version = tagName.substring(9); // Remove "internal@"
-            if (semver__WEBPACK_IMPORTED_MODULE_2__.valid(version)) {
-                tagGroups.internal.push({ tag: tag.ref, version });
-            }
+            return { tag: tag.ref, version, isValid: semver__WEBPACK_IMPORTED_MODULE_2__.valid(version) };
         }
         // Handle ot3@* tags (e.g., "ot3@1.2.0-alpha.0")
-        else if (tagName.startsWith('ot3@')) {
+        if (tagName.startsWith('ot3@')) {
             const version = tagName.substring(4); // Remove "ot3@"
-            if (semver__WEBPACK_IMPORTED_MODULE_2__.valid(version)) {
-                tagGroups.ot3.push({ tag: tag.ref, version });
-            }
+            return { tag: tag.ref, version, isValid: semver__WEBPACK_IMPORTED_MODULE_2__.valid(version) };
         }
-    });
-    // Find the latest tag in each group
-    const latestByGroup = {
-        v: tagGroups.v.length > 0 ? tagGroups.v.sort((a, b) => semver__WEBPACK_IMPORTED_MODULE_2__.compare(a.version, b.version)).pop() : null,
-        internal: tagGroups.internal.length > 0 ? tagGroups.internal.sort((a, b) => semver__WEBPACK_IMPORTED_MODULE_2__.compare(a.version, b.version)).pop() : null,
-        ot3: tagGroups.ot3.length > 0 ? tagGroups.ot3.sort((a, b) => semver__WEBPACK_IMPORTED_MODULE_2__.compare(a.version, b.version)).pop() : null
-    };
-    // Priority order: v* tags first, then internal@* tags, then ot3@* tags
-    if (latestByGroup.v)
-        return latestByGroup.v.tag;
-    if (latestByGroup.internal)
-        return latestByGroup.internal.tag;
-    if (latestByGroup.ot3)
-        return latestByGroup.ot3.tag;
-    return null;
+        // Unknown tag format
+        return { tag: tag.ref, version: null, isValid: false };
+    })
+        .filter(tv => tv.isValid); // Only keep valid semantic versions
+    if (tagVersions.length === 0)
+        return null;
+    // Sort by semantic version and return the latest
+    tagVersions.sort((a, b) => semver__WEBPACK_IMPORTED_MODULE_2__.compare(a.version, b.version));
+    return tagVersions[tagVersions.length - 1].tag;
 }
 function restDetailsFor(input) {
     return {
