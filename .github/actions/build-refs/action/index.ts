@@ -23,16 +23,16 @@ function setFailed(message: string): void {
   process.exit(1)
 }
 
-// Custom setOutput function that only uses GITHUB_OUTPUT (no deprecated set-output fallback)
+// Custom setOutput function using Environment Files (no deprecated set-output fallback)
 function customSetOutput(name: string, value: string): void {
   const filePath = process.env['GITHUB_OUTPUT']
   if (!filePath) {
     throw new Error('GITHUB_OUTPUT environment variable is not set')
   }
   
-  const delimiter = `_GitHubActionsFileCommandDelimiter_${Math.random().toString(36).substring(7)}_`
-  const commandValue = `${name}<<${delimiter}${os.EOL}${value}${os.EOL}${delimiter}`
-  fs.appendFileSync(filePath, commandValue + os.EOL)
+  // Use the simple Environment Files syntax as recommended by GitHub
+  const commandValue = `${name}=${value}${os.EOL}`
+  fs.appendFileSync(filePath, commandValue)
 }
 
 export type Repo = 'buildroot' | 'monorepo'

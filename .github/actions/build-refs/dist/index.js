@@ -32155,15 +32155,15 @@ function setFailed(message) {
     console.error(message);
     process.exit(1);
 }
-// Custom setOutput function that only uses GITHUB_OUTPUT (no deprecated set-output fallback)
+// Custom setOutput function using Environment Files (no deprecated set-output fallback)
 function customSetOutput(name, value) {
     const filePath = process.env['GITHUB_OUTPUT'];
     if (!filePath) {
         throw new Error('GITHUB_OUTPUT environment variable is not set');
     }
-    const delimiter = `_GitHubActionsFileCommandDelimiter_${Math.random().toString(36).substring(7)}_`;
-    const commandValue = `${name}<<${delimiter}${os__WEBPACK_IMPORTED_MODULE_2__.EOL}${value}${os__WEBPACK_IMPORTED_MODULE_2__.EOL}${delimiter}`;
-    fs__WEBPACK_IMPORTED_MODULE_1__.appendFileSync(filePath, commandValue + os__WEBPACK_IMPORTED_MODULE_2__.EOL);
+    // Use the simple Environment Files syntax as recommended by GitHub
+    const commandValue = `${name}=${value}${os__WEBPACK_IMPORTED_MODULE_2__.EOL}`;
+    fs__WEBPACK_IMPORTED_MODULE_1__.appendFileSync(filePath, commandValue);
 }
 const orderedRepos = ['monorepo', 'buildroot'];
 function variantForRef(ref) {
