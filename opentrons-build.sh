@@ -25,11 +25,22 @@ function finish {
 
 trap finish EXIT
 
+if [ ! -d $(pwd)/../buildroot-upstream ] ; then
+    echo "buildroot-upstream is not present, run ./checkout-buildroot.sh"
+    exit 1
+fi
+if [ ! -d $(pwd)/../opentrons ] ; then
+    echo "opentrons is not present, check it out as a sibling to this directory"
+    exit 1
+fi
+
 DOCKER_BR_BIND_DIR="/buildroot"
 DOCKER_OT_BIND_DIR="/opentrons"
-DOCKER_BIND_BR="--mount type=bind,source=$(pwd),destination=${DOCKER_BR_BIND_DIR},consistency=delegated"
+DOCKER_BR_OVERLAYS_BIND_DIR="/buildroot-overlays"
+DOCKER_BIND_BR="--mount type=bind,source=$(pwd)/../buildroot-upstream,destination=${DOCKER_BR_BIND_DIR},consistency=delegated"
+DOCKER_BIND_BR_OVERLAYS="--mount type=bind,source=$(pwd),destination=${DOCKER_BR_OVERLAYS_BIND_DIR},consistency=delegated"
 DOCKER_BIND_OT="--mount type=bind,source=$(pwd)/../opentrons,destination=${DOCKER_OT_BIND_DIR},consistency=delegated"
-DOCKER_BIND="${DOCKER_BIND_BR} ${DOCKER_BIND_OT}"
+DOCKER_BIND="${DOCKER_BIND_BR} ${DOCKER_BIND_OT} ${DOCKER_BIND_BR_OVERLAYS}"
 heads=${@:1:$(($# - 1))}
 tail=${@:$#}
 
@@ -51,10 +62,10 @@ fi
 
 case $# in
     0)
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} ot2_defconfig
-        docker run --env-file ./.env ${DOCKER_BIND} ${imgname} all
+        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh ${imgname} ot2_defconfig
+        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh ${imgname} all
         ;;
     *)
-        docker run --env-file ./.env ${heads} ${DOCKER_BIND} ${imgname} ${tail}
+        docker run --env-file ./.env ${heads} ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh ${imgname} ${tail}
         ;;
 esac

@@ -11,6 +11,7 @@ filtered_build_log="/buildroot/buildlog.txt"
 
 git config --global --add safe.directory /opentrons
 git config --global --add safe.directory /buildroot
+git config --global --add safe.directory /buildroot-overlays
 
 
 if [[ -n "${FILTER}" ]]; then
@@ -30,13 +31,11 @@ if [[ -n "${FILTER}" ]]; then
    done;
 fi
 
-git config --global --add safe.directory /opentrons
-git config --global --add safe.directory /buildroot
 
 if [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
-    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/opentrons make -C /buildroot "$@"
+    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot "$@"
 else
     echo "Filtered make"
-    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/opentrons make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
+    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
 fi

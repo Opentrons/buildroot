@@ -76,7 +76,7 @@ fi
 
 if [ -e .signing-key ]; then
     echo "Signing rootfs hash"
-    openssl dgst -sha256 -sign .signing-key -out ${BINARIES_DIR}/rootfs.ext4.hash.sig ${BINARIES_DIR}/rootfs.ext4.hash
+    openssl dgst -sha256 -sign ${BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH}/.signing-key -out ${BINARIES_DIR}/rootfs.ext4.hash.sig ${BINARIES_DIR}/rootfs.ext4.hash
     system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/rootfs.ext4.hash.sig ${boot_files}"
 else
     echo "signing key unavailable, build will not be signed"

@@ -1,6 +1,6 @@
-# Buildroot (Opentrons fork)
+# Opentrons Buildroot Overlays
 
-This is the Opentrons fork of Buildroot, the embedded Linux system builder, which we use to configure and build the OT-2's operating system.
+These are the Opentrons package and config overlays for Buildroot for building the OT-2.
 
 ## (Highly) Recommended Reading
 
@@ -10,11 +10,15 @@ Working in this repository is easier if you are familiar with Buildroot.
 - Upstream repository: <https://github.com/buildroot/buildroot/>
 - Buildroot website: <https://buildroot.org/>
 
+## What is this repo?
+
+This repository is a buildroot external tree containing board configuration files; package definitions version overrides; and CI build setup and code.
+
 ## Building Locally
 
 We wrap the Buildroot build system in a [Docker][] container to manage dependencies and make it slightly more portable. Due to case-sensitive filenames and other concerns, the build must be run on Linux.
 
-This fork requires the [opentrons repo](https://github.com/Opentrons/opentrons) to be checked out next to it, since it uses a Buildroot external toolchain to build in our dependencies.
+This fork requires the [opentrons repo](https://github.com/Opentrons/opentrons) to be checked out next to it, since it uses a Buildroot external tree to build in our dependencies. Since this repo itself is also a Buildroot external tree, we need actual buildroot cloned next to it in a directory called `buildroot-upstream` (this can be overridden).
 
 [docker]: https://www.docker.com/
 
@@ -30,18 +34,23 @@ This fork requires the [opentrons repo](https://github.com/Opentrons/opentrons) 
 
 ### Setup
 
-In order to build, `docker` and `git` must be installed and the monorepo must be checked out as a neighbor to `buildroot`
+In order to build, `docker` and `git` must be installed. The monorepo must be checked out as a neighbor to `buildroot`. The upstream `buildroot` repo must be checked out as a neighbor to this repo at `buildroot-upstream`.
 
 ```shell
-# 0) clone the opentrons monorepo, if you haven't already
+# clone the opentrons monorepo, if you haven't already
 git clone https://github.com/Opentrons/opentrons.git
 
-# 1) clone the Opentrons fork of buildroot next to the monorepo
+# clone the overlays next to the monorepo
 git clone https://github.com/Opentrons/buildroot.git
 
-# 2) navigate into the repository
+# clone the upstream buildroot next to the overlays using a helper script that will run
+# git clone https://github.com/buildroot/buildroot.git --branch=<current version> --depth=0 buildroot-upstream
+# where <current version> is what version of upstream we use right now.
 cd buildroot
+./checkout-buildroot.sh
 ```
+
+The last one is a little complex, and also might change when we update buildroot
 
 ### Build
 
