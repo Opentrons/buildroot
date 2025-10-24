@@ -1,7 +1,7 @@
-From d4891381207f92b066946f6a994458dc1e31642b Mon Sep 17 00:00:00 2001
+From 6aae3aab39962ea928a77b516c3b33bc47cc57b0 Mon Sep 17 00:00:00 2001
 From: Seth Foster <seth@opentrons.com>
 Date: Mon, 27 Oct 2025 17:08:37 +0000
-Subject: [PATCH 04/12] remove python-attrs for override
+Subject: [PATCH 04/38] remove python-attrs for override
 
 ---
  package/Config.in                      |  1 -

@@ -1,7 +1,7 @@
-From 8e81336cde1dac2f4e4dc48e561bdf1ecf5a3f98 Mon Sep 17 00:00:00 2001
+From 4ac37f7413611d541065a16a48132d1486b64f38 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Mon, 27 Oct 2025 17:33:50 +0000
-Subject: [PATCH 05/12] remove python-frozenlist for override
+Subject: [PATCH 05/38] remove python-frozenlist for override
 
 ---
  package/Config.in                                |  1 -

@@ -1,0 +1,170 @@
+From 69c894683416a50ac568c00483621fa5472c9bf1 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Wed, 29 Oct 2025 21:16:18 +0000
+Subject: [PATCH 32/38] remove python-pyzmq for override
+
+---
+ package/Config.in                             |  1 -
+ ...e-ZMQ-version-check-to-the-ZMQ-versi.patch | 67 -------------------
+ package/python-pyzmq/Config.in                | 12 ----
+ package/python-pyzmq/python-pyzmq.hash        |  6 --
+ package/python-pyzmq/python-pyzmq.mk          | 29 --------
+ 5 files changed, 115 deletions(-)
+ delete mode 100644 package/python-pyzmq/0001-detect.py-fix-the-ZMQ-version-check-to-the-ZMQ-versi.patch
+ delete mode 100644 package/python-pyzmq/Config.in
+ delete mode 100644 package/python-pyzmq/python-pyzmq.hash
+ delete mode 100644 package/python-pyzmq/python-pyzmq.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index bfba74a6..d3c38845 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1232,7 +1232,6 @@ menu "External python modules"
+ 	source "package/python-pyusb/Config.in"
+ 	source "package/python-pyxb/Config.in"
+ 	source "package/python-pyyaml/Config.in"
+-	source "package/python-pyzmq/Config.in"
+ 	source "package/python-qrcode/Config.in"
+ 	source "package/python-raven/Config.in"
+ 	source "package/python-redis/Config.in"
+diff --git a/package/python-pyzmq/0001-detect.py-fix-the-ZMQ-version-check-to-the-ZMQ-versi.patch b/package/python-pyzmq/0001-detect.py-fix-the-ZMQ-version-check-to-the-ZMQ-versi.patch
+deleted file mode 100644
+index 18553582..00000000
+--- a/package/python-pyzmq/0001-detect.py-fix-the-ZMQ-version-check-to-the-ZMQ-versi.patch
++++ /dev/null
+@@ -1,67 +0,0 @@
+-From 8eae1193457f72899f9cc2254ae1489026df9bb6 Mon Sep 17 00:00:00 2001
+-From: Michael Rommel <rommel@layer-7.net>
+-Date: Sat, 10 Aug 2013 00:44:35 +0200
+-Subject: [PATCH] detect.py: fix the ZMQ version check to the ZMQ version of
+- the buildroot
+-
+-The setup.py script tries to compile a test C program and runs it, to
+-retrieve a version string for the installed ZMQ library, but if the cross
+-compiler links it together, the result cannot be run on the host, due to
+-different architectures and libraries.
+-
+-And if the host compiler would compile/link it, it would not link with
+-the library version inside buildroot but with the library from the
+-host, possibly returning a wrong version number.
+-
+-Instead of trying to run the compiled test program to get the version
+-dynamically, return the version of the buildroot environment.
+-
+-Written by Michael Rommel, modified for version 16.0.2 by Lionel
+-Flandrin.
+-
+-Modified for version 18.0.2 by Asaf Kahlon
+-
+-Modified for version 24.0.1 by James Hilliard
+-
+-Signed-off-by: Michael Rommel <rommel@layer-7.net>
+-Signed-off-by: Lionel Flandrin <lionel@svkt.org>
+-Signed-off-by: Asaf Kahlon <asafka7@gmail.com>
+-Signed-off-by: James Hilliard <james.hilliard1@gmail.com>
+----
+- buildutils/detect.py | 14 ++++++++------
+- 1 file changed, 8 insertions(+), 6 deletions(-)
+-
+-diff --git a/buildutils/detect.py b/buildutils/detect.py
+-index 842e3b14..e2eca744 100644
+---- a/buildutils/detect.py
+-+++ b/buildutils/detect.py
+-@@ -120,18 +120,20 @@ def detect_zmq(basedir, compiler, **compiler_attrs):
+- 
+-     cc = get_compiler(compiler=compiler, **compiler_attrs)
+-     efile = test_compilation(cfile, compiler=cc, **compiler_attrs)
+--    patch_lib_paths(efile, cc.library_dirs)
+-+    #patch_lib_paths(efile, cc.library_dirs)
+- 
+-     # add library dirs to %PATH% for windows
+-     env = os.environ.copy()
+-     if sys.platform.startswith("win"):
+-         env["PATH"] = os.pathsep.join([env["PATH"]] + cc.library_dirs)
+- 
+--    rc, so, se = get_output_error([efile], env=env)
+--    if rc:
+--        msg = f"Error running version detection script:\n{so}\n{se}"
+--        logging.error(msg)
+--        raise OSError(msg)
+-+    #rc, so, se = get_output_error([efile], env=env)
+-+    #if rc:
+-+    #     msg = f"Error running version detection script:\n{so}\n{se}"
+-+    #     logging.error(msg)
+-+    #     raise OSError(msg)
+-+
+-+    so = "vers: ##ZEROMQ_VERSION##"
+- 
+-     handlers = {'vers': lambda val: tuple(int(v) for v in val.split('.'))}
+- 
+--- 
+-2.34.1
+-
+diff --git a/package/python-pyzmq/Config.in b/package/python-pyzmq/Config.in
+deleted file mode 100644
+index f8ce52f8..00000000
+--- a/package/python-pyzmq/Config.in
++++ /dev/null
+@@ -1,12 +0,0 @@
+-config BR2_PACKAGE_PYTHON_PYZMQ
+-	bool "python-pyzmq"
+-	depends on BR2_INSTALL_LIBSTDCPP # zeromq
+-	depends on BR2_TOOLCHAIN_HAS_THREADS # zeromq
+-	select BR2_PACKAGE_ZEROMQ
+-	help
+-	  This package contains the python language binding for zeromq.
+-
+-	  http://zeromq.org/bindings:python
+-
+-comment "python-pyzmq needs a toolchain w/ C++, threads"
+-	depends on !(BR2_INSTALL_LIBSTDCPP && BR2_TOOLCHAIN_HAS_THREADS)
+diff --git a/package/python-pyzmq/python-pyzmq.hash b/package/python-pyzmq/python-pyzmq.hash
+deleted file mode 100644
+index efbc91d8..00000000
+--- a/package/python-pyzmq/python-pyzmq.hash
++++ /dev/null
+@@ -1,6 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/pyzmq/json
+-md5  f10b7c3dee2c03557e2c5d00b73dfc7f  pyzmq-24.0.1.tar.gz
+-sha256  216f5d7dbb67166759e59b0479bca82b8acf9bed6015b526b8eb10143fb08e77  pyzmq-24.0.1.tar.gz
+-# Locally computed sha256 checksums
+-sha256  aef3b80570351d44e29c22d080d4e9e106b34f3fdbc5cdf9636994474c72b1a2  COPYING.BSD
+-sha256  44b23767df3c0fe27f88981f09bc7f50a1695cec4b24252fa5f55f03e76bcd6d  COPYING.LESSER
+diff --git a/package/python-pyzmq/python-pyzmq.mk b/package/python-pyzmq/python-pyzmq.mk
+deleted file mode 100644
+index 5792957e..00000000
+--- a/package/python-pyzmq/python-pyzmq.mk
++++ /dev/null
+@@ -1,29 +0,0 @@
+-################################################################################
+-#
+-# python-pyzmq
+-#
+-################################################################################
+-
+-PYTHON_PYZMQ_VERSION = 24.0.1
+-PYTHON_PYZMQ_SOURCE = pyzmq-$(PYTHON_PYZMQ_VERSION).tar.gz
+-PYTHON_PYZMQ_SITE = https://files.pythonhosted.org/packages/46/0d/b06cf99a64d4187632f4ac9ddf6be99cd35de06fe72d75140496a8e0eef5
+-PYTHON_PYZMQ_LICENSE = LGPL-3.0+, BSD-3-Clause, Apache-2.0
+-# Apache license only online: http://www.apache.org/licenses/LICENSE-2.0
+-PYTHON_PYZMQ_LICENSE_FILES = COPYING.LESSER COPYING.BSD
+-PYTHON_PYZMQ_DEPENDENCIES = host-python-packaging zeromq
+-PYTHON_PYZMQ_SETUP_TYPE = setuptools
+-PYTHON_PYZMQ_BUILD_OPTS = --zmq=$(STAGING_DIR)/usr
+-
+-# Due to issues with cross-compiling, hardcode to the zeromq in BR
+-define PYTHON_PYZMQ_PATCH_ZEROMQ_VERSION
+-	$(SED) 's/##ZEROMQ_VERSION##/$(ZEROMQ_VERSION)/' \
+-		$(@D)/buildutils/detect.py
+-endef
+-
+-PYTHON_PYZMQ_POST_PATCH_HOOKS += PYTHON_PYZMQ_PATCH_ZEROMQ_VERSION
+-
+-ifeq ($(BR2_PACKAGE_ZEROMQ_DRAFTS),y)
+-PYTHON_PYZMQ_BUILD_OPTS += --enable-drafts
+-endif
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

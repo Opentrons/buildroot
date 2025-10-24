@@ -1,0 +1,130 @@
+From 1e4b17c6899c0e19e20e6bf07563b0c587eeb90a Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Wed, 29 Oct 2025 21:15:37 +0000
+Subject: [PATCH 31/38] remove python-tornado for override
+
+---
+ package/Config.in                             |  1 -
+ ...n-open-redirect-in-StaticFileHandler.patch | 42 -------------------
+ package/python-tornado/Config.in              |  9 ----
+ package/python-tornado/python-tornado.hash    |  5 ---
+ package/python-tornado/python-tornado.mk      | 18 --------
+ 5 files changed, 75 deletions(-)
+ delete mode 100644 package/python-tornado/0001-web-Fix-an-open-redirect-in-StaticFileHandler.patch
+ delete mode 100644 package/python-tornado/Config.in
+ delete mode 100644 package/python-tornado/python-tornado.hash
+ delete mode 100644 package/python-tornado/python-tornado.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index dca72cad..bfba74a6 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1301,7 +1301,6 @@ menu "External python modules"
+ 	source "package/python-tinyrpc/Config.in"
+ 	source "package/python-tomako/Config.in"
+ 	source "package/python-toml/Config.in"
+-	source "package/python-tornado/Config.in"
+ 	source "package/python-tqdm/Config.in"
+ 	source "package/python-treq/Config.in"
+ 	source "package/python-trio/Config.in"
+diff --git a/package/python-tornado/0001-web-Fix-an-open-redirect-in-StaticFileHandler.patch b/package/python-tornado/0001-web-Fix-an-open-redirect-in-StaticFileHandler.patch
+deleted file mode 100644
+index 357c6f2f..00000000
+--- a/package/python-tornado/0001-web-Fix-an-open-redirect-in-StaticFileHandler.patch
++++ /dev/null
+@@ -1,42 +0,0 @@
+-From ac79778c91bd9a4a92111f7e06d4b12674571113 Mon Sep 17 00:00:00 2001
+-From: Ben Darnell <ben@bendarnell.com>
+-Date: Sat, 13 May 2023 20:58:52 -0400
+-Subject: [PATCH] web: Fix an open redirect in StaticFileHandler
+-
+-Under some configurations the default_filename redirect could be exploited
+-to redirect to an attacker-controlled site. This change refuses to redirect
+-to URLs that could be misinterpreted.
+-
+-A test case for the specific vulnerable configuration will follow after the
+-patch has been available.
+-
+-Upstream: https://github.com/tornadoweb/tornado/commit/32ad07c54e607839273b4e1819c347f5c8976b2f
+-[Thomas: backported to fix CVE-2023-28370]
+-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+----
+- tornado/web.py | 9 +++++++++
+- 1 file changed, 9 insertions(+)
+-
+-diff --git a/tornado/web.py b/tornado/web.py
+-index cd6a81b4..05b571eb 100644
+---- a/tornado/web.py
+-+++ b/tornado/web.py
+-@@ -2806,6 +2806,15 @@ class StaticFileHandler(RequestHandler):
+-             # but there is some prefix to the path that was already
+-             # trimmed by the routing
+-             if not self.request.path.endswith("/"):
+-+                if self.request.path.startswith("//"):
+-+                    # A redirect with two initial slashes is a "protocol-relative" URL.
+-+                    # This means the next path segment is treated as a hostname instead
+-+                    # of a part of the path, making this effectively an open redirect.
+-+                    # Reject paths starting with two slashes to prevent this.
+-+                    # This is only reachable under certain configurations.
+-+                    raise HTTPError(
+-+                        403, "cannot redirect path with two initial slashes"
+-+                    )
+-                 self.redirect(self.request.path + "/", permanent=True)
+-                 return None
+-             absolute_path = os.path.join(absolute_path, self.default_filename)
+--- 
+-2.41.0
+-
+diff --git a/package/python-tornado/Config.in b/package/python-tornado/Config.in
+deleted file mode 100644
+index b5c59e97..00000000
+--- a/package/python-tornado/Config.in
++++ /dev/null
+@@ -1,9 +0,0 @@
+-config BR2_PACKAGE_PYTHON_TORNADO
+-	bool "python-tornado"
+-	select BR2_PACKAGE_PYTHON3_ZLIB
+-	select BR2_PACKAGE_PYTHON3_SSL
+-	help
+-	  Tornado is a Python web framework and asynchronous networking
+-	  library, originally developed at FriendFeed.
+-
+-	  http://www.tornadoweb.org
+diff --git a/package/python-tornado/python-tornado.hash b/package/python-tornado/python-tornado.hash
+deleted file mode 100644
+index f30a6bb1..00000000
+--- a/package/python-tornado/python-tornado.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/tornado/json
+-md5  32fbad606b439c3e1bf4e79d4e872741  tornado-6.2.tar.gz
+-sha256  9b630419bde84ec666bfd7ea0a4cb2a8a651c2d5cccdbdd1972a0c859dfc3c13  tornado-6.2.tar.gz
+-# Locally computed sha256 checksums
+-sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  LICENSE
+diff --git a/package/python-tornado/python-tornado.mk b/package/python-tornado/python-tornado.mk
+deleted file mode 100644
+index f4a4c97d..00000000
+--- a/package/python-tornado/python-tornado.mk
++++ /dev/null
+@@ -1,18 +0,0 @@
+-################################################################################
+-#
+-# python-tornado
+-#
+-################################################################################
+-
+-PYTHON_TORNADO_VERSION = 6.2
+-PYTHON_TORNADO_SOURCE = tornado-$(PYTHON_TORNADO_VERSION).tar.gz
+-PYTHON_TORNADO_SITE = https://files.pythonhosted.org/packages/f3/9e/225a41452f2d9418d89be5e32cf824c84fe1e639d350d6e8d49db5b7f73a
+-PYTHON_TORNADO_LICENSE = Apache-2.0
+-PYTHON_TORNADO_LICENSE_FILES = LICENSE
+-PYTHON_TORNADO_CPE_ID_VENDOR = tornadoweb
+-PYTHON_TORNADO_CPE_ID_PRODUCT = tornado
+-PYTHON_TORNADO_SETUP_TYPE = setuptools
+-# 0001-web-Fix-an-open-redirect-in-StaticFileHandler.patch
+-PYTHON_TORNADO_IGNORE_CVES += CVE-2023-28370
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

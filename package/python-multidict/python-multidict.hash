@@ -1,5 +1,0 @@
-# md5, sha256 from https://pypi.org/pypi/multidict/json
-md5  abcf9bf19365d06aa784de07da02115d  multidict-6.0.5.tar.gz
-sha256  f7e301075edaf50500f0b341543c41194d8df3ae5caf4702f2095f3ca73dd8da  multidict-6.0.5.tar.gz
-# Locally computed sha256 checksums
-sha256  06a240ea10ba868fda2de58df859886961df873aa74bbab1e0f13eaf99f92b7b  LICENSE

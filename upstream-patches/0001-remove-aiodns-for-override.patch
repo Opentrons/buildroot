@@ -1,7 +1,7 @@
-From a233a838a61b2f600540b40e22fb4e464f7a621a Mon Sep 17 00:00:00 2001
+From 7af8265956e95256c8374f1d138ef74dc601473a Mon Sep 17 00:00:00 2001
 From: Seth Foster <seth@opentrons.com>
 Date: Mon, 27 Oct 2025 15:16:46 +0000
-Subject: [PATCH 01/12] remove aiodns for override
+Subject: [PATCH 01/38] remove aiodns for override
 
 ---
  package/Config.in                        |  1 -

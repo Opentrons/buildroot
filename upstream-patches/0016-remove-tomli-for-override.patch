@@ -1,0 +1,74 @@
+From e72d985817ad398ca323da2c515210c7ecbbe759 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Mon, 27 Oct 2025 20:59:23 +0000
+Subject: [PATCH 16/38] remove tomli for override
+
+---
+ package/Config.in                      |  1 -
+ package/python-tomli/Config.in         |  6 ------
+ package/python-tomli/python-tomli.hash |  5 -----
+ package/python-tomli/python-tomli.mk   | 15 ---------------
+ 4 files changed, 27 deletions(-)
+ delete mode 100644 package/python-tomli/Config.in
+ delete mode 100644 package/python-tomli/python-tomli.hash
+ delete mode 100644 package/python-tomli/python-tomli.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 90b95f0e..17c57647 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1311,7 +1311,6 @@ menu "External python modules"
+ 	source "package/python-tinyrpc/Config.in"
+ 	source "package/python-tomako/Config.in"
+ 	source "package/python-toml/Config.in"
+-	source "package/python-tomli/Config.in"
+ 	source "package/python-tornado/Config.in"
+ 	source "package/python-tqdm/Config.in"
+ 	source "package/python-traitlets/Config.in"
+diff --git a/package/python-tomli/Config.in b/package/python-tomli/Config.in
+deleted file mode 100644
+index d2ae49a4..00000000
+--- a/package/python-tomli/Config.in
++++ /dev/null
+@@ -1,6 +0,0 @@
+-config BR2_PACKAGE_PYTHON_TOMLI
+-	bool "python-tomli"
+-	help
+-	  A lil' TOML parser.
+-
+-	  https://github.com/hukkin/tomli
+diff --git a/package/python-tomli/python-tomli.hash b/package/python-tomli/python-tomli.hash
+deleted file mode 100644
+index 8368f9ee..00000000
+--- a/package/python-tomli/python-tomli.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/tomli/json
+-md5  d4341621d423a7ca6822e23d6d52bb9a  tomli-2.0.1.tar.gz
+-sha256  de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f  tomli-2.0.1.tar.gz
+-# Locally computed sha256 checksums
+-sha256  b80816b0d530b8accb4c2211783790984a6e3b61922c2b5ee92f3372ab2742fe  LICENSE
+diff --git a/package/python-tomli/python-tomli.mk b/package/python-tomli/python-tomli.mk
+deleted file mode 100644
+index 5d259f71..00000000
+--- a/package/python-tomli/python-tomli.mk
++++ /dev/null
+@@ -1,15 +0,0 @@
+-################################################################################
+-#
+-# python-tomli
+-#
+-################################################################################
+-
+-PYTHON_TOMLI_VERSION = 2.0.1
+-PYTHON_TOMLI_SOURCE = tomli-$(PYTHON_TOMLI_VERSION).tar.gz
+-PYTHON_TOMLI_SITE = https://files.pythonhosted.org/packages/c0/3f/d7af728f075fb08564c5949a9c95e44352e23dee646869fa104a3b2060a3
+-PYTHON_TOMLI_LICENSE = MIT
+-PYTHON_TOMLI_LICENSE_FILES = LICENSE
+-PYTHON_TOMLI_SETUP_TYPE = flit
+-
+-$(eval $(python-package))
+-$(eval $(host-python-package))
+-- 
+2.43.0
+

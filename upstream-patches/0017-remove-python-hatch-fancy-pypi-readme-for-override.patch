@@ -1,0 +1,47 @@
+From 474dd8562d7317e25923cc0092681fb299db098c Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 28 Oct 2025 14:20:12 +0000
+Subject: [PATCH 17/38] remove python-hatch-fancy-pypi-readme for override
+
+---
+ .../python-hatch-fancy-pypi-readme.hash           |  5 -----
+ .../python-hatch-fancy-pypi-readme.mk             | 15 ---------------
+ 2 files changed, 20 deletions(-)
+ delete mode 100644 package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.hash
+ delete mode 100644 package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.mk
+
+diff --git a/package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.hash b/package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.hash
+deleted file mode 100644
+index 1b287072..00000000
+--- a/package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/hatch_fancy_pypi_readme/json
+-md5  588776ea8e3608714d4cbba16dffa92b  hatch_fancy_pypi_readme-22.8.0.tar.gz
+-sha256  da91282ca09601c18aded8e378daf8b578c70214866f0971156ee9bb9ce6c26a  hatch_fancy_pypi_readme-22.8.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  e69ea57f96e599e617f61af3e85bf326b87e833994709fb5e5908a81197730a2  LICENSE.txt
+diff --git a/package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.mk b/package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.mk
+deleted file mode 100644
+index f2872118..00000000
+--- a/package/python-hatch-fancy-pypi-readme/python-hatch-fancy-pypi-readme.mk
++++ /dev/null
+@@ -1,15 +0,0 @@
+-################################################################################
+-#
+-# python-hatch-fancy-pypi-readme
+-#
+-################################################################################
+-
+-PYTHON_HATCH_FANCY_PYPI_README_VERSION = 22.8.0
+-PYTHON_HATCH_FANCY_PYPI_README_SOURCE = hatch_fancy_pypi_readme-$(PYTHON_HATCH_FANCY_PYPI_README_VERSION).tar.gz
+-PYTHON_HATCH_FANCY_PYPI_README_SITE = https://files.pythonhosted.org/packages/4e/ab/9b48589d6e3a2f72cc1e8f5221c28ff28fcdf116dbbd6e9beb946054212d
+-PYTHON_HATCH_FANCY_PYPI_README_LICENSE = MIT
+-PYTHON_HATCH_FANCY_PYPI_README_LICENSE_FILES = LICENSE.txt
+-PYTHON_HATCH_FANCY_PYPI_README_SETUP_TYPE = pep517
+-HOST_PYTHON_HATCH_FANCY_PYPI_README_DEPENDENCIES = host-python-hatchling
+-
+-$(eval $(host-python-package))
+-- 
+2.43.0
+

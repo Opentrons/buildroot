@@ -1,7 +1,7 @@
-From 37a6defc37c2e09d35eade1199e428c8e471d074 Mon Sep 17 00:00:00 2001
+From 17de4891b08a0b351d5c61326ffed2f85ed0a840 Mon Sep 17 00:00:00 2001
 From: Seth Foster <seth@opentrons.com>
 Date: Mon, 27 Oct 2025 17:42:29 +0000
-Subject: [PATCH 06/12] remove python-pydantic for override
+Subject: [PATCH 06/38] remove python-pydantic for override
 
 ---
  package/Config.in                            |  1 -

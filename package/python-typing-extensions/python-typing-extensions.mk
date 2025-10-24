@@ -10,6 +10,10 @@ PYTHON_TYPING_EXTENSIONS_SITE = https://files.pythonhosted.org/packages/98/5a/da
 PYTHON_TYPING_EXTENSIONS_SETUP_TYPE = flit
 PYTHON_TYPING_EXTENSIONS_LICENSE = PSF-2.0
 PYTHON_TYPING_EXTENSIONS_LICENSE_FILES = LICENSE
+PYTHON_TYPING_EXTENSIONS_DEPENDENCIES = \
+	host-python-tomli
+HOST_PYTHON_TYPING_EXTENSIONS_DEPENDENCIES = \
+	host-python-tomli
 
 $(eval $(python-package))
 $(eval $(host-python-package))
