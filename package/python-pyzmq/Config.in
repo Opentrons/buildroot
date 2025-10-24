@@ -1,6 +1,0 @@
-config BR2_PACKAGE_PYTHON_PYZMQ
-	bool "python-pyzmq"
-	help
-	  Python bindings for 0MQ.
-
-	  https://pyzmq.readthedocs.org

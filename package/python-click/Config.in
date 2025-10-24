@@ -1,7 +1,0 @@
-config BR2_PACKAGE_PYTHON_CLICK
-	bool "python-click"
-	select BR2_PACKAGE_PYTHON_IMPORTLIB_METADATA # runtime
-	help
-	  Composable command line interface toolkit.
-
-	  https://palletsprojects.com/p/click/
