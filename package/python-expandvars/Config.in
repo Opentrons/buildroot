@@ -1,6 +1,0 @@
-config BR2_PACKAGE_PYTHON_EXPANDVARS
-	bool "python-expandvars"
-	help
-	  Expand system variables Unix style.
-
-	  https://github.com/sayanarijit/expandvars

@@ -1,6 +1,0 @@
-config BR2_PACKAGE_PYTHON_EXCEPTIONGROUP
-	bool "python-exceptiongroup"
-	help
-	  This is a backport of the BaseExceptionGroup and ExceptionGroup classes from Python 3.11.
-
-	  https://github.com/agronholm/exceptiongroup

@@ -1,7 +1,0 @@
-config BR2_PACKAGE_PYTHON_IDNA
-	bool "python-idna"
-	depends on BR2_PACKAGE_PYTHON3
-	help
-	  Internationalized Domain Names in Applications (IDNA).
-
-	  https://github.com/kjd/idna

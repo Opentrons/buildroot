@@ -1,8 +1,0 @@
-config BR2_PACKAGE_PYTHON_BLUEPY
-	bool "python-bluepy"
-	select BR2_PACKAGE_LIBGLIB2
-	help
-	  Python module for interfacing with BLE devices through
-	  Bluez.
-
-	  https://github.com/IanHarvey/bluepy
