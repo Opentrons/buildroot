@@ -8,7 +8,6 @@ config BR2_PACKAGE_SYSTEMD_ARCH_SUPPORTS
 	default y if BR2_m68k
 	default y if BR2_mips || BR2_mipsel || BR2_mips64 || BR2_mips64el
 	default y if BR2_powerpc || BR2_powerpc64 || BR2_powerpc64le
-	default y if BR2_nios2
 	default y if BR2_riscv
 	default y if BR2_sh4 || BR2_sh4eb || BR2_sh4a || BR2_sh4aeb
 	default y if BR2_sparc || BR2_sparc64
@@ -23,17 +22,19 @@ menuconfig BR2_PACKAGE_SYSTEMD
 	depends on BR2_TOOLCHAIN_USES_GLIBC
 	depends on BR2_TOOLCHAIN_HAS_SSP
 	depends on BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_15
-	depends on BR2_TOOLCHAIN_GCC_AT_LEAST_5
-	depends on BR2_HOST_GCC_AT_LEAST_5 # host-systemd
+	depends on BR2_TOOLCHAIN_GCC_AT_LEAST_8
+	depends on BR2_HOST_GCC_AT_LEAST_8 # host-systemd
 	select BR2_PACKAGE_HAS_UDEV
 	select BR2_PACKAGE_DBUS if !BR2_PACKAGE_DBUS_BROKER # runtime
 	select BR2_PACKAGE_LIBCAP
+	select BR2_PACKAGE_LIBXCRYPT
 	select BR2_PACKAGE_UTIL_LINUX
 	select BR2_PACKAGE_UTIL_LINUX_LIBS
 	select BR2_PACKAGE_UTIL_LINUX_LIBMOUNT
 	select BR2_PACKAGE_UTIL_LINUX_AGETTY
 	select BR2_PACKAGE_UTIL_LINUX_MOUNT
 	select BR2_PACKAGE_UTIL_LINUX_FSCK
+	select BR2_PACKAGE_UTIL_LINUX_SULOGIN
 	select BR2_PACKAGE_KMOD
 	select BR2_PACKAGE_BUSYBOX_SHOW_OTHERS # kmod-tools
 	select BR2_PACKAGE_KMOD_TOOLS
@@ -51,9 +52,11 @@ menuconfig BR2_PACKAGE_SYSTEMD
 	  an elaborate transactional dependency-based service control
 	  logic.  It can work as a drop-in replacement for sysvinit.
 
-	  Kernel versions below 4.15 ("recommended baseline") have
+	  Kernel versions below 5.4 ("recommended baseline") have
 	  significant gaps in functionality and are not recommended
-	  for use with this version of systemd.
+	  for use with this version of systemd. (e.g. lack race-free
+	  process tracking by pidfd, systemd-networkd, and new mount
+	  API support).
 
 	  Systemd requires a Linux kernel >= 3.15 with the following
 	  options enabled:
@@ -97,7 +100,7 @@ menuconfig BR2_PACKAGE_SYSTEMD
 
 	  Notice that systemd selects the fsck wrapper from util-linux
 	  but no particular fsck.<fstype> is selected. You must choose
-	  the apropriate ones (e.g. e2fsck, from the e2fsprogs
+	  the appropriate ones (e.g. e2fsck, from the e2fsprogs
 	  package) according to the system configuration.
 
 	  https://freedesktop.org/wiki/Software/systemd/
@@ -111,6 +114,7 @@ config BR2_PACKAGE_SYSTEMD_BOOT
 	bool "systemd-boot"
 	depends on BR2_i386 || BR2_x86_64
 	select BR2_PACKAGE_GNU_EFI
+	select BR2_PACKAGE_SYSTEMD_EFI
 	help
 	  systemd-boot is a simple UEFI boot manager which executes
 	  configured EFI images. The default entry is selected by a
@@ -158,6 +162,9 @@ config BR2_PACKAGE_SYSTEMD_BOOT_EFI_ARCH
 	default "ia32"  if BR2_i386
 	default "x64"   if BR2_x86_64
 	depends on BR2_PACKAGE_SYSTEMD_BOOT
+
+config BR2_PACKAGE_SYSTEMD_EFI
+	bool "enable EFI support"
 
 config BR2_PACKAGE_SYSTEMD_JOURNAL_REMOTE
 	bool "enable journal remote tools"
@@ -210,7 +217,7 @@ config BR2_PACKAGE_SYSTEMD_PSTORE
 	help
 	  When this features is enabled, additional tools and services
 	  are built to support archiving contents of the persistent
-	  storage filesytem.
+	  storage filesystem.
 
 	  https://www.freedesktop.org/software/systemd/man/systemd-pstore.html
 
@@ -327,6 +334,15 @@ config BR2_PACKAGE_SYSTEMD_MACHINED
 
 	  https://www.freedesktop.org/software/systemd/man/systemd-machined.service.html
 
+config BR2_PACKAGE_SYSTEMD_NSRESOURCED
+	bool "enable nsresourced"
+	help
+	  systemd-nsresourced is a system service that permits
+	  transient delegation of a a UID/GID range to a user
+	  namespace allocated by a client, via a Varlink IPC API.
+
+	  https://www.freedesktop.org/software/systemd/man/systemd-nsresourced.service.html
+
 config BR2_PACKAGE_SYSTEMD_MYHOSTNAME
 	bool "enable myhostname NSS plugin"
 	default y
@@ -340,7 +356,8 @@ config BR2_PACKAGE_SYSTEMD_MYHOSTNAME
 
 config BR2_PACKAGE_SYSTEMD_NETWORKD
 	bool "enable network manager"
-	default y
+	default y if BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
+	depends on BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
 	help
 	  systemd-networkd is a system service that manages networks.
 	  It detects and configures network devices as they appear, as
@@ -350,6 +367,9 @@ config BR2_PACKAGE_SYSTEMD_NETWORKD
 	  to dhcpcd or ISC dhcp.
 
 	  https://www.freedesktop.org/software/systemd/man/systemd-networkd.html
+
+comment "systemd-networkd needs a toolchain with kernel headers >= 5.4"
+	depends on !BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
 
 config BR2_PACKAGE_SYSTEMD_OOMD
 	bool "enable out-of-memory killer"
@@ -481,6 +501,16 @@ config BR2_PACKAGE_SYSTEMD_SYSEXT
 
 	  https://www.freedesktop.org/software/systemd/man/systemd-sysext.html
 
+config BR2_PACKAGE_SYSTEMD_MOUNTFSD
+	bool "enable mountfsd support"
+	help
+	  systemd-mountfsd is a system service that dissects disk
+	  images, and returns mount file descriptors for the file
+	  systems contained therein to clients, via a Varlink IPC
+	  API.
+
+	  https://www.freedesktop.org/software/systemd/man/systemd-mountfsd.service.html
+
 config BR2_PACKAGE_SYSTEMD_SYSUPDATE
 	bool "enable sysupdate support"
 	select BR2_PACKAGE_OPENSSL
@@ -563,10 +593,43 @@ config BR2_PACKAGE_SYSTEMD_UTMP
 config BR2_PACKAGE_SYSTEMD_VCONSOLE
 	bool "enable vconsole tool"
 	default y
+	select BR2_PACKAGE_KBD if BR2_PACKAGE_SYSTEMD_VCONSOLE_DEFAULT_KEYMAP != ""
 	help
 	  systemd-vconsole-setup is an early boot service that
 	  configures the virtual console font and console keymap.
 
 	  https://www.freedesktop.org/software/systemd/man/systemd-vconsole-setup.service.html
+
+config BR2_PACKAGE_SYSTEMD_VCONSOLE_DEFAULT_KEYMAP
+	string "default keymap"
+	default "us"
+	depends on BR2_PACKAGE_SYSTEMD_VCONSOLE
+	help
+	  Default keymap for the system. Leave empty to not set a
+	  default keymap.
+
+# See for which architectures QEMU_MACHINE_TYPE is defined in
+# src/vmspawn/vmspawn-util.h
+config BR2_PACKAGE_SYSTEMD_VMSPAWN_ARCH_SUPPORTS
+	bool
+	default y if BR2_aarch64 || BR2_aarch64_be
+	default y if BR2_arm || BR2_armeb
+	default y if BR2_i386
+	default y if BR2_mips || BR2_mips64 || BR2_mipsel || BR2_mips64el
+	default y if BR2_powerpc || BR2_powerpc64 || BR2_powerpc64le
+	default y if BR2_riscv
+	default y if BR2_s390x
+	default y if BR2_x86_64
+
+config BR2_PACKAGE_SYSTEMD_VMSPAWN
+	bool "enable vmspawn"
+	depends on BR2_PACKAGE_SYSTEMD_VMSPAWN_ARCH_SUPPORTS
+	help
+	  systemd-vmspawn may be used to start a virtual machine
+	  from an OS image. In many ways it is similar to
+	  systemd-nspawn, but launches a full virtual machine
+	  instead of using namespaces.
+
+	  https://www.freedesktop.org/software/systemd/man/systemd-vmspawn.html
 
 endif

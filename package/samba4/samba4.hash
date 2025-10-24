@@ -1,4 +1,9 @@
 # Locally calculated after checking pgp signature
+<<<<<<< HEAD
 # https://download.samba.org/pub/samba/stable/samba-4.18.6.tar.asc
 sha256  284c8a994ce989c87cd6808c390fcb9d00c36b21a0dc1a8a75474b67c9e715e7  samba-4.18.6.tar.gz
+=======
+# https://download.samba.org/pub/samba/stable/samba-4.21.8.tar.asc
+sha256  e78c36653a37e9647513e5408fc8052375901560d36b8744cd21acc9e4d91fc8  samba-4.21.8.tar.gz
+>>>>>>> upstream-2025.02.7
 sha256  8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903  COPYING

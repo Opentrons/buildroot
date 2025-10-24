@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 # From https://gstreamer.freedesktop.org/src/gst-devtools/gst-devtools-1.22.2.tar.xz.sha256sum
 sha256  eb62726d3e27a8782369a24fd6364a8885ed2462b3bbdab091dffc8139ee06d8  gst-devtools-1.22.2.tar.xz
+=======
+# From https://gstreamer.freedesktop.org/src/gst-devtools/gst-devtools-1.24.13.tar.xz.sha256sum
+sha256  2485b30dfb94b65e2e4befb0b9367fbecbfcf2102b24fa9138df4403497e7b73  gst-devtools-1.24.13.tar.xz
+>>>>>>> upstream-2025.02.7
 sha256  6095e9ffa777dd22839f7801aa845b31c9ed07f3d6bf8a26dc5d2dec8ccc0ef3  validate/COPYING

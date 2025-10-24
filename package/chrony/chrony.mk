@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-CHRONY_VERSION = 4.3
-CHRONY_SITE = http://download.tuxfamily.org/chrony
+CHRONY_VERSION = 4.6.1
+CHRONY_SITE = https://chrony-project.org/releases
 CHRONY_LICENSE = GPL-2.0
 CHRONY_LICENSE_FILES = COPYING
 CHRONY_CPE_ID_VENDOR = tuxfamily
@@ -22,6 +22,10 @@ CHRONY_CONF_OPTS = \
 
 define CHRONY_USERS
 	chrony -1 chrony -1 * /run/chrony - - Time daemon
+endef
+
+define CHRONY_PERMISSIONS
+	/var/lib/chrony d 755 chrony chrony - - - - -
 endef
 
 ifeq ($(BR2_PACKAGE_LIBNSS),y)
@@ -71,10 +75,11 @@ endef
 
 define CHRONY_INSTALL_TARGET_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) DESTDIR="$(TARGET_DIR)" install
+	$(INSTALL) -D -m 644 $(@D)/examples/chrony.conf.example2 $(TARGET_DIR)/etc/chrony.conf
 endef
 
 define CHRONY_INSTALL_INIT_SYSV
-	$(INSTALL) -D -m 755 package/chrony/S49chrony $(TARGET_DIR)/etc/init.d/S49chrony
+	$(INSTALL) -D -m 755 package/chrony/S49chronyd $(TARGET_DIR)/etc/init.d/S49chronyd
 endef
 
 define CHRONY_INSTALL_INIT_SYSTEMD

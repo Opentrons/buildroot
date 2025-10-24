@@ -1,7 +1,6 @@
 config BR2_PACKAGE_PYTHON_MULTIPART
 	bool "python-multipart"
-	select BR2_PACKAGE_PYTHON_SIX # runtime
 	help
 	  A streaming multipart parser for Python.
 
-	  http://github.com/andrew-d/python-multipart
+	  https://github.com/andrew-d/python-multipart

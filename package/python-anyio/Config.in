@@ -1,6 +1,5 @@
 config BR2_PACKAGE_PYTHON_ANYIO
 	bool "python-anyio"
-	depends on BR2_PACKAGE_PYTHON3
 	select BR2_PACKAGE_PYTHON_IDNA # runtime
 	select BR2_PACKAGE_PYTHON_SNIFFIO # runtime
 	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
@@ -8,4 +7,4 @@ config BR2_PACKAGE_PYTHON_ANYIO
 	  High level compatibility layer for multiple asynchronous
 	  event loop implementations.
 
-	  
+	  https://github.com/agronholm/anyio

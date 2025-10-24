@@ -20,6 +20,18 @@ config BR2_PACKAGE_EXIV2
 
 if BR2_PACKAGE_EXIV2
 
+config BR2_PACKAGE_EXIV2_BROTLI
+	bool "Brotli support"
+	select BR2_PACKAGE_BROTLI
+	help
+	  Build with Brotli support for JPEG XL
+
+config BR2_PACKAGE_EXIV2_INIH
+	bool "Inih support"
+	select BR2_PACKAGE_INIH
+	help
+	  Build with inih support
+
 config BR2_PACKAGE_EXIV2_PNG
 	bool "PNG image support"
 	select BR2_PACKAGE_ZLIB
@@ -39,6 +51,6 @@ config BR2_PACKAGE_EXIV2_LENSDATA
 
 	  This database comes from a thirdparty and is free to use in
 	  non-commercial, GPL or open source software only.
-	  For more informations src/nikonmn_int.cpp.
+	  For more information see src/nikonmn_int.cpp.
 
 endif

@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-PROFTPD_VERSION = 1.3.8
-PROFTPD_SITE = ftp://ftp.proftpd.org/distrib/source
+PROFTPD_VERSION = 1.3.8d
+PROFTPD_SITE = https://github.com/proftpd/proftpd/archive/v$(PROFTPD_VERSION)
 PROFTPD_LICENSE = GPL-2.0+
 PROFTPD_LICENSE_FILES = COPYING
 PROFTPD_CPE_ID_VENDOR = proftpd
@@ -31,6 +31,10 @@ ifeq ($(BR2_PACKAGE_LIBIDN2),y)
 PROFTPD_DEPENDENCIES += libidn2
 endif
 
+ifeq ($(BR2_PACKAGE_LIBXCRYPT),y)
+PROFTPD_DEPENDENCIES += libxcrypt
+endif
+
 ifeq ($(BR2_PACKAGE_PCRE2),y)
 PROFTPD_CONF_OPTS += --enable-pcre2
 PROFTPD_DEPENDENCIES += pcre2
@@ -43,6 +47,13 @@ PROFTPD_CONF_OPTS += --enable-cap
 PROFTPD_DEPENDENCIES += libcap
 else
 PROFTPD_CONF_OPTS += --disable-cap
+endif
+
+ifeq ($(BR2_PACKAGE_PROFTPD_MOD_LANG),y)
+PROFTPD_CONF_OPTS += --enable-nls
+ifneq ($(BR2_ENABLE_LOCALE),y)
+PROFTPD_DEPENDENCIES += libiconv
+endif
 endif
 
 ifeq ($(BR2_PACKAGE_PROFTPD_MOD_REWRITE),y)
@@ -126,6 +137,7 @@ endif
 define PROFTPD_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/proftpd $(TARGET_DIR)/usr/sbin/proftpd
 	$(INSTALL) -m 0644 -D $(@D)/sample-configurations/basic.conf $(TARGET_DIR)/etc/proftpd.conf
+	$(SED) 's/^\(Group\s\+\)nogroup/\1nobody/' $(TARGET_DIR)/etc/proftpd.conf
 	$(PROFTPD_INSTALL_FTPQUOTA)
 	$(PROFTPD_INSTALL_FTPASSWD)
 endef

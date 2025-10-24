@@ -5,7 +5,11 @@
 ################################################################################
 
 ifeq ($(BR2_PACKAGE_LUA_5_4),y)
+<<<<<<< HEAD
 LUA_VERSION = 5.4.6
+=======
+LUA_VERSION = 5.4.8
+>>>>>>> upstream-2025.02.7
 else ifeq ($(BR2_PACKAGE_LUA_5_3),y)
 LUA_VERSION = 5.3.6
 else
@@ -20,6 +24,12 @@ else
 LUA_LICENSE_FILES = COPYRIGHT
 endif
 LUA_CPE_ID_VENDOR = lua
+
+ifeq ($(BR2_PACKAGE_LUA_5_1),y)
+# Only affect lua version 5.1.5
+# 5.1.5/0003-Fix-stack-overflow-in-vararg-functions.patch
+LUA_IGNORE_CVES += CVE-2014-5461
+endif
 
 LUA_PROVIDES = luainterpreter
 

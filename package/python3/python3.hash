@@ -1,3 +1,10 @@
+# From https://www.python.org/downloads/release/python-31211/
+md5  9613d56b90d0d0cfd19980c7e2956a06  Python-3.12.11.tar.xz
 # Locally computed
+<<<<<<< HEAD
 sha256  6a30ecde59c47048013eb5a658c9b5dec277203d2793667f578df7671f7f03f3  Python-3.10.8.tar.xz
 sha256  d4a223f033419313218c9b8444167e91e87a5bebdb43fb8490df441df5220a8b  LICENSE
+=======
+sha256  c30bb24b7f1e9a19b11b55a546434f74e739bb4c271a3e3a80ff4380d49f7adb  Python-3.12.11.tar.xz
+sha256  3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf  LICENSE
+>>>>>>> upstream-2025.02.7

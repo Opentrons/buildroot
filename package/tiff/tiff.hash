@@ -1,3 +1,5 @@
-# Locally computed
-sha256  d7f38b6788e4a8f5da7940c5ac9424f494d8a79eba53d555f4a507167dca5e2b  tiff-4.5.1.tar.gz
-sha256  0780558a8bfba0af1160ec1ff11ade4f41c0d7deafd6ecfc796b492a788e380d  LICENSE.md
+# Locally computed after checking pgp signature
+# https://download.osgeo.org/libtiff/tiff-4.7.1.tar.xz.sig
+# with key: B1FA7D81EEB8E66399178B9733EBBFC47B3DD87D
+sha256  b92017489bdc1db3a4c97191aa4b75366673cb746de0dce5d7a749d5954681ba  tiff-4.7.1.tar.xz
+sha256  0e27c2382d7b8147972bbb746e04059a1152c8d0fda9d03ef1399d1a433c4ade  LICENSE.md

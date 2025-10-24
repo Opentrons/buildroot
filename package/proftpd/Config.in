@@ -2,6 +2,7 @@ config BR2_PACKAGE_PROFTPD
 	bool "proftpd"
 	depends on BR2_USE_MMU # fork()
 	depends on !BR2_STATIC_LIBS
+	select BR2_PACKAGE_LIBXCRYPT if BR2_TOOLCHAIN_USES_GLIBC
 	help
 	  ProFTPD, a highly configurable FTP server.
 
@@ -14,6 +15,13 @@ config BR2_PACKAGE_PROFTPD_MOD_CAP
 	select BR2_PACKAGE_LIBCAP
 	help
 	  Compile ProFTPD with mod_cap support
+
+config BR2_PACKAGE_PROFTPD_MOD_LANG
+	bool "mod_lang support"
+	select BR2_PACKAGE_LIBICONV if !BR2_ENABLE_LOCALE
+	help
+	  The mod_lang module enables ProFTPD support for RFC 2640 LANG
+	  and OPTS UTF8 commands.
 
 config BR2_PACKAGE_PROFTPD_MOD_REWRITE
 	bool "mod_rewrite support"

@@ -4,7 +4,11 @@
 #
 ################################################################################
 
+<<<<<<< HEAD
 GST1_RTSP_SERVER_VERSION = 1.22.2
+=======
+GST1_RTSP_SERVER_VERSION = 1.24.13
+>>>>>>> upstream-2025.02.7
 GST1_RTSP_SERVER_SOURCE = gst-rtsp-server-$(GST1_RTSP_SERVER_VERSION).tar.xz
 GST1_RTSP_SERVER_SITE = http://gstreamer.freedesktop.org/src/gst-rtsp-server
 GST1_RTSP_SERVER_LICENSE = LGPL-2.1+

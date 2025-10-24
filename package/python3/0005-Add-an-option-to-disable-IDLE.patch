@@ -1,0 +1,140 @@
+<<<<<<< HEAD:package/python3/0020-Add-an-option-to-disable-IDLE.patch
+From f1b15834045d0641c43014b970721df066fa71f7 Mon Sep 17 00:00:00 2001
+=======
+From 5b4755f8d6bbeb68f2966464038c3e1f337868d3 Mon Sep 17 00:00:00 2001
+>>>>>>> upstream-2025.02.7:package/python3/0005-Add-an-option-to-disable-IDLE.patch
+From: Maxime Ripard <maxime.ripard@free-electrons.com>
+Date: Wed, 22 Feb 2017 17:45:14 -0800
+Subject: [PATCH] Add an option to disable IDLE
+
+IDLE is an IDE embedded into python, written using Tk, so it doesn't make
+much sense to have it into our build.
+
+Signed-off-by: Maxime Ripard <maxime.ripard@free-electrons.com>
+[ Andrey Smirnov: ported to Python 3.6 ]
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+[ Adam Duskett: ported to Python 3.10.0 ]
+Signed-off-by: Adam Duskett <aduskett@gmail.com>
+[ Adam Duskett: ported to Python 3.12.1 ]
+Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
+---
+ Makefile.pre.in | 9 ++++++++-
+ configure.ac    | 6 ++++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile.pre.in b/Makefile.pre.in
+<<<<<<< HEAD:package/python3/0020-Add-an-option-to-disable-IDLE.patch
+index 08c5e8a..461c5e3 100644
+--- a/Makefile.pre.in
++++ b/Makefile.pre.in
+@@ -1389,7 +1389,9 @@ bininstall: altbininstall
+=======
+index b44ad736144..aceb52e31ce 100644
+--- a/Makefile.pre.in
++++ b/Makefile.pre.in
+@@ -2048,7 +2048,9 @@ bininstall: commoninstall altbininstall
+>>>>>>> upstream-2025.02.7:package/python3/0005-Add-an-option-to-disable-IDLE.patch
+ 	-rm -f $(DESTDIR)$(LIBPC)/python3-embed.pc
+ 	(cd $(DESTDIR)$(LIBPC); $(LN) -s python-$(VERSION)-embed.pc python3-embed.pc)
+ 	-rm -f $(DESTDIR)$(BINDIR)/idle3
++ifeq (@IDLE@,yes)
+ 	(cd $(DESTDIR)$(BINDIR); $(LN) -s idle$(VERSION) idle3)
++endif
+ 	-rm -f $(DESTDIR)$(BINDIR)/pydoc3
+ ifeq (@PYDOC@,yes)
+ 	(cd $(DESTDIR)$(BINDIR); $(LN) -s pydoc$(VERSION) pydoc3)
+<<<<<<< HEAD:package/python3/0020-Add-an-option-to-disable-IDLE.patch
+@@ -1439,7 +1441,6 @@ LIBSUBDIRS=	asyncio \
+=======
+@@ -2100,7 +2102,6 @@ LIBSUBDIRS=	asyncio \
+>>>>>>> upstream-2025.02.7:package/python3/0005-Add-an-option-to-disable-IDLE.patch
+ 		ensurepip ensurepip/_bundled \
+ 		html \
+ 		http \
+-		idlelib idlelib/Icons \
+ 		importlib importlib/metadata \
+ 		json \
+ 		logging \
+<<<<<<< HEAD:package/python3/0020-Add-an-option-to-disable-IDLE.patch
+@@ -1552,6 +1553,10 @@ ifeq (@EXPAT@,yes)
+ LIBSUBDIRS += $(XMLLIBSUBDIRS)
+=======
+@@ -2273,6 +2274,10 @@ TESTSUBDIRS += test/test_lib2to3			\
+ 		test/test_lib2to3/data/fixers/myfixes
+>>>>>>> upstream-2025.02.7:package/python3/0005-Add-an-option-to-disable-IDLE.patch
+ endif
+ 
++ifeq (@IDLE@,yes)
++LIBSUBDIRS += idlelib idlelib/Icons
++endif
++
+ TEST_MODULES=@TEST_MODULES@
+<<<<<<< HEAD:package/python3/0020-Add-an-option-to-disable-IDLE.patch
+ libinstall:	build_all $(srcdir)/Modules/xxmodule.c
+ 	@for i in $(SCRIPTDIR) $(LIBDEST); \
+diff --git a/configure.ac b/configure.ac
+index e99a174..baaa743 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -6073,6 +6073,12 @@ AC_ARG_ENABLE(lib2to3,
+=======
+ 
+ .PHONY: libinstall
+@@ -2490,7 +2495,9 @@ libainstall: all scripts
+ ifeq (@LIB2TO3@,yes)
+ 	$(INSTALL_SCRIPT) $(SCRIPT_2TO3) $(DESTDIR)$(BINDIR)/2to3-$(VERSION)
+ endif
++ifeq (@IDLE@,yes)
+ 	$(INSTALL_SCRIPT) $(SCRIPT_IDLE) $(DESTDIR)$(BINDIR)/idle$(VERSION)
++endif
+ ifeq (@PYDOC@,yes)
+ 	$(INSTALL_SCRIPT) $(SCRIPT_PYDOC) $(DESTDIR)$(BINDIR)/pydoc$(VERSION)
+ endif
+diff --git a/configure.ac b/configure.ac
+index 9b77582560d..becec336dc2 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -7578,6 +7578,12 @@ AC_ARG_ENABLE(lib2to3,
+>>>>>>> upstream-2025.02.7:package/python3/0005-Add-an-option-to-disable-IDLE.patch
+ 	AS_HELP_STRING([--disable-lib2to3], [disable lib2to3]),
+ 	[ LIB2TO3="${enableval}" ], [ LIB2TO3=yes ])
+ 
++AC_SUBST(IDLE)
++
++AC_ARG_ENABLE(idle3,
++	AS_HELP_STRING([--disable-idle3], [disable idle3 IDE]),
++	[ IDLE="${enableval}" ], [ IDLE=yes ])
++
+ # generate output files
+<<<<<<< HEAD:package/python3/0020-Add-an-option-to-disable-IDLE.patch
+ AC_CONFIG_FILES(Makefile.pre Misc/python.pc Misc/python-embed.pc Misc/python-config.sh)
+ AC_CONFIG_FILES([Modules/ld_so_aix], [chmod +x Modules/ld_so_aix])
+diff --git a/setup.py b/setup.py
+index e30ed52..4dff249 100644
+--- a/setup.py
++++ b/setup.py
+@@ -2722,11 +2722,14 @@ def main():
+     import warnings
+     warnings.filterwarnings("ignore",category=DeprecationWarning)
+ 
+-    scripts = ['Tools/scripts/idle3', 'Lib/smtpd.py']
++    scripts = [ 'Lib/smtpd.py']
+     if not '--disable-pydoc' in sysconfig.get_config_var("CONFIG_ARGS"):
+         scripts += [ 'Tools/scripts/pydoc3' ]
+     if not '--disable-lib2to3' in sysconfig.get_config_var("CONFIG_ARGS"):
+         scripts += [ 'Tools/scripts/2to3' ]
++    if not '--disable-idle3' in sysconfig.get_config_var("CONFIG_ARGS"):
++        scripts += [ 'Tools/scripts/idle3' ]
++
+     setup(# PyPI Metadata (PEP 301)
+           name = "Python",
+           version = sys.version.split()[0],
+-- 
+2.30.2
+=======
+ AC_CONFIG_FILES(m4_normalize([
+   Makefile.pre
+-- 
+2.39.5
+>>>>>>> upstream-2025.02.7:package/python3/0005-Add-an-option-to-disable-IDLE.patch
+

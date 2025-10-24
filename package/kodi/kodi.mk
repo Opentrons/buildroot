@@ -6,8 +6,8 @@
 
 # When updating the version, please also update kodi-jsonschemabuilder
 # and kodi-texturepacker
-KODI_VERSION_MAJOR = 19.5
-KODI_VERSION_NAME = Matrix
+KODI_VERSION_MAJOR = 21.2
+KODI_VERSION_NAME = Omega
 KODI_VERSION = $(KODI_VERSION_MAJOR)-$(KODI_VERSION_NAME)
 KODI_SITE = $(call github,xbmc,xbmc,$(KODI_VERSION))
 KODI_LICENSE = GPL-2.0
@@ -54,19 +54,32 @@ KODI_DEPENDENCIES = \
 	sqlite \
 	taglib \
 	tinyxml \
+	tinyxml2 \
 	zlib
 
 # taken from tools/depends/target/*/*-VERSION
-KODI_LIBDVDCSS_VERSION = 1.4.2-Leia-Beta-5
-KODI_LIBDVDNAV_VERSION = 6.0.0-Leia-Alpha-3
-KODI_LIBDVDREAD_VERSION = 6.0.0-Leia-Alpha-3
+KODI_LIBDVDCSS_VERSION = 1.4.3-Next-Nexus-Alpha2-2
+KODI_LIBDVDNAV_VERSION = 6.1.1-Next-Nexus-Alpha2-2
+KODI_LIBDVDREAD_VERSION = 6.1.3-Next-Nexus-Alpha2-2
 KODI_EXTRA_DOWNLOADS += \
+	https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-4.0.16.zip \
+	https://archive.apache.org/dist/commons/lang/binaries/commons-lang3-3.14.0-bin.tar.gz \
+	https://archive.apache.org/dist/commons/text/binaries/commons-text-1.11.0-bin.tar.gz \
 	$(call github,xbmc,libdvdcss,$(KODI_LIBDVDCSS_VERSION))/kodi-libdvdcss-$(KODI_LIBDVDCSS_VERSION).tar.gz \
 	$(call github,xbmc,libdvdnav,$(KODI_LIBDVDNAV_VERSION))/kodi-libdvdnav-$(KODI_LIBDVDNAV_VERSION).tar.gz \
 	$(call github,xbmc,libdvdread,$(KODI_LIBDVDREAD_VERSION))/kodi-libdvdread-$(KODI_LIBDVDREAD_VERSION).tar.gz
 
+define KODI_PROVIDE_JAVA_TARBALLS
+	mkdir -p $(@D)/buildroot-build/build/download
+	cp $(KODI_DL_DIR)/apache-groovy-binary-4.0.16.zip $(@D)/buildroot-build/build/download
+	cp $(KODI_DL_DIR)/commons-lang3-3.14.0-bin.tar.gz $(@D)/buildroot-build/build/download
+	cp $(KODI_DL_DIR)/commons-text-1.11.0-bin.tar.gz $(@D)/buildroot-build/build/download
+endef
+KODI_POST_EXTRACT_HOOKS = KODI_PROVIDE_JAVA_TARBALLS
+
 KODI_CONF_OPTS += \
 	-DCMAKE_C_FLAGS="$(TARGET_CFLAGS) $(KODI_C_FLAGS)" \
+	-DCMAKE_EXE_LINKER_FLAGS="$(KODI_EXTRA_LIBS)" \
 	-DENABLE_APP_AUTONAME=OFF \
 	-DENABLE_CCACHE=OFF \
 	-DENABLE_DVDCSS=ON \
@@ -74,17 +87,22 @@ KODI_CONF_OPTS += \
 	-DWITH_FFMPEG=$(STAGING_DIR)/usr \
 	-DENABLE_INTERNAL_FLATBUFFERS=OFF \
 	-DFLATBUFFERS_FLATC_EXECUTABLE=$(HOST_DIR)/bin/flatc \
+	-DENABLE_INTERNAL_RapidJSON=OFF \
+	-DENABLE_INTERNAL_SPDLOG=OFF \
 	-DKODI_DEPENDSBUILD=OFF \
-	-DENABLE_LDGOLD=OFF \
+	-DENABLE_GOLD=OFF \
+	-DCLANG_FORMAT_EXECUTABLE=OFF \
+	-DHOST_CAN_EXECUTE_TARGET=FALSE \
 	-DNATIVEPREFIX=$(HOST_DIR) \
 	-DDEPENDS_PATH=$(STAGING_DIR)/usr \
 	-DENABLE_TESTING=OFF \
+	-DENABLE_DEBUGFISSION=OFF \
 	-DPYTHON_EXECUTABLE=$(HOST_DIR)/bin/python \
 	-DPYTHON_INCLUDE_DIRS=$(STAGING_DIR)/usr/include/python$(PYTHON3_VERSION_MAJOR) \
 	-DPYTHON_PATH=$(STAGING_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR) \
 	-DPYTHON_VER=$(PYTHON3_VERSION_MAJOR) \
-	-DWITH_JSONSCHEMABUILDER=$(HOST_DIR)/bin/JsonSchemaBuilder \
-	-DWITH_TEXTUREPACKER=$(HOST_DIR)/bin/TexturePacker \
+	-DWITH_JSONSCHEMABUILDER=$(HOST_DIR)/bin/ \
+	-DWITH_TEXTUREPACKER=$(HOST_DIR)/bin/ \
 	-DLIBDVDCSS_URL=$(KODI_DL_DIR)/kodi-libdvdcss-$(KODI_LIBDVDCSS_VERSION).tar.gz \
 	-DLIBDVDNAV_URL=$(KODI_DL_DIR)/kodi-libdvdnav-$(KODI_LIBDVDNAV_VERSION).tar.gz \
 	-DLIBDVDREAD_URL=$(KODI_DL_DIR)/kodi-libdvdread-$(KODI_LIBDVDREAD_VERSION).tar.gz
@@ -99,7 +117,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_KODI_PLATFORM_SUPPORTS_GBM),y)
 KODI_CORE_PLATFORM_NAME += gbm
-KODI_DEPENDENCIES += libgbm libinput libxkbcommon
+KODI_DEPENDENCIES += libdisplay-info libgbm libinput libxkbcommon
 endif
 
 ifeq ($(BR2_PACKAGE_KODI_PLATFORM_SUPPORTS_WAYLAND),y)
@@ -122,6 +140,7 @@ KODI_CONF_OPTS += -DCORE_PLATFORM_NAME="$(KODI_CORE_PLATFORM_NAME)"
 
 ifeq ($(BR2_ENABLE_LOCALE),)
 KODI_DEPENDENCIES += libiconv
+KODI_EXTRA_LIBS += -liconv
 endif
 
 ifeq ($(BR2_arceb)$(BR2_arcle),y)
@@ -200,18 +219,13 @@ else
 KODI_CONF_OPTS += -D_AVX2_OK=OFF -D_AVX2_TRUE=OFF
 endif
 
-# mips: uses __atomic_load_8
-ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
-KODI_CONF_OPTS += -DCMAKE_EXE_LINKER_FLAGS=-latomic
-endif
-
 ifeq ($(BR2_TOOLCHAIN_GCC_AT_LEAST_5),)
 KODI_C_FLAGS += -std=gnu99
 endif
 
 ifeq ($(BR2_PACKAGE_KODI_MYSQL),y)
 KODI_CONF_OPTS += -DENABLE_MYSQLCLIENT=ON
-KODI_DEPENDENCIES += mysql
+KODI_DEPENDENCIES += mariadb
 else
 KODI_CONF_OPTS += -DENABLE_MYSQLCLIENT=OFF
 endif
@@ -356,6 +370,13 @@ else
 KODI_CONF_OPTS += -DENABLE_OPTICAL=OFF
 endif
 
+ifeq ($(BR2_PACKAGE_KODI_PIPEWIRE),y)
+KODI_CONF_OPTS += -DENABLE_PIPEWIRE=ON
+KODI_DEPENDENCIES += pipewire
+else
+KODI_CONF_OPTS += -DENABLE_PIPEWIRE=OFF
+endif
+
 ifeq ($(BR2_PACKAGE_KODI_PULSEAUDIO),y)
 KODI_CONF_OPTS += -DENABLE_PULSEAUDIO=ON
 KODI_DEPENDENCIES += pulseaudio
@@ -364,9 +385,10 @@ KODI_CONF_OPTS += -DENABLE_PULSEAUDIO=OFF
 endif
 
 ifeq ($(BR2_PACKAGE_LIBUDFREAD),y)
+KODI_CONF_OPTS += -DENABLE_UDFREAD=ON
 KODI_DEPENDENCIES += libudfread
 else
-KODI_CONF_OPTS += -DENABLE_INTERNAL_UDFREAD=OFF
+KODI_CONF_OPTS += -DENABLE_UDFREAD=OFF
 endif
 
 # Remove versioncheck addon, updating Kodi is done by building a new

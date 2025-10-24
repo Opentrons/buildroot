@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LLDPD_VERSION = 1.0.15
+LLDPD_VERSION = 1.0.18
 LLDPD_SITE = https://media.luffy.cx/files/lldpd
 LLDPD_DEPENDENCIES = \
 	$(if $(BR2_PACKAGE_CHECK),check) \
@@ -14,7 +14,7 @@ LLDPD_DEPENDENCIES = \
 	$(if $(BR2_PACKAGE_VALGRIND),valgrind)
 LLDPD_LICENSE = ISC
 LLDPD_LICENSE_FILES = LICENSE
-LLDPD_CPE_ID_VENDOR = lldpd_project
+LLDPD_CPE_ID_VALID = YES
 
 # 0001-daemon-fix-read-overflow-when-parsing-CDP-addresses.patch
 LLDPD_IGNORE_CVES += CVE-2023-41910

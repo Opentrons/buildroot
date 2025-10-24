@@ -4,17 +4,13 @@
 #
 ################################################################################
 
-LIBARCHIVE_VERSION = 3.6.2
+LIBARCHIVE_VERSION = 3.8.1
 LIBARCHIVE_SOURCE = libarchive-$(LIBARCHIVE_VERSION).tar.xz
 LIBARCHIVE_SITE = https://www.libarchive.de/downloads
 LIBARCHIVE_INSTALL_STAGING = YES
 LIBARCHIVE_LICENSE = BSD-2-Clause, BSD-3-Clause, CC0-1.0, OpenSSL, Apache-2.0
 LIBARCHIVE_LICENSE_FILES = COPYING
 LIBARCHIVE_CPE_ID_VENDOR = libarchive
-# We're patching configure.ac
-LIBARCHIVE_AUTORECONF = YES
-# needed for autoreconf
-LIBARCHIVE_DEPENDENCIES += host-pkgconf
 
 ifeq ($(BR2_PACKAGE_LIBARCHIVE_BSDTAR),y)
 ifeq ($(BR2_STATIC_LIBS),y)
@@ -44,6 +40,16 @@ LIBARCHIVE_CONF_OPTS += --enable-bsdcat=shared
 endif
 else
 LIBARCHIVE_CONF_OPTS += --disable-bsdcat
+endif
+
+ifeq ($(BR2_PACKAGE_LIBARCHIVE_BSDUNZIP),y)
+ifeq ($(BR2_STATIC_LIBS),y)
+LIBARCHIVE_CONF_OPTS += --enable-bsdunzip=static
+else
+LIBARCHIVE_CONF_OPTS += --enable-bsdunzip=shared
+endif
+else
+LIBARCHIVE_CONF_OPTS += --disable-bsdunzip
 endif
 
 ifeq ($(BR2_PACKAGE_ACL),y)

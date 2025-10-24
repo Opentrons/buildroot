@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-# python-pymupdf's version must match mupdf's version
-MUPDF_VERSION = 1.21.1
+# python-pymupdf's version be compatible with mupdf's version
+MUPDF_VERSION = 1.23.9
 MUPDF_SOURCE = mupdf-$(MUPDF_VERSION)-source.tar.lz
 MUPDF_SITE = https://mupdf.com/downloads/archive
 MUPDF_LICENSE = AGPL-3.0+
@@ -19,36 +19,37 @@ MUPDF_DEPENDENCIES = \
 	host-pkgconf \
 	jbig2dec jpeg \
 	lcms2 openjpeg \
-	xlib_libX11 \
 	zlib
 
-# The pkg-config name for gumbo-parser is `gumbo`.
-MUPDF_PKG_CONFIG_PACKAGES = \
-	freetype2 \
-	gumbo \
-	harfbuzz \
-	libjpeg \
-	zlib
-
-MUPDF_CFLAGS = \
-	$(TARGET_CFLAGS) \
-	`$(PKG_CONFIG_HOST_BINARY) --cflags $(MUPDF_PKG_CONFIG_PACKAGES)` \
-	-fPIC # -fPIC is needed because the Makefile doesn't append it.
-
-MUPDF_LDFLAGS = \
-	$(TARGET_LDFLAGS) \
-	`$(PKG_CONFIG_HOST_BINARY) --libs $(MUPDF_PKG_CONFIG_PACKAGES)`
+# libfreeglut/0001-Plug-memory-leak-that-happens-upon-error.patch
+# Fix is in libfreeglut, but CVE applied to mupdf.
+MUPDF_IGNORE_CVES = \
+	CVE-2024-24258 \
+	CVE-2024-24259
 
 # mupdf doesn't use CFLAGS and LIBS but XCFLAGS and XLIBS instead.
 # with USE_SYSTEM_LIBS it will try to use system libraries instead of the bundled ones.
 MUPDF_MAKE_ENV = $(TARGET_MAKE_ENV) $(TARGET_CONFIGURE_OPTS) \
-	XCFLAGS="$(MUPDF_CFLAGS)" \
-	XLIBS="$(MUPDF_LDFLAGS)" \
+	XCFLAGS="$(TARGET_CFLAGS)" \
+	XLIBS="$(TARGET_LDFLAGS)" \
 	USE_SYSTEM_LIBS=yes
 
 MUPDF_MAKE_OPTS = \
 	HAVE_OBJCOPY=no \
 	prefix="/usr"
+
+ifeq ($(BR2_STATIC_LIBS),y)
+MUPDF_MAKE_OPTS += shared=no
+else
+MUPDF_MAKE_OPTS += shared=yes
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBX11)$(BR2_PACKAGE_XLIB_LIBXEXT),yy)
+MUPDF_MAKE_OPTS += HAVE_X11=yes
+MUPDF_DEPENDENCIES += xlib_libX11 xlib_libXext
+else
+MUPDF_MAKE_OPTS += HAVE_X11=no
+endif
 
 ifeq ($(BR2_PACKAGE_LIBFREEGLUT),y)
 MUPDF_DEPENDENCIES += libfreeglut

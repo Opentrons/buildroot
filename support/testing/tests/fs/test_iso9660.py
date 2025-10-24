@@ -4,16 +4,9 @@ import infra.basetest
 
 BASIC_CONFIG = \
     """
-    BR2_x86_pentium4=y
+    BR2_x86_core2=y
     BR2_TOOLCHAIN_EXTERNAL=y
-    BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
-    BR2_TOOLCHAIN_EXTERNAL_DOWNLOAD=y
-    BR2_TOOLCHAIN_EXTERNAL_URL="http://autobuild.buildroot.org/toolchains/tarballs/br-i386-pentium4-full-2017.05-1078-g95b1dae.tar.bz2"
-    BR2_TOOLCHAIN_EXTERNAL_GCC_6=y
-    BR2_TOOLCHAIN_EXTERNAL_HEADERS_3_2=y
-    BR2_TOOLCHAIN_EXTERNAL_LOCALE=y
-    # BR2_TOOLCHAIN_EXTERNAL_HAS_THREADS_DEBUG is not set
-    BR2_TOOLCHAIN_EXTERNAL_CXX=y
+    BR2_TOOLCHAIN_EXTERNAL_BOOTLIN_X86_CORE2_GLIBC_STABLE=y
     BR2_TARGET_GENERIC_GETTY_PORT="ttyS0"
     BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200=y
     BR2_LINUX_KERNEL=y
@@ -29,7 +22,16 @@ def test_mount_internal_external(emulator, builddir, internal=True, efi=False):
     img = os.path.join(builddir, "images", "rootfs.iso9660")
     if efi:
         efi_img = os.path.join(builddir, "images", "OVMF.fd")
-        emulator.boot(arch="i386", options=["-cdrom", img, "-bios", efi_img])
+        # In QEMU v5.1.0 up to v7.2.0, the CPU hotplug register block misbehaves.
+        # EDK2 hang if the bug is detected in Qemu after printing errors to IO port 0x402
+        # (requires BR2_TARGET_EDK2_OVMF_DEBUG_ON_SERIAL to see them)
+        # The Docker image used by the Buildroot gitlab-ci uses Qemu 5.2.0, the workaround
+        # can be removed as soon as the Docker image is updated to provided Qemu >= 8.0.0.
+        # This workaround is needed only when efi=True since it imply EDK2 is used.
+        # https://github.com/tianocore/edk2/commit/bf5678b5802685e07583e3c7ec56d883cbdd5da3
+        # http://lists.busybox.net/pipermail/buildroot/2023-July/670825.html
+        qemu_fw_cfg = "name=opt/org.tianocore/X-Cpuhp-Bugcheck-Override,string=yes"
+        emulator.boot(arch="i386", options=["-cdrom", img, "-bios", efi_img, "-fw_cfg", qemu_fw_cfg])
     else:
         emulator.boot(arch="i386", options=["-cdrom", img])
     emulator.login()

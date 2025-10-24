@@ -4,10 +4,10 @@
 #
 ################################################################################
 
-HIGHWAY_VERSION = 1.0.2
+HIGHWAY_VERSION = 1.2.0
 HIGHWAY_SITE = $(call github,google,highway,$(HIGHWAY_VERSION))
-HIGHWAY_LICENSE = Apache-2.0
-HIGHWAY_LICENSE_FILES = LICENSE
+HIGHWAY_LICENSE = Apache-2.0 or BSD-3-Clause
+HIGHWAY_LICENSE_FILES = LICENSE LICENSE-BSD3
 HIGHWAY_INSTALL_STAGING = YES
 
 HIGHWAY_CXXFLAGS = $(TARGET_CXXFLAGS)
@@ -35,7 +35,14 @@ endif
 ifeq ($(BR2_ARM_FPU_VFPV4),y)
 HIGHWAY_CONF_OPTS += -DHWY_CMAKE_ARM7=ON
 else
+# Highway Armv7 Neon support requires in fact vfpv4 / neon v2. When we
+# are in a vfpv3 case (e.g. Cortex-A8, Cortex-A9) this flag need to be
+# set to off.
 HIGHWAY_CONF_OPTS += -DHWY_CMAKE_ARM7=OFF
+endif
+
+ifeq ($(BR2_RISCV_32),y)
+HIGHWAY_CONF_OPTS += -DHWY_CMAKE_RVV=OFF
 endif
 
 # Workaround for gcc bug 104028 on m68k.

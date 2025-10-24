@@ -1,4 +1,5 @@
-# From http://snapshot.debian.org/package/fakeroot/1.30.1-1/
-sha256  32ebb1f421aca0db7141c32a8c104eb95d2b45c393058b9435fbf903dd2b6a75  fakeroot_1.30.1.orig.tar.gz
+# From https://deb.debian.org/debian/pool/main/f/fakeroot/fakeroot_1.36-1.dsc
+sha1  ea895c6632fcf1b38cc84987d1b4daf833ffd430  fakeroot_1.36.orig.tar.gz
+sha256  7fe3cf3daf95ee93b47e568e85f4d341a1f9ae91766b4f9a9cdc29737dea4988  fakeroot_1.36.orig.tar.gz
 # License files, locally calculated
 sha256  fc82ca8b6fdb18d4e3e85cfd8ab58d1bcd3f1b29abe782895abd91d64763f8e7  COPYING

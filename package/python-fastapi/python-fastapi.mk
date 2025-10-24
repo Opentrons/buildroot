@@ -4,11 +4,14 @@
 #
 ################################################################################
 
-PYTHON_FASTAPI_VERSION = 0.68.1
+PYTHON_FASTAPI_VERSION = 0.116.1
 PYTHON_FASTAPI_SOURCE = fastapi-$(PYTHON_FASTAPI_VERSION).tar.gz
-PYTHON_FASTAPI_SITE = https://files.pythonhosted.org/packages/e0/2a/03c3e1ede3aa83c45da1d156b0180288e573f5e2643ec4fd6d697cebebdf
-PYTHON_FASTAPI_SETUP_TYPE = distutils
+PYTHON_FASTAPI_SITE = https://files.pythonhosted.org/packages/78/d7/6c8b3bfe33eeffa208183ec037fee0cce9f7f024089ab1c5d12ef04bd27c
+PYTHON_FASTAPI_SETUP_TYPE = pep517
 PYTHON_FASTAPI_LICENSE = MIT
 PYTHON_FASTAPI_LICENSE_FILES = LICENSE
+PYTHON_FASTAPI_CPE_ID_VENDOR = tiangolo
+PYTHON_FASTAPI_CPE_ID_PRODUCT = fastapi
+PYTHON_FASTAPI_DEPENDENCIES = host-python-pdm-backend
 
 $(eval $(python-package))

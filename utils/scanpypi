@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# ~*~ encoding=utf8 ~*~
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-or-later AND MIT
 """
 
 Utility for building Buildroot packages for existing PyPI packages
@@ -11,7 +11,6 @@ import argparse
 import json
 import sys
 import os
-import copy
 import shutil
 import tarfile
 import zipfile
@@ -20,20 +19,13 @@ import hashlib
 import re
 import textwrap
 import tempfile
-import imp
-import configparser
-import inspect
-from functools import wraps
-import six.moves.urllib.request
-import six.moves.urllib.error
-import six.moves.urllib.parse
-from six.moves import map
-from six.moves import zip
-from six.moves import input
-if six.PY2:
-    import StringIO
-else:
-    import io
+import traceback
+import importlib
+import importlib.metadata
+import urllib.request
+import urllib.error
+import urllib.parse
+import io
 
 BUF_SIZE = 65536
 
@@ -47,33 +39,54 @@ except ImportError:
     liclookup = None
 
 
-def setup_decorator(func, method):
-    """
-    Decorator for distutils.core.setup and setuptools.setup.
-    Puts the arguments with which setup is called as a dict
-    Add key 'method' which should be either 'setuptools' or 'distutils'.
+def toml_load(f):
+    with open(f, 'rb') as fh:
+        ex = None
 
-    Keyword arguments:
-    func -- either setuptools.setup or distutils.core.setup
-    method -- either 'setuptools' or 'distutils'
-    """
-
-    @wraps(func)
-    def closure(*args, **kwargs):
-        # Any python packages calls its setup function to be installed.
-        # Argument 'name' of this setup function is the package's name
+        # Try standard library tomllib first
         try:
-            BuildrootPackage.setup_args[kwargs['name']] = kwargs
-            BuildrootPackage.setup_args[kwargs['name']]['method'] = method
-        except KeyError:
+            from tomllib import load
+            return load(fh)
+        except ImportError:
             pass
-    return closure
 
-# monkey patch
-import setuptools  # noqa E402
-setuptools.setup = setup_decorator(setuptools.setup, 'setuptools')
-import distutils   # noqa E402
-distutils.core.setup = setup_decorator(setuptools.setup, 'distutils')
+        # Try regular tomli next
+        try:
+            from tomli import load
+            return load(fh)
+        except ImportError as e:
+            ex = e
+
+        # Try pip's vendored tomli
+        try:
+            from pip._vendor.tomli import load
+            try:
+                return load(fh)
+            except TypeError:
+                # Fallback to handle older version
+                try:
+                    fh.seek(0)
+                    w = io.TextIOWrapper(fh, encoding="utf8", newline="")
+                    return load(w)
+                finally:
+                    w.detach()
+        except ImportError:
+            pass
+
+        # Try regular toml last
+        try:
+            from toml import load
+            fh.seek(0)
+            w = io.TextIOWrapper(fh, encoding="utf8", newline="")
+            try:
+                return load(w)
+            finally:
+                w.detach()
+        except ImportError:
+            pass
+
+        print('This package needs tomli')
+        raise ex
 
 
 def find_file_upper_case(filenames, path='./'):
@@ -113,6 +126,48 @@ class DownloadFailed(Exception):
     pass
 
 
+# Copied and adapted from
+# https://github.com/pypa/pyproject-hooks/blob/v1.1.0/src/pyproject_hooks/_in_process/_in_process.py
+# SPDX-License-Identifier: MIT
+
+class BackendUnavailable(Exception):
+    """Raised if we cannot import the backend"""
+
+    def __init__(self, message, traceback=None):
+        super().__init__(message)
+        self.message = message
+        self.traceback = traceback
+
+
+class BackendPathFinder:
+    """Implements the MetaPathFinder interface to locate modules in ``backend-path``.
+
+    Since the environment provided by the frontend can contain all sorts of
+    MetaPathFinders, the only way to ensure the backend is loaded from the
+    right place is to prepend our own.
+    """
+
+    def __init__(self, backend_path, backend_module):
+        self.backend_path = backend_path
+        self.backend_module = backend_module
+        self.backend_parent, _, _ = backend_module.partition(".")
+
+    def find_spec(self, fullname, _path, _target=None):
+        if "." in fullname:
+            # Rely on importlib to find nested modules based on parent's path
+            return None
+
+        # Ignore other items in _path or sys.path and use backend_path instead:
+        spec = importlib.machinery.PathFinder.find_spec(fullname, path=self.backend_path)
+        if spec is None and fullname == self.backend_parent:
+            # According to the spec, the backend MUST be loaded from backend-path.
+            # Therefore, we can halt the import machinery and raise a clean error.
+            msg = f"Cannot find module {self.backend_module!r} in {self.backend_path!r}"
+            raise BackendUnavailable(msg)
+
+        return spec
+
+
 class BuildrootPackage():
     """This class's methods are not meant to be used individually please
     use them in the correct order:
@@ -148,6 +203,8 @@ class BuildrootPackage():
         self.metadata_url = None
         self.pkg_req = None
         self.setup_metadata = None
+        self.backend_path = None
+        self.build_backend = None
         self.tmp_extract = None
         self.used_url = None
         self.filename = None
@@ -162,15 +219,15 @@ class BuildrootPackage():
         self.metadata_url = 'https://pypi.org/pypi/{pkg}/json'.format(
             pkg=self.real_name)
         try:
-            pkg_json = six.moves.urllib.request.urlopen(self.metadata_url).read().decode()
-        except six.moves.urllib.error.HTTPError as error:
+            pkg_json = urllib.request.urlopen(self.metadata_url).read().decode()
+        except urllib.error.HTTPError as error:
             print('ERROR:', error.getcode(), error.msg, file=sys.stderr)
             print('ERROR: Could not find package {pkg}.\n'
                   'Check syntax inside the python package index:\n'
                   'https://pypi.python.org/pypi/ '
                   .format(pkg=self.real_name))
             raise
-        except six.moves.urllib.error.URLError:
+        except urllib.error.URLError:
             print('ERROR: Could not find package {pkg}.\n'
                   'Check syntax inside the python package index:\n'
                   'https://pypi.python.org/pypi/ '
@@ -197,7 +254,7 @@ class BuildrootPackage():
                 'digests': None}]
             # In this case, we can't get the name of the downloaded file
             # from the pypi api, so we need to find it, this should work
-            urlpath = six.moves.urllib.parse.urlparse(
+            urlpath = urllib.parse.urlparse(
                 self.metadata['info']['download_url']).path
             # urlparse().path give something like
             # /path/to/file-version.tar.gz
@@ -209,8 +266,8 @@ class BuildrootPackage():
             try:
                 print('Downloading package {pkg} from {url}...'.format(
                     pkg=self.real_name, url=download_url['url']))
-                download = six.moves.urllib.request.urlopen(download_url['url'])
-            except six.moves.urllib.error.HTTPError as http_error:
+                download = urllib.request.urlopen(download_url['url'])
+            except urllib.error.HTTPError as http_error:
                 download = http_error
             else:
                 self.used_url = download_url
@@ -225,7 +282,7 @@ class BuildrootPackage():
             raise DownloadFailed('Failed to download package {pkg}: '
                                  'No source archive available'
                                  .format(pkg=self.real_name))
-        elif download.__class__ == six.moves.urllib.error.HTTPError:
+        elif download.__class__ == urllib.error.HTTPError:
             raise download
 
         self.filename = self.used_url['filename']
@@ -249,15 +306,12 @@ class BuildrootPackage():
 
     def extract_package(self, tmp_path):
         """
-        Extract the package contents into a directrory
+        Extract the package content into a directory
 
         Keyword arguments:
         tmp_path -- directory where you want the package to be extracted
         """
-        if six.PY2:
-            as_file = StringIO.StringIO(self.as_string)
-        else:
-            as_file = io.BytesIO(self.as_string)
+        as_file = io.BytesIO(self.as_string)
         if self.filename[-3:] == 'zip':
             with zipfile.ZipFile(as_file) as as_zipfile:
                 tmp_pkg = os.path.join(tmp_path, self.buildroot_name)
@@ -296,67 +350,83 @@ class BuildrootPackage():
             folder=tmp_pkg,
             name=pkg_filename)
 
-    def find_metadata(self, setup, extract_path):
-        if self.metadata_name in self.setup_args:
-            # setup was called on import, all good
-            return self.setup_args[self.metadata_name]
-        elif hasattr(setup, 'main') and inspect.isfunction(setup.main):
-            # maybe there’s a main function?
-            setup.main()
-        elif hasattr(setup, 'setup_args') and isinstance(setup.setup_args, tuple):
-            setup.setup(*setup_args)
-        elif hasattr(setup, 'setup_args') and isinstance(setup.setup_args, dict):
-            setup.setup(**setup.setup_args)
-        else:
-            # Maybe it’s in the config file
-            config = configparser.ConfigParser()
-            config.read(os.path.join(extract_path, 'setup.cfg'))
-            self.setup_args[self.metadata_name] = {}
-            if 'metadata' in config.sections():
-                self.setup_args[self.metadata_name].update(config['metadata'])
-            if 'options' in config.sections():
-                self.setup_args[self.metadata_name].update(config['options'])
-                if 'install_requires' in self.setup_args[self.metadata_name]:
-                    self.setup_args[self.metadata_name]['install_requires']\
-                        = [ir for ir in self.setup_args[self.metadata_name]['install_requires'].split('\n')
-                           if ir]
-            if 'method' not in self.setup_args[self.metadata_name]:
-                self.setup_args[self.metadata_name]['method'] = 'bdist_wheel'
-            if self.setup_args[self.metadata_name] == {}:
-                raise KeyError("I give up")
-
-        return self.setup_args[self.metadata_name]
-
-    def load_setup(self):
+    def load_metadata(self):
         """
         Loads the corresponding setup and store its metadata
         """
         current_dir = os.getcwd()
         os.chdir(self.tmp_extract)
-        sys.path.append(self.tmp_extract)
-        old_sm = copy.copy(sys.modules)
-        s_file, s_path, s_desc = imp.find_module('setup', [self.tmp_extract])
-        setup = imp.load_module('setup', s_file, s_path, s_desc)
+        try:
+            mod_path, _, obj_path = self.build_backend.partition(":")
 
-        self.setup_metadata = self.find_metadata(setup, self.tmp_extract)
-        # Here we must remove the module the hard way.
-        # We must do this because of a very specific case: if a package calls
-        # setup from the __main__ but does not come with a 'main()' function,
-        # for some reason setup.main() will successfully call the main
-        # function of a previous package...
-        will_delete = [k for k in sys.modules.keys() if k not in old_sm.keys()]
-        for k in will_delete:
-            sys.modules.pop(k)
+            path_finder = None
+            if self.backend_path:
+                path_finder = BackendPathFinder(self.backend_path, mod_path)
+                sys.meta_path.insert(0, path_finder)
+
             try:
-                del locals()[k]
-            except KeyError:
-                try:
-                    del globals()[k]
-                except KeyError:
-                    pass
+                build_backend = importlib.import_module(self.build_backend)
+            except ImportError:
+                msg = f"Cannot import {mod_path!r}"
+                raise BackendUnavailable(msg, traceback.format_exc())
 
-        os.chdir(current_dir)
-        sys.path.remove(self.tmp_extract)
+            if obj_path:
+                for path_part in obj_path.split("."):
+                    build_backend = getattr(build_backend, path_part)
+
+            if path_finder:
+                sys.meta_path.remove(path_finder)
+
+            prepare_metadata_for_build_wheel = getattr(
+                build_backend, 'prepare_metadata_for_build_wheel'
+            )
+            metadata = prepare_metadata_for_build_wheel(self.tmp_extract)
+            try:
+                dist = importlib.metadata.Distribution.at(metadata)
+                self.metadata_name = dist.name
+                if dist.requires:
+                    self.setup_metadata['install_requires'] = dist.requires
+            finally:
+                shutil.rmtree(metadata)
+        finally:
+            os.chdir(current_dir)
+
+    def load_pyproject(self):
+        """
+        Loads the corresponding pyproject.toml and store its metadata
+        """
+        current_dir = os.getcwd()
+        os.chdir(self.tmp_extract)
+        try:
+            pyproject_data = toml_load('pyproject.toml')
+            self.setup_metadata = pyproject_data.get('project', {})
+            self.metadata_name = self.setup_metadata.get('name', self.real_name)
+            build_system = pyproject_data.get('build-system', {})
+            build_backend = build_system.get('build-backend', None)
+            self.backend_path = build_system.get('backend-path', None)
+            if build_backend:
+                self.build_backend = build_backend
+                if build_backend == 'flit_core.buildapi':
+                    self.setup_metadata['method'] = 'flit'
+                elif build_backend == 'hatchling.build':
+                    self.setup_metadata['method'] = 'hatch'
+                elif build_backend == 'poetry.core.masonry.api':
+                    self.setup_metadata['method'] = 'poetry'
+                elif build_backend == 'setuptools.build_meta':
+                    self.setup_metadata['method'] = 'setuptools'
+                else:
+                    if self.backend_path:
+                        self.setup_metadata['method'] = 'pep517'
+                    else:
+                        self.setup_metadata['method'] = 'unknown'
+            else:
+                self.build_backend = 'setuptools.build_meta'
+                self.setup_metadata = {'method': 'setuptools'}
+        except FileNotFoundError:
+            self.build_backend = 'setuptools.build_meta'
+            self.setup_metadata = {'method': 'setuptools'}
+        finally:
+            os.chdir(current_dir)
 
     def get_requirements(self, pkg_folder):
         """
@@ -369,35 +439,18 @@ class BuildrootPackage():
         if 'install_requires' not in self.setup_metadata:
             self.pkg_req = None
             return set()
-        self.pkg_req = self.setup_metadata['install_requires']
-        # Pull possible python version requirements specified as e.g.
-        # ’functools32;python<3’ by transforming the list of requires
-        # into a list of tuples of (pkg, python-requirement-or-none)
-        possible_pyreqs = [(m.group(1), m.group(2)) for m in
-                           [re.match("([-.\w]+)(?:;([\w.-<=>!']*))?.*", pkg)
-                            for pkg in self.pkg_req]]
-        def parse_pyreqs(reqtuples):
-            to_ret = []
-            for pkg, python_required in reqtuples:
-                if not python_required:
-                    to_ret.append(pkg)
-                else:
-                    args = re.match("python_version([<>=]+)'?([\d.]+)'?", python_required)
-                    if None is args:
-                        to_ret.append(pkg)
-                    version = args.group(2)
-                    comp = args.group(1)
-                    version = [int(part) for part in version.split('.')]
-                    version = tuple(version + ([0]*(3-len(version))))
-                    import semver
-                    if semver.match('.'.join([str(vi) for vi in sys.version_info[:3]]),
-                                    comp + '.'.join([str(vi) for vi in version])):
-                        to_ret.append(pkg)
-            return to_ret
-        self.pkg_req = parse_pyreqs(possible_pyreqs)
+        self.pkg_req = set()
+        extra_re = re.compile(r'''extra\s*==\s*("([^"]+)"|'([^']+)')''')
+        for req in self.setup_metadata['install_requires']:
+            if not extra_re.search(req):
+                self.pkg_req.add(req)
+        self.pkg_req = [re.sub(r'([-.\w]+).*', r'\1', req)
+                        for req in self.pkg_req]
+
         # get rid of commented lines and also strip the package strings
-        self.pkg_req = [item.strip() for item in self.pkg_req
-                        if len(item) > 0 and item[0] != '#']
+        self.pkg_req = {item.strip() for item in self.pkg_req
+                        if len(item) > 0 and item[0] != '#'}
+
         req_not_found = self.pkg_req
         self.pkg_req = list(map(pkg_buildroot_name, self.pkg_req))
         pkg_tuples = list(zip(req_not_found, self.pkg_req))
@@ -424,7 +477,7 @@ class BuildrootPackage():
 
     def __create_mk_download_info(self):
         """
-        Create the lines refering to the download information of the
+        Create the lines referring to the download information of the
         <package_name>.mk file
         """
         lines = []
@@ -455,7 +508,7 @@ class BuildrootPackage():
 
     def __create_mk_setup(self):
         """
-        Create the line refering to the setup method of the package of the
+        Create the line referring to the setup method of the package of the
         <package_name>.mk file
 
         There are two things you can use to make an installer
@@ -540,7 +593,7 @@ class BuildrootPackage():
 
     def __create_mk_license(self):
         """
-        Create the lines referring to the package's license informations of the
+        Create the lines referring to the package's license information of the
         <package_name>.mk file
 
         The license's files are found by searching the package (case insensitive)
@@ -683,8 +736,12 @@ class BuildrootPackage():
         if help_lines[-1][-1] != '.':
             help_lines[-1] += '.'
 
-        home_page = md_info.get('home_page', None) or \
-                    md_info.get('project_urls', {}).get('Homepage', None)  # noqa: E127
+        home_page = md_info.get('home_page', None)
+
+        if not home_page:
+            project_urls = md_info.get('project_urls', None)
+            if project_urls:
+                home_page = project_urls.get('Homepage', None)
 
         if home_page:
             # \t + two spaces is 3 char long
@@ -723,23 +780,20 @@ def main():
     try:
         for real_pkg_name in packages:
             package = BuildrootPackage(real_pkg_name, pkg_folder)
+            print('buildroot package name for {}:'.format(package.real_name),
+                  package.buildroot_name)
             # First we download the package
             # Most of the info we need can only be found inside the package
             print('Package:', package.buildroot_name)
             print('Fetching package', package.real_name)
             try:
                 package.fetch_package_info()
-            except (six.moves.urllib.error.URLError, six.moves.urllib.error.HTTPError):
-                continue
-            if package.metadata_name.lower() == 'setuptools':
-                # setuptools imports itself, that does not work very well
-                # with the monkey path at the begining
-                print('Error: setuptools cannot be built using scanPyPI')
+            except (urllib.error.URLError, urllib.error.HTTPError):
                 continue
 
             try:
                 package.download_package()
-            except six.moves.urllib.error.HTTPError as error:
+            except urllib.error.HTTPError as error:
                 print('Error: {code} {reason}'.format(code=error.code,
                                                       reason=error.reason))
                 print('Error downloading package :', package.buildroot_name)
@@ -755,14 +809,15 @@ def main():
                 continue
 
             # Loading the package install info from the package
+            package.load_pyproject()
             try:
-                package.load_setup()
+                package.load_metadata()
             except ImportError as err:
                 if 'buildutils' in str(err):
                     print('This package needs buildutils')
+                    continue
                 else:
                     raise
-                continue
             except (AttributeError, KeyError) as error:
                 print('Error: Could not install package {pkg}: {error}'.format(
                     pkg=package.real_name, error=error))
@@ -802,7 +857,7 @@ def main():
             print("NOTE: Remember to also make an update to the DEVELOPERS file")
             print("      and include an entry for the pkg in packages/Config.in")
             print()
-            # printing an empty line for visual confort
+            # printing an empty line for visual comfort
     finally:
         shutil.rmtree(tmp_path)
 

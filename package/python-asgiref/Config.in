@@ -1,8 +1,14 @@
 config BR2_PACKAGE_PYTHON_ASGIREF
 	bool "python-asgiref"
-	depends on BR2_PACKAGE_PYTHON3
-	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
 	help
-	  ASGI specs, helper code, and adapters.
+	  ASGI is a standard for Python asynchronous web apps and
+	  servers to communicate with each other, and positioned as
+	  an asynchronous successor to WSGI.
+
+	  This package includes ASGI base libraries, such as:
+	    - Sync-to-async and async-to-sync function wrappers,
+	      asgiref.sync
+	    - Server base classes, asgiref.server
+	    - A WSGI-to-ASGI adapter, in asgiref.wsgi
 
 	  https://github.com/django/asgiref/

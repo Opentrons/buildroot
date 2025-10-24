@@ -4,14 +4,19 @@
 #
 ################################################################################
 
-SQLITE_VERSION = 3.40.1
-SQLITE_TAR_VERSION = 3400100
+SQLITE_VERSION = 3.48.0
+SQLITE_TAR_VERSION = 3480000
 SQLITE_SOURCE = sqlite-autoconf-$(SQLITE_TAR_VERSION).tar.gz
-SQLITE_SITE = https://www.sqlite.org/2022
-SQLITE_LICENSE = Public domain
+SQLITE_SITE = https://www.sqlite.org/2025
+SQLITE_LICENSE = blessing
 SQLITE_LICENSE_FILES = tea/license.terms
 SQLITE_CPE_ID_VENDOR = sqlite
 SQLITE_INSTALL_STAGING = YES
+
+# 0002-Add-a-typecast-to-avoid-32-bit-integer-overflow-in-t.patch
+SQLITE_IGNORE_CVES = CVE-2025-29087 CVE-2025-3277
+# 0003-Raise-error-if-too-many-aggregate-terms.patch
+SQLITE_IGNORE_CVES += CVE-2025-6965
 
 ifeq ($(BR2_PACKAGE_SQLITE_STAT4),y)
 SQLITE_CFLAGS += -DSQLITE_ENABLE_STAT4
@@ -23,10 +28,6 @@ endif
 
 ifeq ($(BR2_PACKAGE_SQLITE_ENABLE_FTS3),y)
 SQLITE_CFLAGS += -DSQLITE_ENABLE_FTS3
-endif
-
-ifeq ($(BR2_PACKAGE_SQLITE_ENABLE_JSON1),y)
-SQLITE_CFLAGS += -DSQLITE_ENABLE_JSON1
 endif
 
 ifeq ($(BR2_PACKAGE_SQLITE_ENABLE_UNLOCK_NOTIFY),y)

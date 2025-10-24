@@ -4,16 +4,23 @@
 #
 ################################################################################
 
+<<<<<<< HEAD
 LIBMODSECURITY_VERSION = 3.0.10
+=======
+LIBMODSECURITY_VERSION = 3.0.14
+>>>>>>> upstream-2025.02.7
 LIBMODSECURITY_SOURCE = modsecurity-v$(LIBMODSECURITY_VERSION).tar.gz
-LIBMODSECURITY_SITE = https://github.com/SpiderLabs/ModSecurity/releases/download/v$(LIBMODSECURITY_VERSION)
+LIBMODSECURITY_SITE = https://github.com/owasp-modsecurity/ModSecurity/releases/download/v$(LIBMODSECURITY_VERSION)
 LIBMODSECURITY_INSTALL_STAGING = YES
 LIBMODSECURITY_LICENSE = Apache-2.0
 LIBMODSECURITY_LICENSE_FILES = LICENSE
 LIBMODSECURITY_CPE_ID_VENDOR = trustwave
 LIBMODSECURITY_CPE_ID_PRODUCT = modsecurity
+<<<<<<< HEAD
 # We're patching configure.ac
 LIBMODSECURITY_AUTORECONF = YES
+=======
+>>>>>>> upstream-2025.02.7
 
 LIBMODSECURITY_DEPENDENCIES = pcre2
 LIBMODSECURITY_CONF_OPTS = \

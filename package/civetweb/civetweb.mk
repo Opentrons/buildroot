@@ -4,11 +4,14 @@
 #
 ################################################################################
 
-CIVETWEB_VERSION = 1.15
+CIVETWEB_VERSION = 1.16
 CIVETWEB_SITE = $(call github,civetweb,civetweb,v$(CIVETWEB_VERSION))
 CIVETWEB_LICENSE = MIT
 CIVETWEB_LICENSE_FILES = LICENSE.md
-CIVETWEB_CPE_ID_VENDOR = civetweb_project
+CIVETWEB_CPE_ID_VALID = YES
+
+# 0002-Fix-heap-overflow-in-directory-URI-slash-redirection.patch
+CIVETWEB_IGNORE_CVES += CVE-2025-55763
 
 CIVETWEB_CONF_OPTS = TARGET_OS=LINUX WITH_IPV6=1 \
 	$(if $(BR2_INSTALL_LIBSTDCPP),WITH_CPP=1)

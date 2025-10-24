@@ -33,6 +33,9 @@ OPENOCD_LICENSE_FILES = \
 	LICENSES/preferred/MIT \
 	LICENSES/stand-alone/GPL-3.0
 
+OPENOCD_CPE_ID_VENDOR = openocd
+OPENOCD_CPE_ID_PRODUCT = open_on-chip_debugger
+
 # 0001-configure-enable-build-on-uclinux.patch patches configure.ac
 OPENOCD_AUTORECONF = YES
 OPENOCD_CONF_ENV = CFLAGS="$(TARGET_CFLAGS) -std=gnu99"
@@ -55,9 +58,14 @@ OPENOCD_DEPENDENCIES = \
 	$(if $(BR2_PACKAGE_LIBFTDI1),libftdi1) \
 	$(if $(BR2_PACKAGE_LIBUSB),libusb) \
 	$(if $(BR2_PACKAGE_LIBUSB_COMPAT),libusb-compat) \
-	$(if $(BR2_PACKAGE_LIBHID),libhid) \
-	$(if $(BR2_PACKAGE_HIDAPI),hidapi) \
-	$(if $(BR2_PACKAGE_LIBGPIOD),libgpiod)
+	$(if $(BR2_PACKAGE_HIDAPI),hidapi)
+
+ifeq ($(BR2_PACKAGE_LIBGPIOD),y)
+OPENOCD_DEPENDENCIES += libgpiod
+OPENOCD_CONF_OPTS += --enable-linuxgpiod
+else
+OPENOCD_CONF_OPTS += --disable-linuxgpiod
+endif
 
 # Adapters
 OPENOCD_CONF_OPTS += \
@@ -84,6 +92,7 @@ OPENOCD_CONF_OPTS += \
 	$(if $(BR2_PACKAGE_OPENOCD_AT91RM),--enable-at91rm9200,--disable-at91rm9200) \
 	$(if $(BR2_PACKAGE_OPENOCD_BCM2835),--enable-bcm2835gpio,--disable-bcm2835gpio) \
 	$(if $(BR2_PACKAGE_OPENOCD_GW16012),--enable-gw16012,--disable-gw16012) \
+	$(if $(BR2_PACKAGE_OPENOCD_IMXGPIO),--enable-imx_gpio,--disable-imx_gpio) \
 	$(if $(BR2_PACKAGE_OPENOCD_PRESTO),--enable-presto,--disable-presto) \
 	$(if $(BR2_PACKAGE_OPENOCD_OPENJTAG),--enable-openjtag,--disable-openjtag) \
 	$(if $(BR2_PACKAGE_OPENOCD_BUSPIRATE),--enable-buspirate,--disable-buspirate) \

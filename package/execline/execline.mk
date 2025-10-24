@@ -4,8 +4,8 @@
 #
 ################################################################################
 
-EXECLINE_VERSION = 2.9.0.1
-EXECLINE_SITE = http://skarnet.org/software/execline
+EXECLINE_VERSION = 2.9.6.0
+EXECLINE_SITE = https://skarnet.org/software/execline
 EXECLINE_LICENSE = ISC
 EXECLINE_LICENSE_FILES = COPYING
 EXECLINE_INSTALL_STAGING = YES
@@ -18,6 +18,7 @@ EXECLINE_CONF_OPTS = \
 	--with-dynlib=$(STAGING_DIR)/lib \
 	--with-lib=$(STAGING_DIR)/lib/skalibs \
 	$(if $(BR2_STATIC_LIBS),,--disable-allstatic) \
+	$(if $(BR2_PACKAGE_EXECLINE_MULTICALL),--enable-multicall,) \
 	$(SHARED_STATIC_LIBS_OPTS)
 
 define EXECLINE_CONFIGURE_CMDS

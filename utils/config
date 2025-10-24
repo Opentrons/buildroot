@@ -30,7 +30,7 @@ commands:
 
 options:
 	--file config-file   .config file to change (default .config)
-	--keep-case|-k       Keep next symbols' case (dont' upper-case it)
+	--keep-case|-k       Keep next symbols' case (don't upper-case it)
 	--package|-p         Operate on package (set prefix to BR2_PACKAGE_)
 
 $myname doesn't check the validity of the .config file. This is done at next
@@ -172,10 +172,10 @@ while [ "$1" != "" ] ; do
 		;;
 
 	--state|-s)
-		if grep -q "# ${BR2_PREFIX}$ARG is not set" $FN ; then
+		if grep -q "# ${BR2_PREFIX}$ARG is not set" "$FN" ; then
 			echo n
 		else
-			if V="$(grep "^${BR2_PREFIX}$ARG=" $FN)"; then
+			if V="$(grep "^${BR2_PREFIX}$ARG=" "$FN")"; then
 				V="${V/#${BR2_PREFIX}$ARG=/}"
 				V="${V/#\"/}"
 				V="${V/%\"/}"
