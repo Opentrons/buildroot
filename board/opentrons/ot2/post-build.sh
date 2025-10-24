@@ -32,7 +32,7 @@ cp -r ${BINARIES_DIR}/rpi-firmware/overlays ${TARGET_DIR}/boot/overlays
 cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
 
 # rewrite config.txt to boot u-boot
-sed -i s/kernel=zImage/kernel=u-boot.bin/ ./board/opentrons/ot2/config.txt
+sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH}/board/opentrons/ot2/config.txt
 hostname_to_write=$(cat ${TARGET_DIR}/etc/hostname)
 
 if [ ${OT_BUILD_TYPE} != "release" ]; then
@@ -63,7 +63,7 @@ if [[ -f ${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/avahi-daemon.s
     mv ${TARGET_DIR}/etc/systemd/system/multi-user.target.wants/avahi-daemon.service ${TARGET_DIR}/etc/systemd/system/opentrons.target.wants/avahi-daemon.service
 fi
 
-python ./board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/opentrons-update-server-version.json ${BINARIES_DIR}/opentrons-robot-server-version.json ${BINARIES_DIR}/opentrons-system-server-version.json ${BINARIES_DIR}/opentrons-server-utils-version.json ${BINARIES_DIR}/opentrons-hardware-version.json ${BINARIES_DIR}/VERSION.json
+python ${BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH}/board/opentrons/ot2/write_version.py ${BINARIES_DIR}/opentrons-api-version.json ${BINARIES_DIR}/opentrons-update-server-version.json ${BINARIES_DIR}/opentrons-robot-server-version.json ${BINARIES_DIR}/opentrons-system-server-version.json ${BINARIES_DIR}/opentrons-server-utils-version.json ${BINARIES_DIR}/opentrons-hardware-version.json ${BINARIES_DIR}/VERSION.json
 cp ${BINARIES_DIR}/VERSION.json ${TARGET_DIR}/etc/VERSION.json
 
 # Dropbear stores its host keys in /etc/dropbear, and the stock Buildroot

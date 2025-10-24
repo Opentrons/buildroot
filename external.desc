@@ -1,0 +1,2 @@
+name: OPENTRONS_BUILDROOT_OVERLAYS
+desc: Opentrons overlays for buildroot with configs and packages for OT-2
