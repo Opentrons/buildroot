@@ -1,0 +1,74 @@
+From c1458f41c9360d316e52070b1b3bfdb81c9e12d9 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Wed, 29 Oct 2025 20:43:18 +0000
+Subject: [PATCH 28/38] remove python-traitlets for override
+
+---
+ package/Config.in                              |  1 -
+ package/python-traitlets/Config.in             |  6 ------
+ package/python-traitlets/python-traitlets.hash |  5 -----
+ package/python-traitlets/python-traitlets.mk   | 15 ---------------
+ 4 files changed, 27 deletions(-)
+ delete mode 100644 package/python-traitlets/Config.in
+ delete mode 100644 package/python-traitlets/python-traitlets.hash
+ delete mode 100644 package/python-traitlets/python-traitlets.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index fd350054..d1139def 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1305,7 +1305,6 @@ menu "External python modules"
+ 	source "package/python-toml/Config.in"
+ 	source "package/python-tornado/Config.in"
+ 	source "package/python-tqdm/Config.in"
+-	source "package/python-traitlets/Config.in"
+ 	source "package/python-treq/Config.in"
+ 	source "package/python-trio/Config.in"
+ 	source "package/python-trio-websocket/Config.in"
+diff --git a/package/python-traitlets/Config.in b/package/python-traitlets/Config.in
+deleted file mode 100644
+index a2736011..00000000
+--- a/package/python-traitlets/Config.in
++++ /dev/null
+@@ -1,6 +0,0 @@
+-config BR2_PACKAGE_PYTHON_TRAITLETS
+-	bool "python-traitlets"
+-	help
+-	  A configuration system for Python applications.
+-
+-	  https://pypi.python.org/pypi/traitlets
+diff --git a/package/python-traitlets/python-traitlets.hash b/package/python-traitlets/python-traitlets.hash
+deleted file mode 100644
+index 80fa8d4d..00000000
+--- a/package/python-traitlets/python-traitlets.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/traitlets/json
+-md5  95b21c721316bbc06922df9d97af5158  traitlets-5.8.0.tar.gz
+-sha256  6cc57d6dc28c85d5365961726ffd19b538739347749e13ebe34e03323a0e8f84  traitlets-5.8.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  3dcd47086529bf178cf7d10f35a8c188a1e9710391acecceef700898a4cf099b  COPYING.md
+diff --git a/package/python-traitlets/python-traitlets.mk b/package/python-traitlets/python-traitlets.mk
+deleted file mode 100644
+index 7054557a..00000000
+--- a/package/python-traitlets/python-traitlets.mk
++++ /dev/null
+@@ -1,15 +0,0 @@
+-################################################################################
+-#
+-# python-traitlets
+-#
+-################################################################################
+-
+-PYTHON_TRAITLETS_VERSION = 5.8.0
+-PYTHON_TRAITLETS_SOURCE = traitlets-$(PYTHON_TRAITLETS_VERSION).tar.gz
+-PYTHON_TRAITLETS_SITE = https://files.pythonhosted.org/packages/56/48/0eb99357330a02974d537be8e4096bc58cfac1089e3153570119ccea7a40
+-PYTHON_TRAITLETS_LICENSE = BSD-3-Clause
+-PYTHON_TRAITLETS_LICENSE_FILES = COPYING.md
+-PYTHON_TRAITLETS_SETUP_TYPE = pep517
+-PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

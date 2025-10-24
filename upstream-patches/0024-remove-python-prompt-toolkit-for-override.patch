@@ -1,0 +1,76 @@
+From f4b0004633dcd5995055168543962f189887f77c Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Wed, 29 Oct 2025 20:31:22 +0000
+Subject: [PATCH 24/38] remove python-prompt-toolkit for override
+
+---
+ package/Config.in                                  |  1 -
+ package/python-prompt-toolkit/Config.in            |  9 ---------
+ .../python-prompt-toolkit.hash                     |  5 -----
+ .../python-prompt-toolkit/python-prompt-toolkit.mk | 14 --------------
+ 4 files changed, 29 deletions(-)
+ delete mode 100644 package/python-prompt-toolkit/Config.in
+ delete mode 100644 package/python-prompt-toolkit/python-prompt-toolkit.hash
+ delete mode 100644 package/python-prompt-toolkit/python-prompt-toolkit.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 2dd319bd..e29f1432 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1173,7 +1173,6 @@ menu "External python modules"
+ 	source "package/python-portend/Config.in"
+ 	source "package/python-posix-ipc/Config.in"
+ 	source "package/python-priority/Config.in"
+-	source "package/python-prompt-toolkit/Config.in"
+ 	source "package/python-protobuf/Config.in"
+ 	source "package/python-psutil/Config.in"
+ 	source "package/python-psycopg2/Config.in"
+diff --git a/package/python-prompt-toolkit/Config.in b/package/python-prompt-toolkit/Config.in
+deleted file mode 100644
+index 81d95888..00000000
+--- a/package/python-prompt-toolkit/Config.in
++++ /dev/null
+@@ -1,9 +0,0 @@
+-config BR2_PACKAGE_PYTHON_PROMPT_TOOLKIT
+-	bool "python-prompt-toolkit"
+-	select BR2_PACKAGE_PYTHON_WCWIDTH # runtime
+-	select BR2_PACKAGE_PYTHON3_PYEXPAT # runtime
+-	help
+-	  Library for building powerful interactive command lines in
+-	  Python.
+-
+-	  https://github.com/prompt-toolkit/python-prompt-toolkit
+diff --git a/package/python-prompt-toolkit/python-prompt-toolkit.hash b/package/python-prompt-toolkit/python-prompt-toolkit.hash
+deleted file mode 100644
+index 62ba0c3c..00000000
+--- a/package/python-prompt-toolkit/python-prompt-toolkit.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/prompt-toolkit/json
+-md5  5a2bb559c0bcbc617f507a320c64ba03  prompt_toolkit-3.0.36.tar.gz
+-sha256  3e163f254bef5a03b146397d7c1963bd3e2812f0964bb9a24e6ec761fd28db63  prompt_toolkit-3.0.36.tar.gz
+-# Locally computed sha256 checksums
+-sha256  303574d9bdd85c757d6025017942bf17baeedf2778f62bd7f425d07d880f4c4a  LICENSE
+diff --git a/package/python-prompt-toolkit/python-prompt-toolkit.mk b/package/python-prompt-toolkit/python-prompt-toolkit.mk
+deleted file mode 100644
+index 426fa41e..00000000
+--- a/package/python-prompt-toolkit/python-prompt-toolkit.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-prompt-toolkit
+-#
+-################################################################################
+-
+-PYTHON_PROMPT_TOOLKIT_VERSION = 3.0.36
+-PYTHON_PROMPT_TOOLKIT_SOURCE = prompt_toolkit-$(PYTHON_PROMPT_TOOLKIT_VERSION).tar.gz
+-PYTHON_PROMPT_TOOLKIT_SITE = https://files.pythonhosted.org/packages/fb/93/180be2342f89f16543ec4eb3f25083b5b84eba5378f68efff05409fb39a9
+-PYTHON_PROMPT_TOOLKIT_SETUP_TYPE = setuptools
+-PYTHON_PROMPT_TOOLKIT_LICENSE = BSD-3-Clause
+-PYTHON_PROMPT_TOOLKIT_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

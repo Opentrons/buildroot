@@ -1,0 +1,73 @@
+From 278c0e118eb893c8a47370e39f876f8f5ca4859e Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 28 Oct 2025 19:30:10 +0000
+Subject: [PATCH 19/38] remove python-backcall for override
+
+---
+ package/Config.in                            |  1 -
+ package/python-backcall/Config.in            |  6 ------
+ package/python-backcall/python-backcall.hash |  5 -----
+ package/python-backcall/python-backcall.mk   | 14 --------------
+ 4 files changed, 26 deletions(-)
+ delete mode 100644 package/python-backcall/Config.in
+ delete mode 100644 package/python-backcall/python-backcall.hash
+ delete mode 100644 package/python-backcall/python-backcall.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 17c57647..89717511 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -973,7 +973,6 @@ menu "External python modules"
+ 	source "package/python-automat/Config.in"
+ 	source "package/python-avro/Config.in"
+ 	source "package/python-babel/Config.in"
+-	source "package/python-backcall/Config.in"
+ 	source "package/python-bcrypt/Config.in"
+ 	source "package/python-beautifulsoup4/Config.in"
+ 	source "package/python-bidict/Config.in"
+diff --git a/package/python-backcall/Config.in b/package/python-backcall/Config.in
+deleted file mode 100644
+index 7b4345ca..00000000
+--- a/package/python-backcall/Config.in
++++ /dev/null
+@@ -1,6 +0,0 @@
+-config BR2_PACKAGE_PYTHON_BACKCALL
+-	bool "python-backcall"
+-	help
+-	  Specifications for callback functions passed in to an API.
+-
+-	  https://github.com/takluyver/backcall
+diff --git a/package/python-backcall/python-backcall.hash b/package/python-backcall/python-backcall.hash
+deleted file mode 100644
+index 063b4bed..00000000
+--- a/package/python-backcall/python-backcall.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/backcall/json
+-md5  1f4c9a370c78743406296f48e56e8821  backcall-0.2.0.tar.gz
+-sha256  5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e  backcall-0.2.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  d422f8ce77312733c07f5fec8ccbe61d58d539774f7a66f37e4bc54740d86020  LICENSE
+diff --git a/package/python-backcall/python-backcall.mk b/package/python-backcall/python-backcall.mk
+deleted file mode 100644
+index 2ead3421..00000000
+--- a/package/python-backcall/python-backcall.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-backcall
+-#
+-################################################################################
+-
+-PYTHON_BACKCALL_VERSION = 0.2.0
+-PYTHON_BACKCALL_SOURCE = backcall-$(PYTHON_BACKCALL_VERSION).tar.gz
+-PYTHON_BACKCALL_SITE = https://files.pythonhosted.org/packages/a2/40/764a663805d84deee23043e1426a9175567db89c8b3287b5c2ad9f71aa93
+-PYTHON_BACKCALL_SETUP_TYPE = distutils
+-PYTHON_BACKCALL_LICENSE = BSD-3-Clause
+-PYTHON_BACKCALL_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

@@ -1,0 +1,74 @@
+From aafe6c1d3553912422aaf3aed6535b9d2f79cbfb Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Wed, 29 Oct 2025 20:33:13 +0000
+Subject: [PATCH 25/38] remove python-wcwidth for override
+
+---
+ package/Config.in                          |  1 -
+ package/python-wcwidth/Config.in           |  7 -------
+ package/python-wcwidth/python-wcwidth.hash |  5 -----
+ package/python-wcwidth/python-wcwidth.mk   | 14 --------------
+ 4 files changed, 27 deletions(-)
+ delete mode 100644 package/python-wcwidth/Config.in
+ delete mode 100644 package/python-wcwidth/python-wcwidth.hash
+ delete mode 100644 package/python-wcwidth/python-wcwidth.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index e29f1432..85aa4273 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1329,7 +1329,6 @@ menu "External python modules"
+ 	source "package/python-versiontools/Config.in"
+ 	source "package/python-visitor/Config.in"
+ 	source "package/python-watchdog/Config.in"
+-	source "package/python-wcwidth/Config.in"
+ 	source "package/python-weasyprint/Config.in"
+ 	source "package/python-web2py/Config.in"
+ 	source "package/python-webargs/Config.in"
+diff --git a/package/python-wcwidth/Config.in b/package/python-wcwidth/Config.in
+deleted file mode 100644
+index c5cc0223..00000000
+--- a/package/python-wcwidth/Config.in
++++ /dev/null
+@@ -1,7 +0,0 @@
+-config BR2_PACKAGE_PYTHON_WCWIDTH
+-	bool "python-wcwidth"
+-	help
+-	  This library measures number of Terminal column cells of
+-	  wide-character codes.
+-
+-	  https://github.com/jquast/wcwidth
+diff --git a/package/python-wcwidth/python-wcwidth.hash b/package/python-wcwidth/python-wcwidth.hash
+deleted file mode 100644
+index 216182c2..00000000
+--- a/package/python-wcwidth/python-wcwidth.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/wcwidth/json
+-md5  a07a75f99d316e14838ac760c831ea37  wcwidth-0.2.5.tar.gz
+-sha256  c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83  wcwidth-0.2.5.tar.gz
+-# Locally computed sha256 checksums
+-sha256  70b98a95a2144eb70af8017fa8c6d95ce247e40867436e8bc649e137fe13d21a  LICENSE
+diff --git a/package/python-wcwidth/python-wcwidth.mk b/package/python-wcwidth/python-wcwidth.mk
+deleted file mode 100644
+index a170a8e3..00000000
+--- a/package/python-wcwidth/python-wcwidth.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-wcwidth
+-#
+-################################################################################
+-
+-PYTHON_WCWIDTH_VERSION = 0.2.5
+-PYTHON_WCWIDTH_SOURCE = wcwidth-$(PYTHON_WCWIDTH_VERSION).tar.gz
+-PYTHON_WCWIDTH_SITE = https://files.pythonhosted.org/packages/89/38/459b727c381504f361832b9e5ace19966de1a235d73cdbdea91c771a1155
+-PYTHON_WCWIDTH_SETUP_TYPE = setuptools
+-PYTHON_WCWIDTH_LICENSE = MIT
+-PYTHON_WCWIDTH_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

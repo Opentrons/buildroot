@@ -1,0 +1,49 @@
+From 4a253e7a85619973ca2b779cc4a87e97e61adadd Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Thu, 30 Oct 2025 17:10:28 +0000
+Subject: [PATCH 36/38] remove python-hatch-vcs for override
+
+---
+ package/python-hatch-vcs/python-hatch-vcs.hash |  5 -----
+ package/python-hatch-vcs/python-hatch-vcs.mk   | 17 -----------------
+ 2 files changed, 22 deletions(-)
+ delete mode 100644 package/python-hatch-vcs/python-hatch-vcs.hash
+ delete mode 100644 package/python-hatch-vcs/python-hatch-vcs.mk
+
+diff --git a/package/python-hatch-vcs/python-hatch-vcs.hash b/package/python-hatch-vcs/python-hatch-vcs.hash
+deleted file mode 100644
+index 6e5fe1de..00000000
+--- a/package/python-hatch-vcs/python-hatch-vcs.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/hatch_vcs/json
+-md5  c2f2cbe6851b7b2969cb4aa24c4b9b2f  hatch_vcs-0.3.0.tar.gz
+-sha256  cec5107cfce482c67f8bc96f18bbc320c9aa0d068180e14ad317bbee5a153fee  hatch_vcs-0.3.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  117aa5006d8475562f04442ab06dd2a4c501af3a77255eae0deef1f0c2499a1a  LICENSE.txt
+diff --git a/package/python-hatch-vcs/python-hatch-vcs.mk b/package/python-hatch-vcs/python-hatch-vcs.mk
+deleted file mode 100644
+index ef5f6541..00000000
+--- a/package/python-hatch-vcs/python-hatch-vcs.mk
++++ /dev/null
+@@ -1,17 +0,0 @@
+-################################################################################
+-#
+-# python-hatch-vcs
+-#
+-################################################################################
+-
+-PYTHON_HATCH_VCS_VERSION = 0.3.0
+-PYTHON_HATCH_VCS_SOURCE = hatch_vcs-$(PYTHON_HATCH_VCS_VERSION).tar.gz
+-PYTHON_HATCH_VCS_SITE = https://files.pythonhosted.org/packages/04/33/b68d68e532392d938472d16a03e4ce0ccd749ea31b42d18f8baa6547cbfd
+-PYTHON_HATCH_VCS_LICENSE = MIT
+-PYTHON_HATCH_VCS_LICENSE_FILES = LICENSE.txt
+-PYTHON_HATCH_VCS_SETUP_TYPE = pep517
+-HOST_PYTHON_HATCH_VCS_DEPENDENCIES = \
+-	host-python-hatchling \
+-	host-python-setuptools-scm
+-
+-$(eval $(host-python-package))
+-- 
+2.43.0
+

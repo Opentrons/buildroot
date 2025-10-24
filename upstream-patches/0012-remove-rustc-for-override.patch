@@ -1,7 +1,7 @@
-From e586543cde230d101ba875c510e0dd96863dd9ff Mon Sep 17 00:00:00 2001
+From 34aa6b405af5dc9718e4a572e2ebf31f9d6368f3 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Mon, 27 Oct 2025 18:03:38 +0000
-Subject: [PATCH 12/12] remove rustc for override
+Subject: [PATCH 12/38] remove rustc for override
 
 ---
  package/Config.in.host       |   1 -

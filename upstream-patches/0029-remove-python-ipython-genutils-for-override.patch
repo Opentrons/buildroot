@@ -1,0 +1,73 @@
+From 0b0dca1307669a30a4c8ef41ef04a48342a18de8 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Wed, 29 Oct 2025 20:45:21 +0000
+Subject: [PATCH 29/38] remove python-ipython-genutils for override
+
+---
+ package/Config.in                                  |  1 -
+ package/python-ipython-genutils/Config.in          |  6 ------
+ .../python-ipython-genutils.hash                   |  5 -----
+ .../python-ipython-genutils.mk                     | 14 --------------
+ 4 files changed, 26 deletions(-)
+ delete mode 100644 package/python-ipython-genutils/Config.in
+ delete mode 100644 package/python-ipython-genutils/python-ipython-genutils.hash
+ delete mode 100644 package/python-ipython-genutils/python-ipython-genutils.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index d1139def..9a61fd2c 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1094,7 +1094,6 @@ menu "External python modules"
+ 	source "package/python-ipdb/Config.in"
+ 	source "package/python-iptables/Config.in"
+ 	source "package/python-ipy/Config.in"
+-	source "package/python-ipython-genutils/Config.in"
+ 	source "package/python-iso8601/Config.in"
+ 	source "package/python-itsdangerous/Config.in"
+ 	source "package/python-iwlib/Config.in"
+diff --git a/package/python-ipython-genutils/Config.in b/package/python-ipython-genutils/Config.in
+deleted file mode 100644
+index d49442ee..00000000
+--- a/package/python-ipython-genutils/Config.in
++++ /dev/null
+@@ -1,6 +0,0 @@
+-config BR2_PACKAGE_PYTHON_IPYTHON_GENUTILS
+-	bool "python-ipython-genutils"
+-	help
+-	  IPython vestigial utilities
+-
+-	  https://pypi.python.org/pypi/ipython_genutils
+diff --git a/package/python-ipython-genutils/python-ipython-genutils.hash b/package/python-ipython-genutils/python-ipython-genutils.hash
+deleted file mode 100644
+index fd719c93..00000000
+--- a/package/python-ipython-genutils/python-ipython-genutils.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5 from https://pypi.python.org/pypi/ipython_genutils/json
+-md5  5a4f9781f78466da0ea1a648f3e1f79f  ipython_genutils-0.2.0.tar.gz
+-# Locally computed
+-sha256  eb2e116e75ecef9d4d228fdc66af54269afa26ab4463042e33785b887c628ba8  ipython_genutils-0.2.0.tar.gz
+-sha256  f09da6c0f4971485f6fbd6c630d0d6cdd012bfe128b2ebbd014de2f6c7c7e2a6  COPYING.md
+diff --git a/package/python-ipython-genutils/python-ipython-genutils.mk b/package/python-ipython-genutils/python-ipython-genutils.mk
+deleted file mode 100644
+index 4e8cc287..00000000
+--- a/package/python-ipython-genutils/python-ipython-genutils.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-ipython-genutils
+-#
+-################################################################################
+-
+-PYTHON_IPYTHON_GENUTILS_VERSION = 0.2.0
+-PYTHON_IPYTHON_GENUTILS_SOURCE = ipython_genutils-$(PYTHON_IPYTHON_GENUTILS_VERSION).tar.gz
+-PYTHON_IPYTHON_GENUTILS_SITE = https://pypi.python.org/packages/e8/69/fbeffffc05236398ebfcfb512b6d2511c622871dca1746361006da310399
+-PYTHON_IPYTHON_GENUTILS_LICENSE = BSD-3-Clause
+-PYTHON_IPYTHON_GENUTILS_LICENSE_FILES = COPYING.md
+-PYTHON_IPYTHON_GENUTILS_SETUP_TYPE = distutils
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

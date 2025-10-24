@@ -1,7 +1,7 @@
-From af65997b91623d510abdfd93dc86e8d222c48963 Mon Sep 17 00:00:00 2001
+From c73824b9f25b93cf166c8a7be14ff443fb68615b Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Mon, 27 Oct 2025 17:48:45 +0000
-Subject: [PATCH 08/12] remove python-sqlalchemy for override
+Subject: [PATCH 08/38] remove python-sqlalchemy for override
 
 ---
  package/Config.in                                |  1 -

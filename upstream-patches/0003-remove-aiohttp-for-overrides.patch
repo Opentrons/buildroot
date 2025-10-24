@@ -1,7 +1,7 @@
-From ed673c32764e1af2dfee70e337ade589469570d6 Mon Sep 17 00:00:00 2001
+From 6c6ef9e196afd13fc699578c9559bf58b1b82819 Mon Sep 17 00:00:00 2001
 From: Seth Foster <seth@opentrons.com>
 Date: Mon, 27 Oct 2025 16:40:53 +0000
-Subject: [PATCH 03/12] remove aiohttp for overrides
+Subject: [PATCH 03/38] remove aiohttp for overrides
 
 ---
  package/Config.in                          |  1 -

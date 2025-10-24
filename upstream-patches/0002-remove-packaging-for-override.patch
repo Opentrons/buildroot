@@ -1,7 +1,7 @@
-From fee7dd5df5c6724eceede8dbd31d1881c4fd7397 Mon Sep 17 00:00:00 2001
+From a1e081c4dee4b6b12f15dc7f02980090961eeadb Mon Sep 17 00:00:00 2001
 From: Seth Foster <seth@opentrons.com>
 Date: Mon, 27 Oct 2025 15:18:03 +0000
-Subject: [PATCH 02/12] remove packaging for override
+Subject: [PATCH 02/38] remove packaging for override
 
 ---
  package/Config.in                              |  1 -

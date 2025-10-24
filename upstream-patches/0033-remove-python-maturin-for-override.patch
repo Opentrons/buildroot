@@ -1,0 +1,56 @@
+From bffe52213c66148eb7f7fff5113599325445012c Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Thu, 30 Oct 2025 13:47:16 +0000
+Subject: [PATCH 33/38] remove python-maturin for override
+
+---
+ package/python-maturin/python-maturin.hash |  5 -----
+ package/python-maturin/python-maturin.mk   | 24 ----------------------
+ 2 files changed, 29 deletions(-)
+ delete mode 100644 package/python-maturin/python-maturin.hash
+ delete mode 100644 package/python-maturin/python-maturin.mk
+
+diff --git a/package/python-maturin/python-maturin.hash b/package/python-maturin/python-maturin.hash
+deleted file mode 100644
+index b104b1fb..00000000
+--- a/package/python-maturin/python-maturin.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# Locally calculated after vendoring
+-sha256  59157a06c0a482aec750d64746f2b23e556ce3ec62d9cdce74fcb7b4658b722b  maturin-0.14.9.tar.gz
+-# Locally computed sha256 checksums
+-sha256  a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2  license-apache
+-sha256  ea7882c559733766ad08343bde1d1ec80a4967c03a738fb8e0058ef6289f7b7c  license-mit
+diff --git a/package/python-maturin/python-maturin.mk b/package/python-maturin/python-maturin.mk
+deleted file mode 100644
+index 3484e09d..00000000
+--- a/package/python-maturin/python-maturin.mk
++++ /dev/null
+@@ -1,24 +0,0 @@
+-################################################################################
+-#
+-# python-maturin
+-#
+-################################################################################
+-
+-PYTHON_MATURIN_VERSION = 0.14.9
+-PYTHON_MATURIN_SOURCE = maturin-$(PYTHON_MATURIN_VERSION).tar.gz
+-PYTHON_MATURIN_SITE = https://files.pythonhosted.org/packages/90/f9/f4242c0e8bc5def9a7135c12574449dbb411ecc595cf72202ca97a79c2ad
+-PYTHON_MATURIN_SETUP_TYPE = setuptools
+-PYTHON_MATURIN_LICENSE = Apache-2.0 or MIT
+-PYTHON_MATURIN_LICENSE_FILES = license-apache license-mit
+-HOST_PYTHON_MATURIN_DEPENDENCIES = \
+-	host-python-setuptools-rust \
+-	host-rustc
+-HOST_PYTHON_MATURIN_ENV = \
+-	$(HOST_PKG_CARGO_ENV) \
+-	PYO3_CROSS_LIB_DIR="$(HOST_DIR)/lib/python$(PYTHON3_VERSION_MAJOR)"
+-# We need to vendor the Cargo crates at download time
+-PYTHON_MATURIN_DOWNLOAD_POST_PROCESS = cargo
+-PYTHON_MATURIN_DOWNLOAD_DEPENDENCIES = host-rustc
+-HOST_PYTHON_MATURIN_DL_ENV = $(HOST_PKG_CARGO_ENV)
+-
+-$(eval $(host-python-package))
+-- 
+2.43.0
+
