@@ -87,6 +87,10 @@ jobs:
           fetch-depth: 0
           ref: ${{needs.decide-refs.outputs.buildroot}}
           path: ./buildroot
+      - name: Fetch upstream buildroot
+        run: |
+          cd ./buildroot
+          ./checkout-buildroot.sh
       - name: Fetch monorepo source
         uses: 'actions/checkout@v3'
         with:
