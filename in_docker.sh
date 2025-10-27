@@ -7,7 +7,7 @@ set -o pipefail
 set -e
 set -v
 
-filtered_build_log="/buildroot/buildlog.txt"
+filtered_build_log="/buildroot-overlays/buildlog.txt"
 
 git config --global --add safe.directory /opentrons
 git config --global --add safe.directory /buildroot
