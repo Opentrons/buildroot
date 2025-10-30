@@ -1,0 +1,77 @@
+From fee7dd5df5c6724eceede8dbd31d1881c4fd7397 Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Mon, 27 Oct 2025 15:18:03 +0000
+Subject: [PATCH 02/12] remove packaging for override
+
+---
+ package/Config.in                              |  1 -
+ package/python-packaging/Config.in             |  6 ------
+ package/python-packaging/python-packaging.hash |  7 -------
+ package/python-packaging/python-packaging.mk   | 16 ----------------
+ 4 files changed, 30 deletions(-)
+ delete mode 100644 package/python-packaging/Config.in
+ delete mode 100644 package/python-packaging/python-packaging.hash
+ delete mode 100644 package/python-packaging/python-packaging.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 7b1cbaf1..4ee432c5 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1162,7 +1162,6 @@ menu "External python modules"
+ 	source "package/python-opcua-asyncio/Config.in"
+ 	source "package/python-orjson/Config.in"
+ 	source "package/python-outcome/Config.in"
+-	source "package/python-packaging/Config.in"
+ 	source "package/python-paho-mqtt/Config.in"
+ 	source "package/python-paramiko/Config.in"
+ 	source "package/python-parso/Config.in"
+diff --git a/package/python-packaging/Config.in b/package/python-packaging/Config.in
+deleted file mode 100644
+index c09dfffe..00000000
+--- a/package/python-packaging/Config.in
++++ /dev/null
+@@ -1,6 +0,0 @@
+-config BR2_PACKAGE_PYTHON_PACKAGING
+-	bool "python-packaging"
+-	help
+-	  Core utilities for Python packages.
+-
+-	  https://github.com/pypa/packaging
+diff --git a/package/python-packaging/python-packaging.hash b/package/python-packaging/python-packaging.hash
+deleted file mode 100644
+index e10c1190..00000000
+--- a/package/python-packaging/python-packaging.hash
++++ /dev/null
+@@ -1,7 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/packaging/json
+-md5  806414ea4c6f17b029a7911b622062e8  packaging-22.0.tar.gz
+-sha256  2198ec20bd4c017b8f9717e00f0c8714076fc2fd93816750ab48e2c41de2cfd3  packaging-22.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48  LICENSE
+-sha256  0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594  LICENSE.APACHE
+-sha256  b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5  LICENSE.BSD
+diff --git a/package/python-packaging/python-packaging.mk b/package/python-packaging/python-packaging.mk
+deleted file mode 100644
+index c9190ccf..00000000
+--- a/package/python-packaging/python-packaging.mk
++++ /dev/null
+@@ -1,16 +0,0 @@
+-################################################################################
+-#
+-# python-packaging
+-#
+-################################################################################
+-
+-PYTHON_PACKAGING_VERSION = 22.0
+-PYTHON_PACKAGING_SOURCE = packaging-$(PYTHON_PACKAGING_VERSION).tar.gz
+-PYTHON_PACKAGING_SITE = https://files.pythonhosted.org/packages/6b/f7/c240d7654ddd2d2f3f328d8468d4f1f876865f6b9038b146bec0a6737c65
+-PYTHON_PACKAGING_SETUP_TYPE = flit
+-PYTHON_PACKAGING_LICENSE = Apache-2.0 or BSD-2-Clause
+-PYTHON_PACKAGING_LICENSE_FILES = LICENSE LICENSE.APACHE LICENSE.BSD
+-HOST_PYTHON_PACKAGING_SETUP_TYPE = flit-bootstrap
+-
+-$(eval $(python-package))
+-$(eval $(host-python-package))
+-- 
+2.43.0
+

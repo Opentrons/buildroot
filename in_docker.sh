@@ -12,6 +12,23 @@ filtered_build_log="/buildroot/buildlog.txt"
 git config --global --add safe.directory /opentrons
 git config --global --add safe.directory /buildroot
 git config --global --add safe.directory /buildroot-overlays
+git config --global user.email "engineering@opentrons.com"
+git config --global user.name "Opentrons CI"
+
+_previous_upstream_ref=$(git -C /buildroot rev-parse HEAD )
+
+function do_unpatch {
+    echo "git -C /buildroot reset --hard $_previous_upstream_ref"
+    git -C /buildroot reset --hard $_previous_upstream_ref
+}
+
+function do_patch {
+    echo "git -C /buildroot am $* /buildroot-overlays/upstream-patches/*.patch"
+    git -C /buildroot am $* /buildroot-overlays/upstream-patches/*.patch
+}
+
+trap do_unpatch EXIT
+do_patch
 
 
 if [[ -n "${FILTER}" ]]; then

@@ -1,0 +1,75 @@
+From 37a6defc37c2e09d35eade1199e428c8e471d074 Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Mon, 27 Oct 2025 17:42:29 +0000
+Subject: [PATCH 06/12] remove python-pydantic for override
+
+---
+ package/Config.in                            |  1 -
+ package/python-pydantic/Config.in            |  8 --------
+ package/python-pydantic/python-pydantic.hash |  5 -----
+ package/python-pydantic/python-pydantic.mk   | 14 --------------
+ 4 files changed, 28 deletions(-)
+ delete mode 100644 package/python-pydantic/Config.in
+ delete mode 100644 package/python-pydantic/python-pydantic.hash
+ delete mode 100644 package/python-pydantic/python-pydantic.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 47227ad4..8695bfde 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1198,7 +1198,6 @@ menu "External python modules"
+ 	source "package/python-pycryptodomex/Config.in"
+ 	source "package/python-pycups/Config.in"
+ 	source "package/python-pydal/Config.in"
+-	source "package/python-pydantic/Config.in"
+ 	source "package/python-pydevmem/Config.in"
+ 	source "package/python-pydyf/Config.in"
+ 	source "package/python-pyelftools/Config.in"
+diff --git a/package/python-pydantic/Config.in b/package/python-pydantic/Config.in
+deleted file mode 100644
+index 41ec43ad..00000000
+--- a/package/python-pydantic/Config.in
++++ /dev/null
+@@ -1,8 +0,0 @@
+-config BR2_PACKAGE_PYTHON_PYDANTIC
+-	bool "python-pydantic"
+-	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
+-	help
+-	  Data validation and settings management using python 3.6
+-	  type hinting.
+-
+-	  https://github.com/samuelcolvin/pydantic
+diff --git a/package/python-pydantic/python-pydantic.hash b/package/python-pydantic/python-pydantic.hash
+deleted file mode 100644
+index e73a3099..00000000
+--- a/package/python-pydantic/python-pydantic.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/pydantic/json
+-md5  2e036b5f993b93dd83f6a7009252ae78  pydantic-1.10.4.tar.gz
+-sha256  b9a3859f24eb4e097502a3be1fb4b2abb79b6103dd9e2e0edb70613a4459a648  pydantic-1.10.4.tar.gz
+-# Locally computed sha256 checksums
+-sha256  9e3946690ac88b6b73e8f001a0586af13568be8852fd514e4393f39761764387  LICENSE
+diff --git a/package/python-pydantic/python-pydantic.mk b/package/python-pydantic/python-pydantic.mk
+deleted file mode 100644
+index a1a4dc9b..00000000
+--- a/package/python-pydantic/python-pydantic.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-pydantic
+-#
+-################################################################################
+-
+-PYTHON_PYDANTIC_VERSION = 1.10.4
+-PYTHON_PYDANTIC_SOURCE = pydantic-$(PYTHON_PYDANTIC_VERSION).tar.gz
+-PYTHON_PYDANTIC_SITE = https://files.pythonhosted.org/packages/53/17/34e54e352f6a3d304044e52d5ddd5cd621a62ec8fb7af08cc73af65dd3e1
+-PYTHON_PYDANTIC_SETUP_TYPE = setuptools
+-PYTHON_PYDANTIC_LICENSE = MIT
+-PYTHON_PYDANTIC_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+
