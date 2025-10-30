@@ -1,0 +1,75 @@
+From 64e7c0c29c7ea556777e39607e4989b527e49c37 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Mon, 27 Oct 2025 18:01:25 +0000
+Subject: [PATCH 11/12] remove python-yarl for override
+
+---
+ package/Config.in                    |  1 -
+ package/python-yarl/Config.in        |  8 --------
+ package/python-yarl/python-yarl.hash |  5 -----
+ package/python-yarl/python-yarl.mk   | 14 --------------
+ 4 files changed, 28 deletions(-)
+ delete mode 100644 package/python-yarl/Config.in
+ delete mode 100644 package/python-yarl/python-yarl.hash
+ delete mode 100644 package/python-yarl/python-yarl.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 8e3c0bb8..6e60a428 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1361,7 +1361,6 @@ menu "External python modules"
+ 	source "package/python-xmljson/Config.in"
+ 	source "package/python-xmltodict/Config.in"
+ 	source "package/python-xmodem/Config.in"
+-	source "package/python-yarl/Config.in"
+ 	source "package/python-yatl/Config.in"
+ 	source "package/python-zc-lockfile/Config.in"
+ 	source "package/python-zeroconf/Config.in"
+diff --git a/package/python-yarl/Config.in b/package/python-yarl/Config.in
+deleted file mode 100644
+index 84e14ce9..00000000
+--- a/package/python-yarl/Config.in
++++ /dev/null
+@@ -1,8 +0,0 @@
+-config BR2_PACKAGE_PYTHON_YARL
+-	bool "python-yarl"
+-	select BR2_PACKAGE_PYTHON_MULTIDICT
+-	select BR2_PACKAGE_PYTHON_IDNA
+-	help
+-	  Yet another URL library.
+-
+-	  http://yarl.readthedocs.io/
+diff --git a/package/python-yarl/python-yarl.hash b/package/python-yarl/python-yarl.hash
+deleted file mode 100644
+index 9725e005..00000000
+--- a/package/python-yarl/python-yarl.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/yarl/json
+-md5  57c82725b9f4895eecee45faf5e61a54  yarl-1.8.2.tar.gz
+-sha256  49d43402c6e3013ad0978602bf6bf5328535c48d192304b91b97a3c6790b1562  yarl-1.8.2.tar.gz
+-# Locally computed sha256 checksums
+-sha256  56d6ac6c8105c0a51304c21db060e361af9a8ea0af9a75c239c28b5d13693838  LICENSE
+diff --git a/package/python-yarl/python-yarl.mk b/package/python-yarl/python-yarl.mk
+deleted file mode 100644
+index 77e0c913..00000000
+--- a/package/python-yarl/python-yarl.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-yarl
+-#
+-################################################################################
+-
+-PYTHON_YARL_VERSION = 1.8.2
+-PYTHON_YARL_SOURCE = yarl-$(PYTHON_YARL_VERSION).tar.gz
+-PYTHON_YARL_SITE = https://files.pythonhosted.org/packages/c4/1e/1b204050c601d5cd82b45d5c8f439cb6f744a2ce0c0a6f83be0ddf0dc7b2
+-PYTHON_YARL_LICENSE = Apache-2.0
+-PYTHON_YARL_LICENSE_FILES = LICENSE
+-PYTHON_YARL_SETUP_TYPE = setuptools
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

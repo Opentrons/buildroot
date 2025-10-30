@@ -1,0 +1,75 @@
+From d4891381207f92b066946f6a994458dc1e31642b Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Mon, 27 Oct 2025 17:08:37 +0000
+Subject: [PATCH 04/12] remove python-attrs for override
+
+---
+ package/Config.in                      |  1 -
+ package/python-attrs/Config.in         |  8 --------
+ package/python-attrs/python-attrs.hash |  5 -----
+ package/python-attrs/python-attrs.mk   | 14 --------------
+ 4 files changed, 28 deletions(-)
+ delete mode 100644 package/python-attrs/Config.in
+ delete mode 100644 package/python-attrs/python-attrs.hash
+ delete mode 100644 package/python-attrs/python-attrs.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 7645a3c1..772cb9e4 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -969,7 +969,6 @@ menu "External python modules"
+ 	source "package/python-async-generator/Config.in"
+ 	source "package/python-async-lru/Config.in"
+ 	source "package/python-async-timeout/Config.in"
+-	source "package/python-attrs/Config.in"
+ 	source "package/python-augeas/Config.in"
+ 	source "package/python-autobahn/Config.in"
+ 	source "package/python-automat/Config.in"
+diff --git a/package/python-attrs/Config.in b/package/python-attrs/Config.in
+deleted file mode 100644
+index fb0ab248..00000000
+--- a/package/python-attrs/Config.in
++++ /dev/null
+@@ -1,8 +0,0 @@
+-config BR2_PACKAGE_PYTHON_ATTRS
+-	bool "python-attrs"
+-	help
+-	  attrs is the Python package that will bring back the joy of
+-	  writing classes by relieving you from the drudgery of
+-	  implementing object protocols (aka dunder methods).
+-
+-	  https://attrs.readthedocs.io/
+diff --git a/package/python-attrs/python-attrs.hash b/package/python-attrs/python-attrs.hash
+deleted file mode 100644
+index 66b2082c..00000000
+--- a/package/python-attrs/python-attrs.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/attrs/json
+-md5  eff16b3bbd0d9b72e118cca83a19d380  attrs-22.2.0.tar.gz
+-sha256  c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99  attrs-22.2.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  882115c95dfc2af1eeb6714f8ec6d5cbcabf667caff8729f42420da63f714e9f  LICENSE
+diff --git a/package/python-attrs/python-attrs.mk b/package/python-attrs/python-attrs.mk
+deleted file mode 100644
+index 0462f7cb..00000000
+--- a/package/python-attrs/python-attrs.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-attrs
+-#
+-################################################################################
+-
+-PYTHON_ATTRS_VERSION = 22.2.0
+-PYTHON_ATTRS_SOURCE = attrs-$(PYTHON_ATTRS_VERSION).tar.gz
+-PYTHON_ATTRS_SITE = https://files.pythonhosted.org/packages/21/31/3f468da74c7de4fcf9b25591e682856389b3400b4b62f201e65f15ea3e07
+-PYTHON_ATTRS_SETUP_TYPE = setuptools
+-PYTHON_ATTRS_LICENSE = MIT
+-PYTHON_ATTRS_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

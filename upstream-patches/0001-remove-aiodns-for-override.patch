@@ -1,0 +1,74 @@
+From a233a838a61b2f600540b40e22fb4e464f7a621a Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Mon, 27 Oct 2025 15:16:46 +0000
+Subject: [PATCH 01/12] remove aiodns for override
+
+---
+ package/Config.in                        |  1 -
+ package/python-aiodns/Config.in          |  7 -------
+ package/python-aiodns/python-aiodns.hash |  5 -----
+ package/python-aiodns/python-aiodns.mk   | 14 --------------
+ 4 files changed, 27 deletions(-)
+ delete mode 100644 package/python-aiodns/Config.in
+ delete mode 100644 package/python-aiodns/python-aiodns.hash
+ delete mode 100644 package/python-aiodns/python-aiodns.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index e9e8d93d..7b1cbaf1 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -937,7 +937,6 @@ menu "External python modules"
+ 	source "package/python-aioblescan/Config.in"
+ 	source "package/python-aiocoap/Config.in"
+ 	source "package/python-aioconsole/Config.in"
+-	source "package/python-aiodns/Config.in"
+ 	source "package/python-aiofiles/Config.in"
+ 	source "package/python-aiohttp/Config.in"
+ 	source "package/python-aiohttp-cors/Config.in"
+diff --git a/package/python-aiodns/Config.in b/package/python-aiodns/Config.in
+deleted file mode 100644
+index 63c24293..00000000
+--- a/package/python-aiodns/Config.in
++++ /dev/null
+@@ -1,7 +0,0 @@
+-config BR2_PACKAGE_PYTHON_AIODNS
+-	bool "python-aiodns"
+-	select BR2_PACKAGE_PYTHON_PYCARES # runtime
+-	help
+-	  Simple DNS resolver for asyncio.
+-
+-	  http://github.com/saghul/aiodns
+diff --git a/package/python-aiodns/python-aiodns.hash b/package/python-aiodns/python-aiodns.hash
+deleted file mode 100644
+index 2cdedc6f..00000000
+--- a/package/python-aiodns/python-aiodns.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/aiodns/json
+-md5  181e11935c78965de2b2b7b0e5efba8d  aiodns-3.0.0.tar.gz
+-sha256  946bdfabe743fceeeb093c8a010f5d1645f708a241be849e17edfb0e49e08cd6  aiodns-3.0.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  eb0455d35129425ed399883cd710923de3e246a510e2eb84d9f00032d0bbec97  LICENSE
+diff --git a/package/python-aiodns/python-aiodns.mk b/package/python-aiodns/python-aiodns.mk
+deleted file mode 100644
+index 2318dcab..00000000
+--- a/package/python-aiodns/python-aiodns.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-aiodns
+-#
+-################################################################################
+-
+-PYTHON_AIODNS_VERSION = 3.0.0
+-PYTHON_AIODNS_SOURCE = aiodns-$(PYTHON_AIODNS_VERSION).tar.gz
+-PYTHON_AIODNS_SITE = https://files.pythonhosted.org/packages/27/79/df72e25df0fdd9bf5a5ab068539731d27c5f2ae5654621ae0c92ceca94cf
+-PYTHON_AIODNS_SETUP_TYPE = setuptools
+-PYTHON_AIODNS_LICENSE = MIT
+-PYTHON_AIODNS_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

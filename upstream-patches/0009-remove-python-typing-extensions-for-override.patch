@@ -1,0 +1,74 @@
+From e996695e9ac60195abd1fe7c717856d0da0b68be Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Mon, 27 Oct 2025 17:50:50 +0000
+Subject: [PATCH 09/12] remove python-typing-extensions for override
+
+---
+ package/Config.in                                 |  1 -
+ package/python-typing-extensions/Config.in        |  6 ------
+ .../python-typing-extensions.hash                 |  5 -----
+ .../python-typing-extensions.mk                   | 15 ---------------
+ 4 files changed, 27 deletions(-)
+ delete mode 100644 package/python-typing-extensions/Config.in
+ delete mode 100644 package/python-typing-extensions/python-typing-extensions.hash
+ delete mode 100644 package/python-typing-extensions/python-typing-extensions.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 0a7c93e1..eddefed6 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1325,7 +1325,6 @@ menu "External python modules"
+ 	source "package/python-txtorcon/Config.in"
+ 	source "package/python-typeguard/Config.in"
+ 	source "package/python-typepy/Config.in"
+-	source "package/python-typing-extensions/Config.in"
+ 	source "package/python-typing-inspect/Config.in"
+ 	source "package/python-u-msgpack/Config.in"
+ 	source "package/python-ubjson/Config.in"
+diff --git a/package/python-typing-extensions/Config.in b/package/python-typing-extensions/Config.in
+deleted file mode 100644
+index b5969328..00000000
+--- a/package/python-typing-extensions/Config.in
++++ /dev/null
+@@ -1,6 +0,0 @@
+-config BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS
+-	bool "python-typing-extensions"
+-	help
+-	  Backported and Experimental Type Hints for Python 3.5+.
+-
+-	  https://github.com/python/typing/blob/master/typing_extensions/README.rst
+diff --git a/package/python-typing-extensions/python-typing-extensions.hash b/package/python-typing-extensions/python-typing-extensions.hash
+deleted file mode 100644
+index 249bb63a..00000000
+--- a/package/python-typing-extensions/python-typing-extensions.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/typing_extensions/json
+-md5  5cfcb56ea6fc4972c3600c0030f4d136  typing_extensions-4.4.0.tar.gz
+-sha256  1511434bb92bf8dd198c12b1cc812e800d4181cfcb867674e0f8279cc93087aa  typing_extensions-4.4.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  c7afb65e755707b9fb90487389a176d3ed3d0031d5131afde45c23715ff5e891  LICENSE
+diff --git a/package/python-typing-extensions/python-typing-extensions.mk b/package/python-typing-extensions/python-typing-extensions.mk
+deleted file mode 100644
+index fd7d0bd9..00000000
+--- a/package/python-typing-extensions/python-typing-extensions.mk
++++ /dev/null
+@@ -1,15 +0,0 @@
+-################################################################################
+-#
+-# python-typing-extensions
+-#
+-################################################################################
+-
+-PYTHON_TYPING_EXTENSIONS_VERSION = 4.4.0
+-PYTHON_TYPING_EXTENSIONS_SOURCE = typing_extensions-$(PYTHON_TYPING_EXTENSIONS_VERSION).tar.gz
+-PYTHON_TYPING_EXTENSIONS_SITE = https://files.pythonhosted.org/packages/e3/a7/8f4e456ef0adac43f452efc2d0e4b242ab831297f1bac60ac815d37eb9cf
+-PYTHON_TYPING_EXTENSIONS_SETUP_TYPE = flit
+-PYTHON_TYPING_EXTENSIONS_LICENSE = Python-2.0
+-PYTHON_TYPING_EXTENSIONS_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-$(eval $(host-python-package))
+-- 
+2.43.0
+
