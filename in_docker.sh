@@ -15,11 +15,9 @@ git config --global --add safe.directory /buildroot-overlays
 git config --global user.email "engineering@opentrons.com"
 git config --global user.name "Opentrons CI"
 
-_previous_upstream_ref=$(git -C /buildroot rev-parse HEAD )
-
 function do_unpatch {
-    echo "git -C /buildroot reset --hard $_previous_upstream_ref"
-    git -C /buildroot reset --hard $_previous_upstream_ref
+    echo "git -C /buildroot reset --hard $(cat /buildroot-overlays/buildroot-upstream-ref)"
+    git -C /buildroot reset --hard $(cat /buildroot-overlays/buildroot-upstream-ref)
 }
 
 function do_patch {

@@ -18,7 +18,7 @@ This repository is a buildroot external tree containing board configuration file
 
 We wrap the Buildroot build system in a [Docker][] container to manage dependencies and make it slightly more portable. Due to case-sensitive filenames and other concerns, the build must be run on Linux.
 
-This fork requires the [opentrons repo](https://github.com/Opentrons/opentrons) to be checked out next to it, since it uses a Buildroot external tree to build in our dependencies. Since this repo itself is also a Buildroot external tree, we need actual buildroot cloned next to it in a directory called `buildroot-upstream` (this can be overridden).
+This fork requires the [opentrons repo](https://github.com/Opentrons/opentrons) to be checked out next to it, since it uses a Buildroot external tree to build in our dependencies. Since this repo itself is also a Buildroot external tree, we need actual buildroot cloned next to it in a directory called `buildroot-upstream` (this can be overridden). The version of buildroot that is used in this repo is in `buildroot-upstream-ref`.
 
 [docker]: https://www.docker.com/
 
@@ -50,7 +50,8 @@ cd buildroot
 ./checkout-buildroot.sh
 ```
 
-The last one is a little complex, and also might change when we update buildroot
+The checkout-buildroot script reads `./buildroot-up
+stream-ref` and pulls the repo at https://github.com/buildroot/buildroot to that ref.
 
 ### Build
 
