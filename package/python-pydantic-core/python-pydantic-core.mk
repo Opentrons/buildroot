@@ -11,6 +11,6 @@ PYTHON_PYDANTIC_CORE_SITE = $(PYTHON_PYDANTIC_CORE_SITE_PYPI)/$(PYTHON_PYDANTIC_
 PYTHON_PYDANTIC_CORE_SETUP_TYPE = maturin
 PYTHON_PYDANTIC_CORE_LICENSE = MIT
 PYTHON_PYDANTIC_CORE_LICENSE_FILES = LICENSE
-PYTHON_PYDANTIC_CORE_DEPENDENCIES = host-python-typing-extensions host-python-maturin
+PYTHON_PYDANTIC_CORE_DEPENDENCIES = host-python-typing-extensions
 
-$(eval $(python-maturin-package))
+$(eval $(python-package))

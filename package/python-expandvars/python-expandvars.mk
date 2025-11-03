@@ -11,5 +11,5 @@ PYTHON_EXPANDVARS_SETUP_TYPE = hatch
 PYTHON_EXPANDVARS_LICENSE = MIT
 PYTHON_EXPANDVARS_LICENSE_FILES = LICENSE
 
-$(eval $(python-hatch-package))
-$(eval $(host-python-hatch-package))
+$(eval $(python-package))
+$(eval $(host-python-package))

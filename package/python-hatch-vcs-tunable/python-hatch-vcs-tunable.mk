@@ -11,7 +11,6 @@ PYTHON_HATCH_VCS_TUNABLE_LICENSE = Apache-2
 PYTHON_HATCH_VCS_TUNABLE_LICENSE_FILES = LICENSE
 PYTHON_HATCH_VCS_TUNABLE_SETUP_TYPE = hatch
 HOST_PYTHON_HATCH_VCS_TUNABLE_DEPENDENCIES = \
-	host-python-hatchling \
 	host-python-hatch-vcs
 
-$(eval $(host-python-hatch-package))
+$(eval $(host-python-package))
