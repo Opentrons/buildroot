@@ -20,7 +20,6 @@ source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pandocfil
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pickleshare/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-prometheus_client/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-prompt-toolkit/Config.in"
-source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-ptyprocess/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pydantic/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pydantic-core/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pydantic-settings/Config.in"
