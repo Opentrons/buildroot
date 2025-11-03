@@ -2,7 +2,6 @@ source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/opentrons/Config
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-aionotify/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-anyio/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-bleach/Config.in"
-source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-dotenv/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-fastapi/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-fastjsonschema/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-filetype/Config.in"
