@@ -8,7 +8,6 @@ source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-filetype/
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-httptools/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-importlib-metadata/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-ipykernel/Config.in"
-source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-ipython-genutils/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-jupyter_client/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-jupyter_core/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-matplotlib-inline/Config.in"
