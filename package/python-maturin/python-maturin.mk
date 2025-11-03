@@ -10,6 +10,6 @@ PYTHON_MATURIN_SITE = https://files.pythonhosted.org/packages/80/da/a4bbd6e97f36
 PYTHON_MATURIN_SETUP_TYPE = setuptools-rust
 PYTHON_MATURIN_LICENSE = Apache-2.0 or MIT
 PYTHON_MATURIN_LICENSE_FILES = license-apache license-mit
-HOST_PYTHON_MATURIN_DEPENDENCIES = host-python-tomli host-python-setuptools-rust host-python-wheel
+HOST_PYTHON_MATURIN_DEPENDENCIES = host-python-tomli host-python-wheel
 
-$(eval $(host-python-maturin-package))
+$(eval $(host-python-package))

@@ -10,6 +10,5 @@ PYTHON_FASTAPI_SITE = https://files.pythonhosted.org/packages/65/e0/f9d77b3a1569
 PYTHON_FASTAPI_SETUP_TYPE = hatch
 PYTHON_FASTAPI_LICENSE = MIT
 PYTHON_FASTAPI_LICENSE_FILES = LICENSE
-PYTHON_FASTAPI_DEPENDENCIES = host-python-hatchling
 
-$(eval $(python-hatch-package))
+$(eval $(python-package))

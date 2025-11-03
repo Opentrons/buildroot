@@ -14,8 +14,8 @@ PYTHON_TRAITLETS_ENV = HATCH_METADATA_CLASSIFIERS_NO_VERIFY=1
 HOST_PYTHON_TRAITLETS_ENV = HATCH_METADATA_CLASSIFIERS_NO_VERIFY=1
 
 
-HOST_PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling host-python-ipython-genutils host-python-six
-PYTHON_TRAITLETS_DEPENDENCIES = host-python-hatchling python-ipython-genutils python-six
+HOST_PYTHON_TRAITLETS_DEPENDENCIES = host-python-ipython-genutils host-python-six
+PYTHON_TRAITLETS_DEPENDENCIES = python-ipython-genutils python-six
 
-$(eval $(python-hatch-package))
-$(eval $(host-python-hatch-package))
+$(eval $(python-package))
+$(eval $(host-python-package))
