@@ -1,6 +1,0 @@
-# md5, sha256 from https://pypi.org/pypi/pyzmq/json
-md5	f10b7c3dee2c03557e2c5d00b73dfc7f  pyzmq-24.0.1.tar.gz
-sha256	216f5d7dbb67166759e59b0479bca82b8acf9bed6015b526b8eb10143fb08e77  pyzmq-24.0.1.tar.gz
-# Locally computed sha256 checksums
-sha256	4fd86507c9b486764343065a9e035222869a27b5789efeb4fd93edc85412d7a3  bundled/zeromq/COPYING
-sha256	6955443403bcb234867b83a11d8fd21c4e5cd40f2c7c3b54d52808d69b1f6b3a  examples/LICENSE
