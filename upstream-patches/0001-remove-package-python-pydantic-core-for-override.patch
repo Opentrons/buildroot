@@ -1,0 +1,76 @@
+From 1c6619e4f681cbdd4beb4db7dbe1a24308969735 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 4 Nov 2025 16:06:29 +0000
+Subject: [PATCH 01/11] remove package/python-pydantic-core for override
+
+---
+ package/Config.in                                |  1 -
+ package/python-pydantic-core/Config.in           |  8 --------
+ .../python-pydantic-core.hash                    |  4 ----
+ .../python-pydantic-core/python-pydantic-core.mk | 16 ----------------
+ 4 files changed, 29 deletions(-)
+ delete mode 100644 package/python-pydantic-core/Config.in
+ delete mode 100644 package/python-pydantic-core/python-pydantic-core.hash
+ delete mode 100644 package/python-pydantic-core/python-pydantic-core.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 9b6bef6d..99a5cab0 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1294,7 +1294,6 @@ menu "External python modules"
+ 	source "package/python-pycups/Config.in"
+ 	source "package/python-pydal/Config.in"
+ 	source "package/python-pydantic/Config.in"
+-	source "package/python-pydantic-core/Config.in"
+ 	source "package/python-pydantic-settings/Config.in"
+ 	source "package/python-pydevmem/Config.in"
+ 	source "package/python-pydyf/Config.in"
+diff --git a/package/python-pydantic-core/Config.in b/package/python-pydantic-core/Config.in
+deleted file mode 100644
+index 3eeb1844..00000000
+--- a/package/python-pydantic-core/Config.in
++++ /dev/null
+@@ -1,8 +0,0 @@
+-config BR2_PACKAGE_PYTHON_PYDANTIC_CORE
+-	bool "python-pydantic-core"
+-	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+-	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
+-	help
+-	  Core validation logic for pydantic written in rust.
+-
+-	  https://github.com/pydantic/pydantic-core
+diff --git a/package/python-pydantic-core/python-pydantic-core.hash b/package/python-pydantic-core/python-pydantic-core.hash
+deleted file mode 100644
+index d908d5cd..00000000
+--- a/package/python-pydantic-core/python-pydantic-core.hash
++++ /dev/null
+@@ -1,4 +0,0 @@
+-# Locally calculated after vendoring
+-sha256  d7e62e6331eb4e712b83dad434926440c7c94989e20d693cfae119b8777ce777  python-pydantic-core-2.27.2-cargo2.tar.gz
+-# Locally computed sha256 checksums
+-sha256  2afdd30d54b4d62b6f488a6bcc1546e84ec5061f13f4209c03d012348783795a  LICENSE
+diff --git a/package/python-pydantic-core/python-pydantic-core.mk b/package/python-pydantic-core/python-pydantic-core.mk
+deleted file mode 100644
+index 6a18421e..00000000
+--- a/package/python-pydantic-core/python-pydantic-core.mk
++++ /dev/null
+@@ -1,16 +0,0 @@
+-################################################################################
+-#
+-# python-pydantic-core
+-#
+-################################################################################
+-
+-PYTHON_PYDANTIC_CORE_VERSION = 2.27.2
+-PYTHON_PYDANTIC_CORE_SOURCE_PYPI = pydantic_core-$(PYTHON_PYDANTIC_CORE_VERSION).tar.gz
+-PYTHON_PYDANTIC_CORE_SITE_PYPI = https://files.pythonhosted.org/packages/fc/01/f3e5ac5e7c25833db5eb555f7b7ab24cd6f8c322d3a3ad2d67a952dc0abc
+-PYTHON_PYDANTIC_CORE_SITE = $(PYTHON_PYDANTIC_CORE_SITE_PYPI)/$(PYTHON_PYDANTIC_CORE_SOURCE_PYPI)?buildroot-path=filename
+-PYTHON_PYDANTIC_CORE_SETUP_TYPE = maturin
+-PYTHON_PYDANTIC_CORE_LICENSE = MIT
+-PYTHON_PYDANTIC_CORE_LICENSE_FILES = LICENSE
+-PYTHON_PYDANTIC_CORE_DEPENDENCIES = host-python-typing-extensions
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

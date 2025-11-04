@@ -1,0 +1,76 @@
+From f5fe871676afea134bb651c8b4e7145d31c361f5 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 4 Nov 2025 17:41:39 +0000
+Subject: [PATCH 08/11] remove package/python-pydantic-settings for override
+
+---
+ package/Config.in                                  |  1 -
+ package/python-pydantic-settings/Config.in         |  9 ---------
+ .../python-pydantic-settings.hash                  |  5 -----
+ .../python-pydantic-settings.mk                    | 14 --------------
+ 4 files changed, 29 deletions(-)
+ delete mode 100644 package/python-pydantic-settings/Config.in
+ delete mode 100644 package/python-pydantic-settings/python-pydantic-settings.hash
+ delete mode 100644 package/python-pydantic-settings/python-pydantic-settings.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 8aef3b84..93fe73cf 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1291,7 +1291,6 @@ menu "External python modules"
+ 	source "package/python-pycryptodomex/Config.in"
+ 	source "package/python-pycups/Config.in"
+ 	source "package/python-pydal/Config.in"
+-	source "package/python-pydantic-settings/Config.in"
+ 	source "package/python-pydevmem/Config.in"
+ 	source "package/python-pydyf/Config.in"
+ 	source "package/python-pyelftools/Config.in"
+diff --git a/package/python-pydantic-settings/Config.in b/package/python-pydantic-settings/Config.in
+deleted file mode 100644
+index 0e8dbc29..00000000
+--- a/package/python-pydantic-settings/Config.in
++++ /dev/null
+@@ -1,9 +0,0 @@
+-config BR2_PACKAGE_PYTHON_PYDANTIC_SETTINGS
+-	bool "python-pydantic-settings"
+-	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS # python-pydantic -> python-pydantic-core
+-	select BR2_PACKAGE_PYTHON_DOTENV # runtime
+-	select BR2_PACKAGE_PYTHON_PYDANTIC # runtime
+-	help
+-	  Settings management using Pydantic.
+-
+-	  https://github.com/pydantic/pydantic-settings
+diff --git a/package/python-pydantic-settings/python-pydantic-settings.hash b/package/python-pydantic-settings/python-pydantic-settings.hash
+deleted file mode 100644
+index 17329338..00000000
+--- a/package/python-pydantic-settings/python-pydantic-settings.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/pydantic-settings/json
+-md5  c12f2c0a6e767e4e65665ad6f9641e93  pydantic_settings-2.7.1.tar.gz
+-sha256  10c9caad35e64bfb3c2fbf70a078c0e25cc92499782e5200747f942a065dec93  pydantic_settings-2.7.1.tar.gz
+-# Locally computed sha256 checksums
+-sha256  eb355a753e020346d33d83bf9769135b89fc610568ac531a01c295bcee7fd998  LICENSE
+diff --git a/package/python-pydantic-settings/python-pydantic-settings.mk b/package/python-pydantic-settings/python-pydantic-settings.mk
+deleted file mode 100644
+index d3dc3d82..00000000
+--- a/package/python-pydantic-settings/python-pydantic-settings.mk
++++ /dev/null
+@@ -1,14 +0,0 @@
+-################################################################################
+-#
+-# python-pydantic-settings
+-#
+-################################################################################
+-
+-PYTHON_PYDANTIC_SETTINGS_VERSION = 2.7.1
+-PYTHON_PYDANTIC_SETTINGS_SOURCE = pydantic_settings-$(PYTHON_PYDANTIC_SETTINGS_VERSION).tar.gz
+-PYTHON_PYDANTIC_SETTINGS_SITE = https://files.pythonhosted.org/packages/73/7b/c58a586cd7d9ac66d2ee4ba60ca2d241fa837c02bca9bea80a9a8c3d22a9
+-PYTHON_PYDANTIC_SETTINGS_SETUP_TYPE = hatch
+-PYTHON_PYDANTIC_SETTINGS_LICENSE = MIT
+-PYTHON_PYDANTIC_SETTINGS_LICENSE_FILES = LICENSE
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

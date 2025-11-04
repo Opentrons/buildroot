@@ -1,23 +1,23 @@
-From c73824b9f25b93cf166c8a7be14ff443fb68615b Mon Sep 17 00:00:00 2001
+From d38fe22dc64b0f77193e99fcf384a51d8015ee43 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
-Date: Mon, 27 Oct 2025 17:48:45 +0000
-Subject: [PATCH 08/38] remove python-sqlalchemy for override
+Date: Tue, 4 Nov 2025 16:08:43 +0000
+Subject: [PATCH 04/11] remove package/python-sqlalchemy for override
 
 ---
- package/Config.in                                |  1 -
- package/python-sqlalchemy/Config.in              | 13 -------------
- package/python-sqlalchemy/python-sqlalchemy.hash |  5 -----
- package/python-sqlalchemy/python-sqlalchemy.mk   | 16 ----------------
- 4 files changed, 35 deletions(-)
+ package/Config.in                               |  1 -
+ package/python-sqlalchemy/Config.in             | 14 --------------
+ .../python-sqlalchemy/python-sqlalchemy.hash    |  5 -----
+ package/python-sqlalchemy/python-sqlalchemy.mk  | 17 -----------------
+ 4 files changed, 37 deletions(-)
  delete mode 100644 package/python-sqlalchemy/Config.in
  delete mode 100644 package/python-sqlalchemy/python-sqlalchemy.hash
  delete mode 100644 package/python-sqlalchemy/python-sqlalchemy.mk
 
 diff --git a/package/Config.in b/package/Config.in
-index 479204c4..0a7c93e1 100644
+index 21f0087e..e3b7dbb7 100644
 --- a/package/Config.in
 +++ b/package/Config.in
-@@ -1298,7 +1298,6 @@ menu "External python modules"
+@@ -1406,7 +1406,6 @@ menu "External python modules"
  	source "package/python-soupsieve/Config.in"
  	source "package/python-spake2/Config.in"
  	source "package/python-spidev/Config.in"
@@ -27,12 +27,13 @@ index 479204c4..0a7c93e1 100644
  	source "package/python-stack-data/Config.in"
 diff --git a/package/python-sqlalchemy/Config.in b/package/python-sqlalchemy/Config.in
 deleted file mode 100644
-index f7ec3a6a..00000000
+index 974393bb..00000000
 --- a/package/python-sqlalchemy/Config.in
 +++ /dev/null
-@@ -1,13 +0,0 @@
+@@ -1,14 +0,0 @@
 -config BR2_PACKAGE_PYTHON_SQLALCHEMY
 -	bool "python-sqlalchemy"
+-	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
 -	help
 -	  SQLAlchemy is the Python SQL toolkit and Object Relational
 -	  Mapper that gives application developers the full power and
@@ -46,35 +47,36 @@ index f7ec3a6a..00000000
 -	  http://www.sqlalchemy.org
 diff --git a/package/python-sqlalchemy/python-sqlalchemy.hash b/package/python-sqlalchemy/python-sqlalchemy.hash
 deleted file mode 100644
-index 9f479d8f..00000000
+index c66ee44e..00000000
 --- a/package/python-sqlalchemy/python-sqlalchemy.hash
 +++ /dev/null
 @@ -1,5 +0,0 @@
 -# md5, sha256 from https://pypi.org/pypi/sqlalchemy/json
--md5  52318b83e8931c5f5a459f54fe4be3e8  SQLAlchemy-1.4.42.tar.gz
--sha256  177e41914c476ed1e1b77fd05966ea88c094053e17a85303c4ce007f88eff363  SQLAlchemy-1.4.42.tar.gz
+-md5  4aecb8d3b1d077d6099c1f8ed18367a4  sqlalchemy-2.0.39.tar.gz
+-sha256  5d2d1fe548def3267b4c70a8568f108d1fed7cbbeccb9cc166e05af2abc25c22  sqlalchemy-2.0.39.tar.gz
 -# Locally computed sha256 checksums
--sha256  859ded25da34c1eb73e6e736df4c5f8ce3ed2ed5290663176f06e7720d9c9a20  LICENSE
+-sha256  9821720b58d4a565b61321007a8ad43ab6991a3959e66cd5db4dd9eae69c7dfc  LICENSE
 diff --git a/package/python-sqlalchemy/python-sqlalchemy.mk b/package/python-sqlalchemy/python-sqlalchemy.mk
 deleted file mode 100644
-index a94b9eca..00000000
+index 26d7d308..00000000
 --- a/package/python-sqlalchemy/python-sqlalchemy.mk
 +++ /dev/null
-@@ -1,16 +0,0 @@
+@@ -1,17 +0,0 @@
 -################################################################################
 -#
 -# python-sqlalchemy
 -#
 -################################################################################
 -
--PYTHON_SQLALCHEMY_VERSION = 1.4.42
--PYTHON_SQLALCHEMY_SOURCE = SQLAlchemy-$(PYTHON_SQLALCHEMY_VERSION).tar.gz
--PYTHON_SQLALCHEMY_SITE = https://files.pythonhosted.org/packages/e4/56/8ea85eaab7d93b58f9c213ad8fc5882838189a29fc8cc401d80710a12969
+-PYTHON_SQLALCHEMY_VERSION = 2.0.39
+-PYTHON_SQLALCHEMY_SOURCE = sqlalchemy-$(PYTHON_SQLALCHEMY_VERSION).tar.gz
+-PYTHON_SQLALCHEMY_SITE = https://files.pythonhosted.org/packages/00/8e/e77fcaa67f8b9f504b4764570191e291524575ddbfe78a90fc656d671fdc
 -PYTHON_SQLALCHEMY_SETUP_TYPE = setuptools
 -PYTHON_SQLALCHEMY_LICENSE = MIT
 -PYTHON_SQLALCHEMY_LICENSE_FILES = LICENSE
 -PYTHON_SQLALCHEMY_CPE_ID_VENDOR = sqlalchemy
 -PYTHON_SQLALCHEMY_CPE_ID_PRODUCT = sqlalchemy
+-PYTHON_SQLALCHEMY_DEPENDENCIES = host-python-cython
 -
 -$(eval $(python-package))
 -- 
