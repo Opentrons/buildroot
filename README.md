@@ -135,7 +135,7 @@ export AWS_SECRET_ACCESS_KEY=xyz
 
 ## Adding Commits
 
-As a fork of the Buildroot project, commits and commit messages should stick to the conventions outlined in the Buildroot manual. Changes to the build configuration should be documented in a commit message in the form of `configs/ot2_defconfig: select lib-foo`. Changes to available build packages should receive a commit message in the form of `package-name: (new,remove,update, etc.) package`.
+Commits and commit messages should stick to the conventions outlined in the Buildroot manual. Changes to the build configuration should be documented in a commit message in the form of `configs/ot2_defconfig: select lib-foo`. Changes to available build packages should receive a commit message in the form of `package-name: (new,remove,update, etc.) package`. This is different from our other repos because this is not a monorepo of unrelated packages; it is a single repo that does one thing (provide overlays for system builds), and we don't use conventional-commits to generate changelogs or anything.
 
 Submitted pull requests should be made up of commits with messages that are suitable to be placed directly onto the head of `opentrons-develop`. Unlike the opentrons monorepo, we merge pull requests into this repository with a rebase merge instead of a squash merge. This means all commits will appear in the master branch once the PR is reviewed and accepted.
 
