@@ -18,7 +18,6 @@ source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-notebook/
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pandas/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pandocfilters/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-prometheus_client/Config.in"
-source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-prompt-toolkit/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pydantic/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pydantic-core/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-pydantic-settings/Config.in"
