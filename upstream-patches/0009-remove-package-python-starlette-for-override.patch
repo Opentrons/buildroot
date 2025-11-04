@@ -1,0 +1,76 @@
+From f94f3ff10cd19dea90ceadc1e94514ed05ec900c Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 4 Nov 2025 17:44:53 +0000
+Subject: [PATCH 09/11] remove package/python-starlette for override
+
+---
+ package/Config.in                              |  1 -
+ package/python-starlette/Config.in             |  7 -------
+ package/python-starlette/python-starlette.hash |  5 -----
+ package/python-starlette/python-starlette.mk   | 16 ----------------
+ 4 files changed, 29 deletions(-)
+ delete mode 100644 package/python-starlette/Config.in
+ delete mode 100644 package/python-starlette/python-starlette.hash
+ delete mode 100644 package/python-starlette/python-starlette.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 93fe73cf..be2028df 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1406,7 +1406,6 @@ menu "External python modules"
+ 	source "package/python-sqliteschema/Config.in"
+ 	source "package/python-sqlparse/Config.in"
+ 	source "package/python-stack-data/Config.in"
+-	source "package/python-starlette/Config.in"
+ 	source "package/python-sympy/Config.in"
+ 	source "package/python-systemd/Config.in"
+ 	source "package/python-tabledata/Config.in"
+diff --git a/package/python-starlette/Config.in b/package/python-starlette/Config.in
+deleted file mode 100644
+index 90f59068..00000000
+--- a/package/python-starlette/Config.in
++++ /dev/null
+@@ -1,7 +0,0 @@
+-config BR2_PACKAGE_PYTHON_STARLETTE
+-	bool "python-starlette"
+-	select BR2_PACKAGE_PYTHON_ANYIO # runtime
+-	help
+-	  The little ASGI library that shines.
+-
+-	  https://github.com/encode/starlette
+diff --git a/package/python-starlette/python-starlette.hash b/package/python-starlette/python-starlette.hash
+deleted file mode 100644
+index 5939eb19..00000000
+--- a/package/python-starlette/python-starlette.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/starlette/json
+-md5  b58c9f8d38df9946689cb3e9f94555da  starlette-0.47.2.tar.gz
+-sha256  6ae9aa5db235e4846decc1e7b79c4f346adf41e9777aebeb49dfd09bbd7023d8  starlette-0.47.2.tar.gz
+-# Locally computed sha256 checksums
+-sha256  dcb95677a02240243187e964f941847d19b17821cf99e5afae684fab328c19bf  LICENSE.md
+diff --git a/package/python-starlette/python-starlette.mk b/package/python-starlette/python-starlette.mk
+deleted file mode 100644
+index 4037903c..00000000
+--- a/package/python-starlette/python-starlette.mk
++++ /dev/null
+@@ -1,16 +0,0 @@
+-################################################################################
+-#
+-# python-starlette
+-#
+-################################################################################
+-
+-PYTHON_STARLETTE_VERSION = 0.47.2
+-PYTHON_STARLETTE_SOURCE = starlette-$(PYTHON_STARLETTE_VERSION).tar.gz
+-PYTHON_STARLETTE_SITE = https://files.pythonhosted.org/packages/04/57/d062573f391d062710d4088fa1369428c38d51460ab6fedff920efef932e
+-PYTHON_STARLETTE_SETUP_TYPE = hatch
+-PYTHON_STARLETTE_LICENSE = BSD-3-Clause
+-PYTHON_STARLETTE_LICENSE_FILES = LICENSE.md
+-PYTHON_STARLETTE_CPE_ID_VENDOR = encode
+-PYTHON_STARLETTE_CPE_ID_PRODUCT = starlette
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

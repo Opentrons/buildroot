@@ -1,0 +1,78 @@
+From 8fa90b73171a095da8ec7fc5d96a36eb502f2a18 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 4 Nov 2025 17:28:28 +0000
+Subject: [PATCH 06/11] remove package/python-anyio for override
+
+---
+ package/Config.in                      |  1 -
+ package/python-anyio/Config.in         | 10 ----------
+ package/python-anyio/python-anyio.hash |  5 -----
+ package/python-anyio/python-anyio.mk   | 15 ---------------
+ 4 files changed, 31 deletions(-)
+ delete mode 100644 package/python-anyio/Config.in
+ delete mode 100644 package/python-anyio/python-anyio.hash
+ delete mode 100644 package/python-anyio/python-anyio.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index e3b7dbb7..273d9e60 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -995,7 +995,6 @@ menu "External python modules"
+ 	source "package/python-alsaaudio/Config.in"
+ 	source "package/python-annotated-types/Config.in"
+ 	source "package/python-ansicolors/Config.in"
+-	source "package/python-anyio/Config.in"
+ 	source "package/python-apispec/Config.in"
+ 	source "package/python-appdirs/Config.in"
+ 	source "package/python-argcomplete/Config.in"
+diff --git a/package/python-anyio/Config.in b/package/python-anyio/Config.in
+deleted file mode 100644
+index 353c7e46..00000000
+--- a/package/python-anyio/Config.in
++++ /dev/null
+@@ -1,10 +0,0 @@
+-config BR2_PACKAGE_PYTHON_ANYIO
+-	bool "python-anyio"
+-	select BR2_PACKAGE_PYTHON_IDNA # runtime
+-	select BR2_PACKAGE_PYTHON_SNIFFIO # runtime
+-	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
+-	help
+-	  High level compatibility layer for multiple asynchronous
+-	  event loop implementations.
+-
+-	  https://github.com/agronholm/anyio
+diff --git a/package/python-anyio/python-anyio.hash b/package/python-anyio/python-anyio.hash
+deleted file mode 100644
+index 4ff6955a..00000000
+--- a/package/python-anyio/python-anyio.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/anyio/json
+-md5  ad00874069a6685b2e3e84c5a2e045cb  anyio-4.8.0.tar.gz
+-sha256  1d9fe889df5212298c0c0723fa20479d1b94883a2df44bd3897aa91083316f7a  anyio-4.8.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  5361ac9dc58f2ef5fd2e9b09c68297c17f04950909bbc8023bdb82eacf22c2b0  LICENSE
+diff --git a/package/python-anyio/python-anyio.mk b/package/python-anyio/python-anyio.mk
+deleted file mode 100644
+index 4f38e127..00000000
+--- a/package/python-anyio/python-anyio.mk
++++ /dev/null
+@@ -1,15 +0,0 @@
+-################################################################################
+-#
+-# python-anyio
+-#
+-################################################################################
+-
+-PYTHON_ANYIO_VERSION = 4.8.0
+-PYTHON_ANYIO_SOURCE = anyio-$(PYTHON_ANYIO_VERSION).tar.gz
+-PYTHON_ANYIO_SITE = https://files.pythonhosted.org/packages/a3/73/199a98fc2dae33535d6b8e8e6ec01f8c1d76c9adb096c6b7d64823038cde
+-PYTHON_ANYIO_SETUP_TYPE = setuptools
+-PYTHON_ANYIO_LICENSE = MIT
+-PYTHON_ANYIO_LICENSE_FILES = LICENSE
+-PYTHON_ANYIO_DEPENDENCIES = host-python-setuptools-scm
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

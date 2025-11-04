@@ -1,0 +1,81 @@
+From 5beba32dcea9d1a7469d7c6d7a89a9b0a6d9bfec Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 4 Nov 2025 17:35:08 +0000
+Subject: [PATCH 07/11] remove package/python-fastapi for override
+
+---
+ package/Config.in                          |  1 -
+ package/python-fastapi/Config.in           | 11 -----------
+ package/python-fastapi/python-fastapi.hash |  5 -----
+ package/python-fastapi/python-fastapi.mk   | 17 -----------------
+ 4 files changed, 34 deletions(-)
+ delete mode 100644 package/python-fastapi/Config.in
+ delete mode 100644 package/python-fastapi/python-fastapi.hash
+ delete mode 100644 package/python-fastapi/python-fastapi.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index 273d9e60..8aef3b84 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1104,7 +1104,6 @@ menu "External python modules"
+ 	source "package/python-evdev/Config.in"
+ 	source "package/python-executing/Config.in"
+ 	source "package/python-falcon/Config.in"
+-	source "package/python-fastapi/Config.in"
+ 	source "package/python-fastapi-sessions/Config.in"
+ 	source "package/python-fastui/Config.in"
+ 	source "package/python-filelock/Config.in"
+diff --git a/package/python-fastapi/Config.in b/package/python-fastapi/Config.in
+deleted file mode 100644
+index 21997daf..00000000
+--- a/package/python-fastapi/Config.in
++++ /dev/null
+@@ -1,11 +0,0 @@
+-config BR2_PACKAGE_PYTHON_FASTAPI
+-	bool "python-fastapi"
+-	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS # python-pydantic -> python-pydantic-core
+-	select BR2_PACKAGE_PYTHON_PYDANTIC # runtime
+-	select BR2_PACKAGE_PYTHON_STARLETTE # runtime
+-	select BR2_PACKAGE_PYTHON_TYPING_EXTENSIONS # runtime
+-	help
+-	  FastAPI framework, high performance, easy to learn, fast to
+-	  code, ready for production.
+-
+-	  https://github.com/fastapi/fastapi
+diff --git a/package/python-fastapi/python-fastapi.hash b/package/python-fastapi/python-fastapi.hash
+deleted file mode 100644
+index 1810e81e..00000000
+--- a/package/python-fastapi/python-fastapi.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/fastapi/json
+-md5  6de51bff13da558df5f6249d7a33b888  fastapi-0.116.1.tar.gz
+-sha256  ed52cbf946abfd70c5a0dccb24673f0670deeb517a88b3544d03c2a6bf283143  fastapi-0.116.1.tar.gz
+-# Locally computed sha256 checksums
+-sha256  4ec89ffc81485b97fec584b2d4a961032eeffe834453894fd9c1274906cc744e  LICENSE
+diff --git a/package/python-fastapi/python-fastapi.mk b/package/python-fastapi/python-fastapi.mk
+deleted file mode 100644
+index 745147dd..00000000
+--- a/package/python-fastapi/python-fastapi.mk
++++ /dev/null
+@@ -1,17 +0,0 @@
+-################################################################################
+-#
+-# python-fastapi
+-#
+-################################################################################
+-
+-PYTHON_FASTAPI_VERSION = 0.116.1
+-PYTHON_FASTAPI_SOURCE = fastapi-$(PYTHON_FASTAPI_VERSION).tar.gz
+-PYTHON_FASTAPI_SITE = https://files.pythonhosted.org/packages/78/d7/6c8b3bfe33eeffa208183ec037fee0cce9f7f024089ab1c5d12ef04bd27c
+-PYTHON_FASTAPI_SETUP_TYPE = pep517
+-PYTHON_FASTAPI_LICENSE = MIT
+-PYTHON_FASTAPI_LICENSE_FILES = LICENSE
+-PYTHON_FASTAPI_CPE_ID_VENDOR = tiangolo
+-PYTHON_FASTAPI_CPE_ID_PRODUCT = fastapi
+-PYTHON_FASTAPI_DEPENDENCIES = host-python-pdm-backend
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

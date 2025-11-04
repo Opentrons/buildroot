@@ -1,0 +1,78 @@
+From 41742a8f89cbd9f86c553046dc44bea226c243b6 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 4 Nov 2025 17:49:38 +0000
+Subject: [PATCH 10/11] remove package/python-uvloop for override
+
+---
+ package/Config.in                          |  1 -
+ package/python-uvicorn/Config.in           |  9 ---------
+ package/python-uvicorn/python-uvicorn.hash |  5 -----
+ package/python-uvicorn/python-uvicorn.mk   | 16 ----------------
+ 4 files changed, 31 deletions(-)
+ delete mode 100644 package/python-uvicorn/Config.in
+ delete mode 100644 package/python-uvicorn/python-uvicorn.hash
+ delete mode 100644 package/python-uvicorn/python-uvicorn.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index be2028df..a1d2409d 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1450,7 +1450,6 @@ menu "External python modules"
+ 	source "package/python-urllib3/Config.in"
+ 	source "package/python-urwid/Config.in"
+ 	source "package/python-urwid-readline/Config.in"
+-	source "package/python-uvicorn/Config.in"
+ 	source "package/python-uvloop/Config.in"
+ 	source "package/python-validators/Config.in"
+ 	source "package/python-versiontools/Config.in"
+diff --git a/package/python-uvicorn/Config.in b/package/python-uvicorn/Config.in
+deleted file mode 100644
+index c84f5478..00000000
+--- a/package/python-uvicorn/Config.in
++++ /dev/null
+@@ -1,9 +0,0 @@
+-config BR2_PACKAGE_PYTHON_UVICORN
+-	bool "python-uvicorn"
+-	select BR2_PACKAGE_PYTHON_CLICK # runtime
+-	select BR2_PACKAGE_PYTHON_H11 # runtime
+-	select BR2_PACKAGE_PYTHON3_SSL # runtime
+-	help
+-	  The lightning-fast ASGI server.
+-
+-	  https://www.uvicorn.org/
+diff --git a/package/python-uvicorn/python-uvicorn.hash b/package/python-uvicorn/python-uvicorn.hash
+deleted file mode 100644
+index 7040ffa3..00000000
+--- a/package/python-uvicorn/python-uvicorn.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/uvicorn/json
+-md5  4a741214532ec25c04dbb1e926e085f9  uvicorn-0.34.2.tar.gz
+-sha256  0e929828f6186353a80b58ea719861d2629d766293b6d19baf086ba31d4f3328  uvicorn-0.34.2.tar.gz
+-# Locally computed sha256 checksums
+-sha256  efe1acf3e62fb99c288b0ec73e5a773b7268ef4320fe757ea994214e4b63c371  LICENSE.md
+diff --git a/package/python-uvicorn/python-uvicorn.mk b/package/python-uvicorn/python-uvicorn.mk
+deleted file mode 100644
+index 944f683b..00000000
+--- a/package/python-uvicorn/python-uvicorn.mk
++++ /dev/null
+@@ -1,16 +0,0 @@
+-################################################################################
+-#
+-# python-uvicorn
+-#
+-################################################################################
+-
+-PYTHON_UVICORN_VERSION = 0.34.2
+-PYTHON_UVICORN_SOURCE = uvicorn-$(PYTHON_UVICORN_VERSION).tar.gz
+-PYTHON_UVICORN_SITE = https://files.pythonhosted.org/packages/a6/ae/9bbb19b9e1c450cf9ecaef06463e40234d98d95bf572fab11b4f19ae5ded
+-PYTHON_UVICORN_SETUP_TYPE = hatch
+-PYTHON_UVICORN_LICENSE = BSD-3-Clause
+-PYTHON_UVICORN_LICENSE_FILES = LICENSE.md
+-PYTHON_UVICORN_CPE_ID_VENDOR = encode
+-PYTHON_UVICORN_CPE_ID_PRODUCT = uvicorn
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+
