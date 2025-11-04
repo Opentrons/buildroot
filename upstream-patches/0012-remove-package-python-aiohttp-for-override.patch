@@ -1,0 +1,87 @@
+From 463bcc0c89e4facb28ebdda416754c8cc0efad5a Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Tue, 4 Nov 2025 19:21:39 +0000
+Subject: [PATCH 12/12] remove package/python-aiohttp for override
+
+---
+ package/Config.in                          |  1 -
+ package/python-aiohttp/Config.in           | 16 ----------------
+ package/python-aiohttp/python-aiohttp.hash |  5 -----
+ package/python-aiohttp/python-aiohttp.mk   | 18 ------------------
+ 4 files changed, 40 deletions(-)
+ delete mode 100644 package/python-aiohttp/Config.in
+ delete mode 100644 package/python-aiohttp/python-aiohttp.hash
+ delete mode 100644 package/python-aiohttp/python-aiohttp.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index a1d2409d..d3401055 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -971,7 +971,6 @@ menu "External python modules"
+ 	source "package/python-aiodns/Config.in"
+ 	source "package/python-aiofiles/Config.in"
+ 	source "package/python-aiohappyeyeballs/Config.in"
+-	source "package/python-aiohttp/Config.in"
+ 	source "package/python-aiohttp-cors/Config.in"
+ 	source "package/python-aiohttp-debugtoolbar/Config.in"
+ 	source "package/python-aiohttp-jinja2/Config.in"
+diff --git a/package/python-aiohttp/Config.in b/package/python-aiohttp/Config.in
+deleted file mode 100644
+index 08883316..00000000
+--- a/package/python-aiohttp/Config.in
++++ /dev/null
+@@ -1,16 +0,0 @@
+-config BR2_PACKAGE_PYTHON_AIOHTTP
+-	bool "python-aiohttp"
+-	select BR2_PACKAGE_PYTHON_AIODNS # runtime
+-	select BR2_PACKAGE_PYTHON_AIOHAPPYEYEBALLS # runtime
+-	select BR2_PACKAGE_PYTHON_AIOSIGNAL # runtime
+-	select BR2_PACKAGE_PYTHON_ATTRS # runtime
+-	select BR2_PACKAGE_PYTHON_BROTLI # runtime
+-	select BR2_PACKAGE_PYTHON_FROZENLIST # runtime
+-	select BR2_PACKAGE_PYTHON_MULTIDICT # runtime
+-	select BR2_PACKAGE_PYTHON_PROPCACHE # runtime
+-	select BR2_PACKAGE_PYTHON_YARL # runtime
+-	select BR2_PACKAGE_PYTHON3_ZLIB # runtime
+-	help
+-	  Async http client/server framework (asyncio).
+-
+-	  https://github.com/aio-libs/aiohttp
+diff --git a/package/python-aiohttp/python-aiohttp.hash b/package/python-aiohttp/python-aiohttp.hash
+deleted file mode 100644
+index 0aa8dbd3..00000000
+--- a/package/python-aiohttp/python-aiohttp.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/aiohttp/json
+-md5  4ed66dcec63108ae3a7c01d0415b4dd9  aiohttp-3.12.14.tar.gz
+-sha256  6e06e120e34d93100de448fd941522e11dafa78ef1a893c179901b7d66aa29f2  aiohttp-3.12.14.tar.gz
+-# Locally computed sha256 checksums
+-sha256  9f80d0db7d755a941db4572172c270ecbd8f082ba215ddd095985942ed94a9eb  LICENSE.txt
+diff --git a/package/python-aiohttp/python-aiohttp.mk b/package/python-aiohttp/python-aiohttp.mk
+deleted file mode 100644
+index 7070d00c..00000000
+--- a/package/python-aiohttp/python-aiohttp.mk
++++ /dev/null
+@@ -1,18 +0,0 @@
+-################################################################################
+-#
+-# python-aiohttp
+-#
+-################################################################################
+-
+-PYTHON_AIOHTTP_VERSION = 3.12.14
+-PYTHON_AIOHTTP_SOURCE = aiohttp-$(PYTHON_AIOHTTP_VERSION).tar.gz
+-PYTHON_AIOHTTP_SITE = https://files.pythonhosted.org/packages/e6/0b/e39ad954107ebf213a2325038a3e7a506be3d98e1435e1f82086eec4cde2
+-PYTHON_AIOHTTP_SETUP_TYPE = setuptools
+-PYTHON_AIOHTTP_LICENSE = Apache-2.0
+-PYTHON_AIOHTTP_LICENSE_FILES = LICENSE.txt
+-PYTHON_AIOHTTP_CPE_ID_VENDOR = aiohttp
+-PYTHON_AIOHTTP_CPE_ID_PRODUCT = aiohttp
+-
+-PYTHON_AIOHTTP_DEPENDENCIES = host-python-pkgconfig
+-
+-$(eval $(python-package))
+-- 
+2.43.0
+

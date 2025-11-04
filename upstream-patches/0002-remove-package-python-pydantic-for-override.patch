@@ -1,7 +1,7 @@
-From 53d40dc43710563c1bf1b58658133efa40cbfa14 Mon Sep 17 00:00:00 2001
+From c73492721a87db481bf0ebfcb95ffe3adfd232a7 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Tue, 4 Nov 2025 16:07:13 +0000
-Subject: [PATCH 02/11] remove package/python-pydantic for override
+Subject: [PATCH 02/12] remove package/python-pydantic for override
 
 ---
  package/Config.in                            |  1 -
