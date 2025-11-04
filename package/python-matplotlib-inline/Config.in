@@ -1,6 +1,0 @@
-config BR2_PACKAGE_PYTHON_MATPLOTLIB_INLINE
-	bool "python-matplotlib-inline"
-	help
-	  Matplotlib to display figures directly inline in the Jupyter notebook
-
-	  https://ipython.org
