@@ -9,6 +9,11 @@ ARG filter_output
 
 VOLUME /buildroot
 
+# Configure archive repositories for Debian Buster (EOL)
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list &&\
+  echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list &&\
+  echo "Acquire::Check-Valid-Until false;" > /etc/apt/apt.conf.d/99no-check-valid-until
+
 RUN apt-get -y update &&\
   apt-get -y install build-essential wget file cpio python rsync unzip bc libncurses-dev git curl
 
