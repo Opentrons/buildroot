@@ -17,14 +17,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          route: POST /repos/{owner}/{repo}/actions/workflows/{workflow-id}/dispatches
-          owner: opentrons
-          repo: buildroot
-          workflow-id: build.yml
-          ref: ${{github.ref}}
-          inputs: |
+          route: POST /repos/opentrons/buildroot/actions/workflows/build.yml/dispatches
+          mediaType: '{"previews": ["wyandotte"]}'
+          data: |
             {
-              "buildroot-ref": "${{ github.ref }}",
-              "monorepo-ref": "-",
-              "infra-stage": "stage-prod"
+              "ref": "${{ github.ref }}",
+              "inputs": {
+                "buildroot-ref": "${{ github.ref }}",
+                "monorepo-ref": "-",
+                "infra-stage": "stage-prod"
+              }
             }
