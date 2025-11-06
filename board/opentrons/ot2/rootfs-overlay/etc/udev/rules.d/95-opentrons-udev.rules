@@ -8,4 +8,4 @@ KERNEL=="ttyACM[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="800b", ATTRS{idVen
 KERNEL=="ttyACM[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="4853", ATTRS{idVendor}=="0483", SYMLINK+="ot_module_heatershaker%n"
 # gen2 thermocycler on stm32:
 KERNEL=="ttyACM[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="ed8d", ATTRS{idVendor}=="0483", SYMLINK+="ot_module_thermocycler%n"
-KERNEL=="video[0-9]*", DEVPATH=="*/3f980000.usb/usb1/1-1/1-1.4/*", ATTR{index}=="0", SYMLINK+="ot_system_camera"
+KERNEL=="video[0-9]*", SUBSYSTEMS=="usb", ATTRS{idProduct}=="9422", ATTRS{idVendor}=="32e4", ATTR{index}=="0", SYMLINK+="ot_system_camera"
