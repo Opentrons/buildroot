@@ -1,3 +1,8 @@
+# Toolchains
+source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/toolchain/toolchain-external-linaro-arm-recent/Config.in.options"
+
+# Target packages
+
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/opentrons/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-aiohttp/Config.in"
 source "$BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH/package/python-aionotify/Config.in"
