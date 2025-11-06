@@ -1,0 +1,19 @@
+config BR2_TOOLCHAIN_EXTERNAL_LINARO_ARM_RECENT
+       bool "ARM GNU Toolchain 14.3"
+       depends on BR2_arm
+       depends on BR2_ARM_CPU_ARMV7A || BR2_ARM_CPU_ARMV8A
+       depends on BR2_HOSTARCH = "x86_64"
+       depends on BR2_ARM_EABIHF
+       select BR2_TOOLCHAIN_EXTERNAL_GLIBC
+       select BR2_TOOLCHAIN_HAS_SSP
+       select BR2_INSTALL_LIBSTDCPP
+       select BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_20
+       select BR2_TOOLCHAIN_GCC_AT_LEAST_14
+       select BR2_TOOLCHAIN_HAS_FORTRAN
+       select BR2_TOOLCHAIN_HAS_OPENMP
+       help
+         ARM GNU Toolchain 14.3, gcc 14.3-based. It
+         generates code that runs on all Cortex-A profile devices,
+         but tuned for the Cortex-A9. The code generated is Thumb 2,
+         with the hard floating point calling convention, and uses
+         the VFPv3-D16 FPU instructions.
