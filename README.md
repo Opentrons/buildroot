@@ -55,24 +55,31 @@ stream-ref` and pulls the repo at https://github.com/buildroot/buildroot to that
 
 ### Build
 
-From `buildroot`, run the `./opentrons_build.sh` script. This will build a docker container and run a build in it using the Buildroot `Makefile`
+From `buildroot`, run the `./opentrons-build.sh` script. This will build a docker container and run a build in it using the Buildroot `Makefile`. 
 
 ```shell
 # build all images
-./opentrons_build.sh
+./opentrons-build.sh
 
 # equivalent command
-./opentrons_build.sh all
+./opentrons-build.sh all
 ```
 
 Buildroot caches build intermediates aggressively, but sometimes you need to run a full rebuild. Full rebuilds (as well as your very first builds) can take a long time, so avoid them if you can. The Buildroot docs explain [when a full rebuild is necessary][].
 
 ```shell
 # run a full rebuild
-./opentrons_build.sh "clean all"
+./opentrons-build.sh "clean all"
 ```
 
 [when a full rebuild is necessary]: https://buildroot.org/downloads/manual/manual.html#full-rebuild
+
+There's also a handy bind that gets you a terminal in the container:
+
+``` shell
+# get a terminal
+./opentrons-build.sh /bin/bash
+```
 
 ### Outputs
 
@@ -96,7 +103,7 @@ The outputs of the build are
 
 ### Other Makefile Targets
 
-`./opentrons_build.sh` will pass the last argument to the Buildroot `Makefile` and any preceding arguments, if they exist, to `docker run`. So, if you want to run multiple `make` targets at once, wrap your targets in quotation marks:
+`./opentrons-build.sh` will pass the last argument to the Buildroot `Makefile` and any preceding arguments, if they exist, to `docker run`. So, if you want to run multiple `make` targets at once, wrap your targets in quotation marks:
 
 ```shell
 ./opentrons-build.sh "python-opentrons-api all"
@@ -115,10 +122,10 @@ You can control the release type with the `OT_BUILD_TYPE` environment variable. 
 
 ```shell
 # development build (default)
-OT_BUILD_TYPE=dev ./opentrons_build.sh
+OT_BUILD_TYPE=dev ./opentrons-build.sh
 
 # production build
-OT_BUILD_TYPE=release SIGNING_KEY=super-secret ./opentrons_build.sh
+OT_BUILD_TYPE=release SIGNING_KEY=super-secret ./opentrons-build.sh
 ```
 
 The API key for our log aggregator, datadog, can be provided either by specifying it in the `DATADOG_API_KEY` environment variable or by having AWS credentials available to pull it (and `python3` and `boto3` installed). If not specified, the build will run and work, but that robot will be unable to upload logs to datadog.
