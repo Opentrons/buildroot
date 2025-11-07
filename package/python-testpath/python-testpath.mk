@@ -4,11 +4,13 @@
 #
 ################################################################################
 
-PYTHON_TESTPATH_VERSION = 0.4.2
+PYTHON_TESTPATH_VERSION = 0.6.0
 PYTHON_TESTPATH_SOURCE = testpath-$(PYTHON_TESTPATH_VERSION).tar.gz
-PYTHON_TESTPATH_SITE = https://files.pythonhosted.org/packages/06/30/9a7e917066d851d8b4117e85794b5f14516419ea714a8a2681ec6aa8a981
-PYTHON_TESTPATH_SETUP_TYPE = setuptools
+PYTHON_TESTPATH_SITE = https://files.pythonhosted.org/packages/08/ad/a3e7d580902f57e31d2181563fc4088894692bb6ef79b816344f27719cdc
+PYTHON_TESTPATH_SETUP_TYPE = flit
 PYTHON_TESTPATH_LICENSE = BSD-3-Clause
 PYTHON_TESTPATH_LICENSE_FILES = LICENSE
+PYTHON_TESTPATH_DEPENDENCIES += host-python-flit-core host-python-installer
 
 $(eval $(python-package))
+

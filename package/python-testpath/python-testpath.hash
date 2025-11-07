@@ -1,5 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/testpath/json
-md5	562d0e1b02fc5cbcb8406955bcd7249f  testpath-0.4.2.tar.gz
-sha256	b694b3d9288dbd81685c5d2e7140b81365d46c29f5db4bc659de5aa6b98780f8  testpath-0.4.2.tar.gz
+md5	9fd4339f76da12d15bc718e4aa2566e9  testpath-0.6.0.tar.gz
+sha256	2f1b97e6442c02681ebe01bd84f531028a7caea1af3825000f52345c30285e0f  testpath-0.6.0.tar.gz
 # Locally computed sha256 checksums
 sha256	95f7c73530d13d9fe14e59b8bbd2eb4901aab79e119e336cd937f495cce6fc36  LICENSE
