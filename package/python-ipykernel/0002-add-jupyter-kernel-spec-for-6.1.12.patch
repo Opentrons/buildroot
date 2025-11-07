@@ -1,0 +1,34 @@
+From 845bb796c72263112bb5239400fa6ec625837bfc Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Fri, 7 Nov 2025 13:53:25 -0500
+Subject: [PATCH 2/2] add jupyter kernel spec for 6.1.12
+
+---
+ data_kernelspec/kernel.json | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+ create mode 100644 data_kernelspec/kernel.json
+
+diff --git a/data_kernelspec/kernel.json b/data_kernelspec/kernel.json
+new file mode 100644
+index 0000000..cca38a4
+--- /dev/null
++++ b/data_kernelspec/kernel.json
+@@ -0,0 +1,14 @@
++{
++ "argv": [
++  "python",
++  "-m",
++  "ipykernel_launcher",
++  "-f",
++  "{connection_file}"
++ ],
++ "display_name": "Python 3 (ipykernel)",
++ "language": "python",
++ "metadata": {
++  "debugger": true
++ }
++}
+\ No newline at end of file
+-- 
+2.43.0
+
