@@ -1,0 +1,89 @@
+From 8451c45cccb064b01f67be0b51fd77847b9d0eda Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Fri, 7 Nov 2025 13:25:33 -0500
+Subject: [PATCH 1/2] remove dynamic jupyter api generation
+
+---
+ .gitignore     |  1 -
+ hatch_build.py | 35 -----------------------------------
+ pyproject.toml |  5 +----
+ 3 files changed, 1 insertion(+), 40 deletions(-)
+ delete mode 100644 hatch_build.py
+
+diff --git a/.gitignore b/.gitignore
+index a986023..2a69663 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -22,7 +22,6 @@ __pycache__
+ .#*
+ .coverage
+ 
+-data_kernelspec
+ .pytest_cache
+ 
+ # copied changelog file
+diff --git a/hatch_build.py b/hatch_build.py
+deleted file mode 100644
+index 71dc49b..0000000
+--- a/hatch_build.py
++++ /dev/null
+@@ -1,35 +0,0 @@
+-"""A custom hatch build hook for ipykernel."""
+-import os
+-import shutil
+-import sys
+-
+-from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+-
+-
+-class CustomHook(BuildHookInterface):
+-    """The IPykernel build hook."""
+-
+-    def initialize(self, version, build_data):
+-        """Initialize the hook."""
+-        here = os.path.abspath(os.path.dirname(__file__))
+-        sys.path.insert(0, here)
+-        from ipykernel.kernelspec import make_ipkernel_cmd, write_kernel_spec
+-
+-        overrides = {}
+-
+-        # When building a standard wheel, the executable specified in the kernelspec is simply 'python'.
+-        if version == "standard":
+-            overrides["metadata"] = dict(debugger=True)
+-            argv = make_ipkernel_cmd(executable="python")
+-
+-        # When installing an editable wheel, the full `sys.executable` can be used.
+-        else:
+-            argv = make_ipkernel_cmd()
+-
+-        overrides["argv"] = argv
+-
+-        dest = os.path.join(here, "data_kernelspec")
+-        if os.path.exists(dest):
+-            shutil.rmtree(dest)
+-
+-        write_kernel_spec(dest, overrides=overrides)
+diff --git a/pyproject.toml b/pyproject.toml
+index 1730197..f3505de 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,5 +1,5 @@
+ [build-system]
+-requires = ["hatchling>=1.4", "jupyter_client>=6"]
++requires = ["hatchling>=1.4"]
+ build-backend = "hatchling.build"
+ 
+ [project]
+@@ -71,9 +71,6 @@ pyside6 = ["pyside6"]
+ [tool.hatch.version]
+ path = "ipykernel/_version.py"
+ 
+-# Used to call hatch_build.py
+-[tool.hatch.build.hooks.custom]
+-
+ [tool.hatch.build.targets.wheel.shared-data]
+ "data_kernelspec" = "share/jupyter/kernels/python3"
+ 
+-- 
+2.43.0
+
