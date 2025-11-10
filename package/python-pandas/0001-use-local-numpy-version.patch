@@ -1,0 +1,27 @@
+From ff0bb11e4f2ddced656cade3cd5a620bfba785b4 Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Mon, 10 Nov 2025 15:34:19 -0500
+Subject: [PATCH] use local numpy version
+
+---
+ pyproject.toml | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index d5a7f71391..bdf710e422 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -6,9 +6,7 @@ requires = [
+     "meson>=1.2.1,<2",
+     "wheel",
+     "Cython<4.0.0a0",  # Note: sync with setup.py, environment.yml and asv.conf.json
+-    # Force numpy higher than 2.0rc1, so that built wheels are compatible
+-    # with both numpy 1 and 2
+-    "numpy>=2.0",
++    "numpy==1.25.0",
+     "versioneer[toml]"
+ ]
+ 
+-- 
+2.43.0
+
