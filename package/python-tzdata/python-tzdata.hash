@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/tzdata/json
+md5  1e0a85189737abbc555fbcf139e989eb  tzdata-2025.2.tar.gz
+sha256  b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9  tzdata-2025.2.tar.gz
+# Locally computed sha256 checksums
+sha256  33e8e5002d3512d3fcc2282b995e6bad9d334781b9c5ac31843f404900e1f3b4  LICENSE
