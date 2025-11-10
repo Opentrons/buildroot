@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PYTHON_DEPRECATION
+	bool "python-deprecation"
+	select BR2_PACKAGE_PYTHON_PACKAGING # runtime
+	help
+	  A library to handle automated deprecations.
+
+	  http://deprecation.readthedocs.io/
