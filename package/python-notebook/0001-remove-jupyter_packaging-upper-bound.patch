@@ -1,0 +1,30 @@
+From f19ced8745bd9fd88cc63f9be6a93f288c648f03 Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Mon, 10 Nov 2025 12:54:22 -0500
+Subject: [PATCH 1/2] remove jupyter_packaging upper bound
+
+---
+ pyproject.toml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index 568fc5823..dbc30b4a8 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,5 +1,5 @@
+ [build-system]
+-requires=["jupyter_packaging~=0.9", "nbclassic>=0.4.0"]
++requires=["jupyter_packaging>=0.9", "nbclassic>=0.4.0"]
+ build-backend = "setuptools.build_meta"
+ 
+ [tool.check-manifest]
+@@ -30,4 +30,4 @@ tag_template = "v{new_version}"
+ src = "notebook/_version.py"
+ 
+ [tool.check-wheel-contents]
+-ignore = ["W002"]
+\ No newline at end of file
++ignore = ["W002"]
+-- 
+2.43.0
+

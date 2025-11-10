@@ -1,0 +1,23 @@
+From 926465bdcf22b5fd3f283de5c6b4596fbe5dfdca Mon Sep 17 00:00:00 2001
+From: Seth Foster <seth@opentrons.com>
+Date: Mon, 10 Nov 2025 12:54:02 -0500
+Subject: [PATCH 2/2] remove nbclassic build dep
+
+---
+ pyproject.toml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index dbc30b4a8..85ecbc379 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -1,5 +1,5 @@
+ [build-system]
+-requires=["jupyter_packaging>=0.9", "nbclassic>=0.4.0"]
++requires=["jupyter_packaging>=0.9"]
+ build-backend = "setuptools.build_meta"
+ 
+ [tool.check-manifest]
+-- 
+2.43.0
+
