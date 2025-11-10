@@ -1,0 +1,5 @@
+# md5, sha256 from https://pypi.org/pypi/jupyter-packaging/json
+md5  9c6834023bd699bda5365ab7ed18bde2  jupyter_packaging-0.12.3.tar.gz
+sha256  9d9b2b63b97ffd67a8bc5391c32a421bc415b264a32c99e4d8d8dd31daae9cf4  jupyter_packaging-0.12.3.tar.gz
+# Locally computed sha256 checksums
+sha256  68db1291ebc41aedf591c5916856bba59478d16cd50c60bbf12381d1719731a5  LICENSE
