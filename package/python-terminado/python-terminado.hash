@@ -1,5 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/terminado/json
-md5	616515f562939e979b67c72b667afba9  terminado-0.8.1.tar.gz
-sha256	55abf9ade563b8f9be1f34e4233c7b7bde726059947a593322e8a553cc4c067a  terminado-0.8.1.tar.gz
+md5	9b411cdada4fe129e60c75f95d17ffa9  terminado-0.18.1.tar.gz
+sha256	de09f2c4b85de4765f7714688fff57d3e75bad1f909b589fde880460c753fd2e  terminado-0.18.1.tar.gz
 # Locally computed sha256 checksums
 sha256	b7f40d8937cf1bde1d5b2d2e7df9b6fde4e558dcb3128ae7a0126c3298ba1be8  LICENSE
