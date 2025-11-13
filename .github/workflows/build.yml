@@ -329,19 +329,19 @@ jobs:
 
       - name: Post results as internal-release
         if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'internal-release'
-        uses: slackapi/slack-github-action@v1.14.0
+        uses: Opentrons/opentrons/.github/actions/simple-build-alert@edge
         with:
-          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+          status: 'success'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
 
       - name: Post results as release
         if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'release'
-        uses: slackapi/slack-github-action@v1.14.0
+        uses: Opentrons/opentrons/.github/actions/simple-build-alert@edge
         with:
-          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
+          status: 'success'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
 
       - name: remove build data
         if: always()
