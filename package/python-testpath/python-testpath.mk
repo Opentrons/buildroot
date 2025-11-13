@@ -12,5 +12,11 @@ PYTHON_TESTPATH_LICENSE = BSD-3-Clause
 PYTHON_TESTPATH_LICENSE_FILES = LICENSE
 PYTHON_TESTPATH_DEPENDENCIES += host-python-flit-core host-python-installer
 
+define PYTHON_TESTPATH_REMOVE_EXES
+	rm -f $(TARGET_DIR)/usr/lib/python*/site-packages/testpath/*.exe
+endef
+
+PYTHON_TESTPATH_POST_INSTALL_TARGET_HOOKS += PYTHON_TESTPATH_REMOVE_EXES
+
 $(eval $(python-package))
 
