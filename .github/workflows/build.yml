@@ -329,7 +329,7 @@ jobs:
 
       - name: Post results as internal-release
         if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'internal-release'
-        uses: Opentrons/opentrons/.github/actions/simple-build-alert@edge
+        uses: ./.github/actions/simple-build-alert
         with:
           status: 'success'
           workflow_name: 'Build OT2 image on github workflows'
@@ -337,7 +337,7 @@ jobs:
 
       - name: Post results as release
         if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'release'
-        uses: Opentrons/opentrons/.github/actions/simple-build-alert@edge
+        uses: ./.github/actions/simple-build-alert
         with:
           status: 'success'
           workflow_name: 'Build OT2 image on github workflows'
