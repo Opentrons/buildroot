@@ -1,0 +1,41 @@
+name: 'Test Slack Alerts'
+on:
+  workflow_dispatch:
+    inputs:
+      alert_type:
+        description: 'Type of alert to test'
+        required: true
+        type: choice
+        options:
+          - 'internal-release'
+          - 'release'
+      status:
+        description: 'Status to test'
+        required: true
+        type: choice
+        options:
+          - 'success'
+          - 'failure'
+          - 'cancelled'
+
+jobs:
+  test-alert:
+    name: 'Test Slack Alert'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Test Internal Release Alert'
+        if: inputs.alert_type == 'internal-release'
+        uses: Opentrons/opentrons/.github/actions/simple-build-alert@edge
+        with:
+          status: ${{ inputs.status }}
+          workflow_name: 'Test Slack Alert (Internal Release)'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+
+      - name: 'Test Release Alert'
+        if: inputs.alert_type == 'release'
+        uses: Opentrons/opentrons/.github/actions/simple-build-alert@edge
+        with:
+          status: ${{ inputs.status }}
+          workflow_name: 'Test Slack Alert (Release)'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
+
