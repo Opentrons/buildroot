@@ -327,25 +327,99 @@ jobs:
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
-      - name: Post results as internal-release
-        if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'internal-release'
-        uses: slackapi/slack-github-action@v1.14.0
-        with:
-          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
-
-      - name: Post results as release
-        if: matrix.build_env == 'stage-prod' && needs.decide-refs.outputs.variant == 'release'
-        uses: slackapi/slack-github-action@v1.14.0
-        with:
-          payload: "{\"s3-url\":\"${{ steps.upload-results.outputs.console_url }}/\",\"type\":\"branch\", \"reflike\":\"${{ needs.decide-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ needs.decide-refs.outputs.monorepo }}\",\"full-image\":\"${{ steps.upload-results.outputs.fullimage_url }}\", \"system-update\":\"${{ steps.upload-results.outputs.system_url }}\", \"version-file\":\"${{ steps.upload-results.outputs.version_file_url }}\", \"release-notes\":\"${{ steps.upload-results.outputs.release_notes_file_url }}\"}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
-
       - name: remove build data
         if: always()
         run: |
           rm -rf ./*
           output_check=${{steps.cache-setup.outputs.output}}
           rm -rf ${output_check:-/does/not/exist}
+
+  notify-internal-release-success:
+    name: 'Notify Internal Release Success'
+    runs-on: 'ubuntu-latest'
+    needs: [decide-refs, run-build]
+    if: always() && inputs.infra-stage == 'stage-prod' && needs.run-build.result == 'success' && needs.decide-refs.outputs.variant == 'internal-release'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: 'Send success alert'
+        uses: ./.github/actions/simple-build-alert
+        with:
+          status: 'success'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+
+  notify-internal-release-failure:
+    name: 'Notify Internal Release Failure'
+    runs-on: 'ubuntu-latest'
+    needs: [decide-refs, run-build]
+    if: always() && inputs.infra-stage == 'stage-prod' && needs.run-build.result == 'failure' && needs.decide-refs.outputs.variant == 'internal-release'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: 'Send failure alert'
+        uses: ./.github/actions/simple-build-alert
+        with:
+          status: 'failure'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+
+  notify-internal-release-cancelled:
+    name: 'Notify Internal Release Cancelled'
+    runs-on: 'ubuntu-latest'
+    needs: [decide-refs, run-build]
+    if: always() && inputs.infra-stage == 'stage-prod' && needs.run-build.result == 'cancelled' && needs.decide-refs.outputs.variant == 'internal-release'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: 'Send cancelled alert'
+        uses: ./.github/actions/simple-build-alert
+        with:
+          status: 'cancelled'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+
+  notify-release-success:
+    name: 'Notify Release Success'
+    runs-on: 'ubuntu-latest'
+    needs: [decide-refs, run-build]
+    if: always() && inputs.infra-stage == 'stage-prod' && needs.run-build.result == 'success' && needs.decide-refs.outputs.variant == 'release'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: 'Send success alert'
+        uses: ./.github/actions/simple-build-alert
+        with:
+          status: 'success'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
+
+  notify-release-failure:
+    name: 'Notify Release Failure'
+    runs-on: 'ubuntu-latest'
+    needs: [decide-refs, run-build]
+    if: always() && inputs.infra-stage == 'stage-prod' && needs.run-build.result == 'failure' && needs.decide-refs.outputs.variant == 'release'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: 'Send failure alert'
+        uses: ./.github/actions/simple-build-alert
+        with:
+          status: 'failure'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
+
+  notify-release-cancelled:
+    name: 'Notify Release Cancelled'
+    runs-on: 'ubuntu-latest'
+    needs: [decide-refs, run-build]
+    if: always() && inputs.infra-stage == 'stage-prod' && needs.run-build.result == 'cancelled' && needs.decide-refs.outputs.variant == 'release'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: 'Send cancelled alert'
+        uses: ./.github/actions/simple-build-alert
+        with:
+          status: 'cancelled'
+          workflow_name: 'Build OT2 image on github workflows'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
