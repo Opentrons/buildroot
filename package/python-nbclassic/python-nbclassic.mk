@@ -25,6 +25,14 @@ PYTHON_NBCLASSIC_DEPENDENCIES = host-python-jupyter-packaging \
 								python-send2trash \
 								python-terminado \
 								python-prometheus_client
+ifeq ($(BR2_PACKAGE_PYTHON_NBCLASSIC_DEFER_INSTALL),y)
+define PYTHON_NBCLASSIC_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/usr/share/deferred-py-installs
+	cp $(@D)/dist/*.whl $(TARGET_DIR)/usr/share/deferred-py-installs/
+endef
+PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL
+endif
+
 
 define PYTHON_NBCLASSIC_USERS
 	jupyter -1 jupyter -1 * - - -

@@ -28,4 +28,23 @@ endef
 PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_REMOVE_TESTS
 endif
 
+define PYTHON_PANDAS_REMOVE_PYCACHE
+	find $(TARGET_DIR)/usr/lib/python3.12/site-packages/pandas -path '*/__pycache__/*' -delete
+	find $(TARGET_DIR)/usr/lib/python3.12/site-packages/pandas -name __pycache__ -delete
+endef
+
+
+ifeq ($(BR2_PACKAGE_PYTHON_PANDAS_DEFER_INSTALL),y)
+define PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL
+	$(PYTHON_PANDAS_REMOVE_PYCACHE)
+	mkdir -p $(TARGET_DIR)/usr/share/deferred-py-installs
+	tar -c -z \
+		-C$(TARGET_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages \
+		-f$(TARGET_DIR)/usr/share/deferred-py-installs/pandas-$(PYTHON_PANDAS_VERSION).tar.gz \
+		--remove-files \
+		pandas
+endef
+PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL
+endif
+
 $(eval $(meson-package))

@@ -19,3 +19,9 @@ config BR2_PACKAGE_PYTHON_PANDAS_TESTS
 		Include test files.
 		Selecting this option adds about 7.0 MB to the target file
 		system.
+
+config BR2_PACKAGE_PYTHON_PANDAS_DEFER_INSTALL
+	bool "pandas.deferinstall"
+	help
+        Selecting this option installs pandas as a tarball in /usr/share/deferred-py-installs to be
+        installed after boot.

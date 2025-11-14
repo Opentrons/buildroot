@@ -4,3 +4,9 @@ config BR2_PACKAGE_PYTHON_TZDATA
 	  Provider of IANA time zone data.
 
 	  https://github.com/python/tzdata
+
+config BR2_PACKAGE_PYTHON_TZDATA_DEFER_INSTALL
+       bool "python-tzdata.deferinstall"
+       help
+         Selecting this option installs the tzdata wheel in /usr/share/deferred-py-installs to
+         be installed after boot.
