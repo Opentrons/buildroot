@@ -11,4 +11,10 @@ PYTHON_TZDATA_SETUP_TYPE = setuptools
 PYTHON_TZDATA_LICENSE = Apache-2.0
 PYTHON_TZDATA_LICENSE_FILES = LICENSE
 
+ifeq ($(BR2_PACKAGE_PYTHON_TZDATA_DEFER_INSTALL),y)
+define PYTHON_TZDATA_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/usr/share/deferred-py-installs
+	cp $(@D)/dist/*.whl $(TARGET_DIR)/usr/share/deferred-py-installs/
+endef
+endif
 $(eval $(python-package))

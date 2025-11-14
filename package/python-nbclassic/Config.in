@@ -1,0 +1,12 @@
+config BR2_PACKAGE_PYTHON_NBCLASSIC
+    bool "python-nbclassic"
+    help
+      Jupyter notebook 6.x support for Jupyter server 7.
+
+      https://github.com/jupyter/nbclassic
+
+config BR2_PACKAGE_PYTHON_NBCLASSIC_DEFER_INSTALL
+    bool "python-nbclassic.deferinstall"
+    help
+      Selecting this option installs the nbclassic wheel in
+      /usr/share/deferred-py-installs to be installed after boot.
