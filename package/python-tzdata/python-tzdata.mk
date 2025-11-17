@@ -15,6 +15,9 @@ ifeq ($(BR2_PACKAGE_PYTHON_TZDATA_DEFER_INSTALL),y)
 define PYTHON_TZDATA_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/share/deferred-py-installs
 	cp $(@D)/dist/*.whl $(TARGET_DIR)/usr/share/deferred-py-installs/
+	mkdir -p $(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d
+	echo '[Service]' > $(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d/tzdata.conf
+	echo 'ExecStart=/usr/bin/pip install --no-deps --root=/var/system-packages --upgrade /usr/share/deferred-py-installs/tzdata-$(PYTHON_TZDATA_VERSION)-py2.py3-none-any.whl' >> $(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d/tzdata.conf
 endef
 endif
 $(eval $(python-package))

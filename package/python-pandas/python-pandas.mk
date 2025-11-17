@@ -21,6 +21,10 @@ PYTHON_PANDAS_DEPENDENCIES = \
 PYTHON_PANDAS_LICENSE = BSD
 PYTHON_PANDAS_LICENSE_FILES = LICENSE
 
+PYTHON_PANDAS_CONF_ENV += \
+	_PYTHON_SYSCONFIGDATA_NAME=$(PKG_PYTHON_SYSCONFIGDATA_NAME) \
+	PYTHONPATH=$(PYTHON3_PATH)
+
 ifneq ($(BR2_PACKAGE_PYTHON_PANDAS_TESTS),y)
 define PYTHON_PANDAS_REMOVE_TESTS
    rm -rf $(TARGET_DIR)/usr/lib/python*/site-packages/pandas/tests
@@ -32,7 +36,7 @@ define PYTHON_PANDAS_REMOVE_PYCACHE
 	find $(TARGET_DIR)/usr/lib/python3.12/site-packages/pandas -path '*/__pycache__/*' -delete
 	find $(TARGET_DIR)/usr/lib/python3.12/site-packages/pandas -name __pycache__ -delete
 endef
-
+PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_REMOVE_PYCACHE
 
 ifeq ($(BR2_PACKAGE_PYTHON_PANDAS_DEFER_INSTALL),y)
 define PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL
@@ -44,7 +48,13 @@ define PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL
 		--remove-files \
 		pandas
 endef
-PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL
+define PYTHON_PANDAS_INSTALL_DEFERRED_HOOK
+mkdir -p $(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d
+echo '[Service]' > $(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d/pandas.conf
+echo 'ExecStart=/usr/bin/tar -x -C/var/system-packages/usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/ -f/usr/share/deferred-py-installs/pandas-$(PYTHON_PANDAS_VERSION).tar.gz' \
+	>>$(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d/pandas.conf
+endef
+PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL PYTHON_PANDAS_INSTALL_DEFERRED_HOOK
 endif
 
 $(eval $(meson-package))

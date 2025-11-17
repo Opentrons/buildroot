@@ -2,4 +2,4 @@
 export RUNNING_ON_PI=1
 export OT_SMOOTHIE_ID=AMA
 # Make sure scripts installed by pip are in the path
-export PATH=$PATH:/var/user-packages/usr/bin
+export PATH=$PATH:/var/system-packages/usr/bin:/var/user-packages/usr/bin
