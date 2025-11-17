@@ -29,8 +29,10 @@ ifeq ($(BR2_PACKAGE_PYTHON_NBCLASSIC_DEFER_INSTALL),y)
 define PYTHON_NBCLASSIC_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/share/deferred-py-installs
 	cp $(@D)/dist/*.whl $(TARGET_DIR)/usr/share/deferred-py-installs/
+	mkdir -p $(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d
+	echo '[Service]' >$(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d/nbclassic.conf
+	echo 'ExecStart=/usr/bin/pip install --no-deps --root=/var/system-packages --upgrade /usr/share/deferred-py-installs/nbclassic-$(PYTHON_NBCLASSIC_VERSION)-py3-none-any.whl' >>$(TARGET_DIR)/etc/systemd/system/install-deferred-packages.service.d/nbclassic.conf
 endef
-PYTHON_PANDAS_POST_INSTALL_TARGET_HOOKS += PYTHON_PANDAS_RECOMPRESS_FOR_DEFERRED_INSTALL
 endif
 
 
