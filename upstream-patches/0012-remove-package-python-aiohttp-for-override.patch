@@ -1,7 +1,7 @@
-From 463bcc0c89e4facb28ebdda416754c8cc0efad5a Mon Sep 17 00:00:00 2001
+From 297484bbd595cbeea9ba2e7fc7c94ad1cf9f4c34 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Tue, 4 Nov 2025 19:21:39 +0000
-Subject: [PATCH 12/12] remove package/python-aiohttp for override
+Subject: [PATCH 12/13] remove package/python-aiohttp for override
 
 ---
  package/Config.in                          |  1 -

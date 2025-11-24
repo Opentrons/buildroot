@@ -1,7 +1,7 @@
-From 09409499149a0cbf4073a22e0911e5995bf7d4a3 Mon Sep 17 00:00:00 2001
+From d6721f1d45fa454bdbcb5c5be4f894db4a3d3552 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Tue, 4 Nov 2025 18:33:55 +0000
-Subject: [PATCH 11/12] remove mosquitto glibc 2.34 fixes
+Subject: [PATCH 11/13] remove mosquitto glibc 2.34 fixes
 
 ---
  ...02-Add-configure-time-check-for-lanl.patch | 47 -------------------

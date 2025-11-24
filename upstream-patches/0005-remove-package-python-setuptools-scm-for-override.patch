@@ -1,7 +1,7 @@
-From 1cb614bd02577e957dd1f6629fc229120096a0f1 Mon Sep 17 00:00:00 2001
+From 460d77007b24dd028b9b4bc129fc90d58ece46cb Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Tue, 4 Nov 2025 16:09:19 +0000
-Subject: [PATCH 05/12] remove package/python-setuptools-scm for override
+Subject: [PATCH 05/13] remove package/python-setuptools-scm for override
 
 ---
  .../python-setuptools-scm.hash                |  5 -----

@@ -1,0 +1,75 @@
+From 9a6b9a8e58d92ac5de71f44fc493eca370d7be88 Mon Sep 17 00:00:00 2001
+From: root <root@ip-172-31-87-224.ec2.internal>
+Date: Mon, 24 Nov 2025 19:12:28 +0000
+Subject: [PATCH 13/13] remove package/python-mistune for overrides
+
+---
+ package/Config.in                          |  1 -
+ package/python-mistune/Config.in           |  7 -------
+ package/python-mistune/python-mistune.hash |  5 -----
+ package/python-mistune/python-mistune.mk   | 15 ---------------
+ 4 files changed, 28 deletions(-)
+ delete mode 100644 package/python-mistune/Config.in
+ delete mode 100644 package/python-mistune/python-mistune.hash
+ delete mode 100644 package/python-mistune/python-mistune.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index d3401055..3ac16d82 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -1216,7 +1216,6 @@ menu "External python modules"
+ 	source "package/python-midiutil/Config.in"
+ 	source "package/python-mimeparse/Config.in"
+ 	source "package/python-minimalmodbus/Config.in"
+-	source "package/python-mistune/Config.in"
+ 	source "package/python-ml-dtypes/Config.in"
+ 	source "package/python-modbus-tk/Config.in"
+ 	source "package/python-more-itertools/Config.in"
+diff --git a/package/python-mistune/Config.in b/package/python-mistune/Config.in
+deleted file mode 100644
+index e62689d0..00000000
+--- a/package/python-mistune/Config.in
++++ /dev/null
+@@ -1,7 +0,0 @@
+-config BR2_PACKAGE_PYTHON_MISTUNE
+-	bool "python-mistune"
+-	help
+-	  The fastest markdown parser in pure Python with renderer
+-	  features, inspired by marked.
+-
+-	  https://pypi.python.org/pypi/mistune
+diff --git a/package/python-mistune/python-mistune.hash b/package/python-mistune/python-mistune.hash
+deleted file mode 100644
+index 7f119f4a..00000000
+--- a/package/python-mistune/python-mistune.hash
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# md5, sha256 from https://pypi.org/pypi/mistune/json
+-md5  fb1f89ef8e8e0313d69ac82cb7c1627b  mistune-3.1.0.tar.gz
+-sha256  dbcac2f78292b9dc066cd03b7a3a26b62d85f8159f2ea5fd28e55df79908d667  mistune-3.1.0.tar.gz
+-# Locally computed sha256 checksums
+-sha256  539013fd8e19f744f8bf0e27a532bbff54cd689ecef7a800f56ae5dc824be870  LICENSE
+diff --git a/package/python-mistune/python-mistune.mk b/package/python-mistune/python-mistune.mk
+deleted file mode 100644
+index 80c1ac83..00000000
+--- a/package/python-mistune/python-mistune.mk
++++ /dev/null
+@@ -1,15 +0,0 @@
+-################################################################################
+-#
+-# python-mistune
+-#
+-################################################################################
+-
+-PYTHON_MISTUNE_VERSION = 3.1.0
+-PYTHON_MISTUNE_SOURCE = mistune-$(PYTHON_MISTUNE_VERSION).tar.gz
+-PYTHON_MISTUNE_SITE = https://files.pythonhosted.org/packages/79/6e/96fc7cb3288666c5de2c396eb0e338dc95f7a8e4920e43e38783a22d0084
+-PYTHON_MISTUNE_LICENSE = BSD-3-Clause
+-PYTHON_MISTUNE_LICENSE_FILES = LICENSE
+-PYTHON_MISTUNE_SETUP_TYPE = setuptools
+-
+-$(eval $(python-package))
+-$(eval $(host-python-package))
+-- 
+2.43.0
+

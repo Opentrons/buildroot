@@ -1,7 +1,7 @@
-From 3d0a231d66ca72a23b17c094e9273d2078a71b3d Mon Sep 17 00:00:00 2001
+From 85b57d7055e35932766b8a0624803ac3f5b22724 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Tue, 4 Nov 2025 17:49:38 +0000
-Subject: [PATCH 10/12] remove package/python-uvloop for override
+Subject: [PATCH 10/13] remove package/python-uvloop for override
 
 ---
  package/Config.in                          |  1 -
