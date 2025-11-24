@@ -1,7 +1,7 @@
-From a860322980b77eb66ee74ab1d767e147cc1f41c5 Mon Sep 17 00:00:00 2001
+From 71c0e1787f9f7fd7f020ac4eff09423e5c24dd85 Mon Sep 17 00:00:00 2001
 From: root <root@ip-172-31-87-224.ec2.internal>
 Date: Tue, 4 Nov 2025 16:07:59 +0000
-Subject: [PATCH 03/12] remove package/python-typing-extensions for override
+Subject: [PATCH 03/13] remove package/python-typing-extensions for override
 
 ---
  package/Config.in                                 |  1 -
