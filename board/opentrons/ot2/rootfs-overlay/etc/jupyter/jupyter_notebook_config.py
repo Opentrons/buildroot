@@ -317,6 +317,9 @@ c.NotebookApp.token = ''
 #  Should be in the form of an HTTP origin: ws[s]://hostname[:port]
 #c.NotebookApp.websocket_url = ''
 
+# Hide the banner about updating to 7.0
+c.NotebookApp.show_banner = False
+
 #------------------------------------------------------------------------------
 # ConnectionFileMixin(LoggingConfigurable) configuration
 #------------------------------------------------------------------------------

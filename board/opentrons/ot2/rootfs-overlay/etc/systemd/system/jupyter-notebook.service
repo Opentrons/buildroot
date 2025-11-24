@@ -3,6 +3,7 @@ Description=Jupyter notebook server
 
 [Service]
 Type=simple
+Environment=PYTHONPATH=/var/system-packages/usr/lib/python3.12:/var/user-packages/usr/lib/python3.12
 ExecStart=/bin/sh -c "jupyter notebook --allow-root --config=%E/jupyter/jupyter_notebook_config.py --notebook-dir=%S/jupyter/notebooks 2>&1"
 PIDFile=%t/jupyter/jupyter.pid
 SupplementaryGroups=dialout
