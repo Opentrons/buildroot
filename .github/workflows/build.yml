@@ -8,11 +8,13 @@ on:
           Ref of https://github.com/opentrons/opentrons to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the oe-core ref if specified, and then default to edge.
         required: true
         default: '-'
+        type: string
       buildroot-ref:
         description: |
           Ref of https://github.com/opentrons/buildroot to build. This is different from the ref specified in the github api/webUI when starting this workflow - that ref is what contains this workflow, this ref specifies what gets built. It MUST be a full ref, e.g. refs/heads/main, or '-' to indicate not-specified. If not specified, will be decided based on the monorepo ref; if that isn't specified, will be main.
         required: true
         default: '-'
+        type: string
       infra-stage:
         description: |
           What infra stage to run on. This should almost always be prod; dev is useful when you explicitly want to test that stage.
@@ -22,6 +24,12 @@ on:
           - 'stage-prod'
           - 'stage-dev'
         default: 'stage-prod'
+      force-own-container:
+        description: |
+          True to build a container from the source branch and use that instead of a ghcr pull. Useful in development.
+        required: false
+        default: false
+        type: boolean
 
 env:
   CI: true
@@ -136,7 +144,11 @@ jobs:
         id: get-image
         run: |
           cd buildroot
-          imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
+          if [ ${{inputs.build-own-container}} = "true" ] ; then
+            imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
+          else
+            imgname=$(./opentrons-build-container.sh build)
+          fi
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
       - name: Set up signing
