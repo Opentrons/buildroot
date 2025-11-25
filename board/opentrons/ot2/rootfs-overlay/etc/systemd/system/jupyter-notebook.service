@@ -1,5 +1,6 @@
 [Unit]
 Description=Jupyter notebook server
+After=install-deferred-packages.service
 
 [Service]
 Type=simple
