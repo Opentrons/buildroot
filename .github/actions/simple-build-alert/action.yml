@@ -42,20 +42,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: 'Determine channel and webhook'
-      id: channel-config
-      shell: bash
-      run: |
-        # Use override if provided, otherwise default to release cycle
-        if [[ -n "${{ inputs.channel_override }}" ]]; then
-          echo "channel=${{ inputs.channel_override }}" >> $GITHUB_OUTPUT
-          echo "webhook_secret=OT_APP_RELEASE_SLACK_NOTIFICATION_WEBHOOK_URL" >> $GITHUB_OUTPUT
-        else
-          # All tagged builds go to release cycle by default
-          echo "channel=#release-cycle" >> $GITHUB_OUTPUT
-          echo "webhook_secret=OT_APP_RELEASE_SLACK_NOTIFICATION_WEBHOOK_URL" >> $GITHUB_OUTPUT
-        fi
-
     - name: 'Build payload'
       id: build-payload
       shell: bash
@@ -114,8 +100,13 @@ runs:
         blocks="${blocks}]"
         
         # Build full payload
-        channel="${{ steps.channel-config.outputs.channel }}"
-        payload="{\"channel\":\"${channel}\",\"username\":\"GitHub Actions\",\"icon_emoji\":\":robot_face:\",\"attachments\":[{\"color\":\"${color}\",\"blocks\":${blocks}}]}"
+        # Note: Channel is determined by the webhook URL, not set in payload
+        # If channel_override is provided, include it; otherwise let webhook determine channel
+        if [[ -n "${{ inputs.channel_override }}" ]]; then
+          payload="{\"channel\":\"${{ inputs.channel_override }}\",\"username\":\"GitHub Actions\",\"icon_emoji\":\":robot_face:\",\"attachments\":[{\"color\":\"${color}\",\"blocks\":${blocks}}]}"
+        else
+          payload="{\"username\":\"GitHub Actions\",\"icon_emoji\":\":robot_face:\",\"attachments\":[{\"color\":\"${color}\",\"blocks\":${blocks}}]}"
+        fi
         
         echo "payload<<EOF" >> $GITHUB_OUTPUT
         echo "$payload" >> $GITHUB_OUTPUT
