@@ -17,6 +17,27 @@ inputs:
   webhook_url:
     description: 'Slack webhook URL'
     required: true
+  console_url:
+    description: 'S3 console URL (optional)'
+    required: false
+  system_url:
+    description: 'System update zip URL (optional)'
+    required: false
+  fullimage_url:
+    description: 'Full image zip URL (optional)'
+    required: false
+  version_file_url:
+    description: 'Version file URL (optional)'
+    required: false
+  release_notes_file_url:
+    description: 'Release notes file URL (optional)'
+    required: false
+  buildroot_ref:
+    description: 'Buildroot ref (optional)'
+    required: false
+  monorepo_ref:
+    description: 'Monorepo ref (optional)'
+    required: false
 
 runs:
   using: 'composite'
@@ -35,51 +56,75 @@ runs:
           echo "webhook_secret=OT_APP_RELEASE_SLACK_NOTIFICATION_WEBHOOK_URL" >> $GITHUB_OUTPUT
         fi
 
+    - name: 'Build payload'
+      id: build-payload
+      shell: bash
+      run: |
+        # Build fields array
+        fields='[{"type":"mrkdwn","text":"*Tag:* `${{ github.ref_name }}`"},{"type":"mrkdwn","text":"*Workflow:* `${{ inputs.workflow_name }}`"},{"type":"mrkdwn","text":"*Status:* `${{ inputs.status }}`"},{"type":"mrkdwn","text":"*View Details:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>"}'
+        
+        if [[ -n "${{ inputs.failed_jobs }}" ]]; then
+          fields="${fields},{\"type\":\"mrkdwn\",\"text\":\"*Failed Jobs:* \`${{ inputs.failed_jobs }}\`\"}"
+        fi
+        
+        if [[ -n "${{ inputs.buildroot_ref }}" ]]; then
+          fields="${fields},{\"type\":\"mrkdwn\",\"text\":\"*Buildroot:* \`${{ inputs.buildroot_ref }}\`\"}"
+        fi
+        
+        if [[ -n "${{ inputs.monorepo_ref }}" ]]; then
+          fields="${fields},{\"type\":\"mrkdwn\",\"text\":\"*Monorepo:* \`${{ inputs.monorepo_ref }}\`\"}"
+        fi
+        
+        fields="${fields}]"
+        
+        # Build blocks array
+        status_text="${{ inputs.status == 'success' && '✅ Build Success' || inputs.status == 'failure' && '❌ Build Failed' || '⚠️ Build Cancelled' }}"
+        color="${{ inputs.status == 'success' && 'good' || inputs.status == 'failure' && 'danger' || 'warning' }}"
+        blocks="[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${status_text}\"}},{\"type\":\"section\",\"fields\":${fields}}"
+        
+        # Add artifacts section if URLs are provided
+        if [[ -n "${{ inputs.console_url }}" ]] || [[ -n "${{ inputs.system_url }}" ]] || [[ -n "${{ inputs.fullimage_url }}" ]] || [[ -n "${{ inputs.version_file_url }}" ]]; then
+          artifacts_text="*Artifacts:*"
+          
+          if [[ -n "${{ inputs.console_url }}" ]]; then
+            artifacts_text="${artifacts_text}\\n*Download at:* <${{ inputs.console_url }}|S3 Console>"
+          fi
+          
+          if [[ -n "${{ inputs.system_url }}" ]]; then
+            artifacts_text="${artifacts_text}\\n*System Image (For Updates):* <${{ inputs.system_url }}|Download>"
+          fi
+          
+          if [[ -n "${{ inputs.fullimage_url }}" ]]; then
+            artifacts_text="${artifacts_text}\\n*Full Image (For Flashing):* <${{ inputs.fullimage_url }}|Download>"
+          fi
+          
+          if [[ -n "${{ inputs.version_file_url }}" ]]; then
+            artifacts_text="${artifacts_text}\\n*Version file:* <${{ inputs.version_file_url }}|Download>"
+          fi
+          
+          if [[ -n "${{ inputs.release_notes_file_url }}" ]]; then
+            artifacts_text="${artifacts_text}\\n*Release notes:* <${{ inputs.release_notes_file_url }}|Download>"
+          fi
+          
+          # Escape for JSON
+          artifacts_text_escaped=$(printf '%s' "$artifacts_text" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+          blocks="${blocks},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${artifacts_text_escaped}\"}}"
+        fi
+        
+        blocks="${blocks}]"
+        
+        # Build full payload
+        channel="${{ steps.channel-config.outputs.channel }}"
+        payload="{\"channel\":\"${channel}\",\"username\":\"GitHub Actions\",\"icon_emoji\":\":robot_face:\",\"attachments\":[{\"color\":\"${color}\",\"blocks\":${blocks}}]}"
+        
+        echo "payload<<EOF" >> $GITHUB_OUTPUT
+        echo "$payload" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
     - name: 'Send Slack Alert'
       uses: slackapi/slack-github-action@v2.1.1
       with:
         webhook-type: 'incoming-webhook'
-        payload: |
-          {
-            "channel": "${{ steps.channel-config.outputs.channel }}",
-            "username": "GitHub Actions",
-            "icon_emoji": ":robot_face:",
-            "attachments": [
-              {
-                "color": "${{ inputs.status == 'success' && 'good' || inputs.status == 'failure' && 'danger' || 'warning' }}",
-                "blocks": [
-                  {
-                    "type": "header",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "${{ inputs.status == 'success' && '✅ Build Success' || inputs.status == 'failure' && '❌ Build Failed' || '⚠️ Build Cancelled' }}"
-                    }
-                  },
-                  {
-                    "type": "section",
-                    "fields": [
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Tag:* `${{ github.ref_name }}`"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Workflow:* `${{ inputs.workflow_name }}`"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*Status:* `${{ inputs.status }}`"
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": "*View Details:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>"
-                      }
-                      ${{ inputs.failed_jobs && format(',{{ "type": "mrkdwn", "text": "*Failed Jobs:* `{0}`" }}', inputs.failed_jobs) || '' }}
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
+        payload: ${{ steps.build-payload.outputs.payload }}
       env:
         SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}

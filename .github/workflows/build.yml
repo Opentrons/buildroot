@@ -69,6 +69,12 @@ jobs:
     concurrency:
       group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
       cancel-in-progress: false
+    outputs:
+      console_url: ${{ steps.upload-results.outputs.console_url }}
+      system_url: ${{ steps.upload-results.outputs.system_url }}
+      fullimage_url: ${{ steps.upload-results.outputs.fullimage_url }}
+      version_file_url: ${{ steps.upload-results.outputs.version_file_url }}
+      release_notes_file_url: ${{ steps.upload-results.outputs.release_notes_file_url }}
     steps:
       - name: Set up vm requirements
         run: |
@@ -348,6 +354,13 @@ jobs:
           status: 'success'
           workflow_name: 'Build OT2 image on github workflows'
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+          console_url: ${{ needs.run-build.outputs.console_url }}
+          system_url: ${{ needs.run-build.outputs.system_url }}
+          fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
+          version_file_url: ${{ needs.run-build.outputs.version_file_url }}
+          release_notes_file_url: ${{ needs.run-build.outputs.release_notes_file_url }}
+          buildroot_ref: ${{ needs.decide-refs.outputs.buildroot }}
+          monorepo_ref: ${{ needs.decide-refs.outputs.monorepo }}
 
   notify-internal-release-failure:
     name: 'Notify Internal Release Failure'
@@ -363,6 +376,13 @@ jobs:
           status: 'failure'
           workflow_name: 'Build OT2 image on github workflows'
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+          console_url: ${{ needs.run-build.outputs.console_url }}
+          system_url: ${{ needs.run-build.outputs.system_url }}
+          fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
+          version_file_url: ${{ needs.run-build.outputs.version_file_url }}
+          release_notes_file_url: ${{ needs.run-build.outputs.release_notes_file_url }}
+          buildroot_ref: ${{ needs.decide-refs.outputs.buildroot }}
+          monorepo_ref: ${{ needs.decide-refs.outputs.monorepo }}
 
   notify-internal-release-cancelled:
     name: 'Notify Internal Release Cancelled'
@@ -378,6 +398,13 @@ jobs:
           status: 'cancelled'
           workflow_name: 'Build OT2 image on github workflows'
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_INTERNAL_RELEASE }}
+          console_url: ${{ needs.run-build.outputs.console_url }}
+          system_url: ${{ needs.run-build.outputs.system_url }}
+          fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
+          version_file_url: ${{ needs.run-build.outputs.version_file_url }}
+          release_notes_file_url: ${{ needs.run-build.outputs.release_notes_file_url }}
+          buildroot_ref: ${{ needs.decide-refs.outputs.buildroot }}
+          monorepo_ref: ${{ needs.decide-refs.outputs.monorepo }}
 
   notify-release-success:
     name: 'Notify Release Success'
@@ -393,6 +420,13 @@ jobs:
           status: 'success'
           workflow_name: 'Build OT2 image on github workflows'
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
+          console_url: ${{ needs.run-build.outputs.console_url }}
+          system_url: ${{ needs.run-build.outputs.system_url }}
+          fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
+          version_file_url: ${{ needs.run-build.outputs.version_file_url }}
+          release_notes_file_url: ${{ needs.run-build.outputs.release_notes_file_url }}
+          buildroot_ref: ${{ needs.decide-refs.outputs.buildroot }}
+          monorepo_ref: ${{ needs.decide-refs.outputs.monorepo }}
 
   notify-release-failure:
     name: 'Notify Release Failure'
@@ -408,6 +442,13 @@ jobs:
           status: 'failure'
           workflow_name: 'Build OT2 image on github workflows'
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
+          console_url: ${{ needs.run-build.outputs.console_url }}
+          system_url: ${{ needs.run-build.outputs.system_url }}
+          fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
+          version_file_url: ${{ needs.run-build.outputs.version_file_url }}
+          release_notes_file_url: ${{ needs.run-build.outputs.release_notes_file_url }}
+          buildroot_ref: ${{ needs.decide-refs.outputs.buildroot }}
+          monorepo_ref: ${{ needs.decide-refs.outputs.monorepo }}
 
   notify-release-cancelled:
     name: 'Notify Release Cancelled'
@@ -423,3 +464,10 @@ jobs:
           status: 'cancelled'
           workflow_name: 'Build OT2 image on github workflows'
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
+          console_url: ${{ needs.run-build.outputs.console_url }}
+          system_url: ${{ needs.run-build.outputs.system_url }}
+          fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
+          version_file_url: ${{ needs.run-build.outputs.version_file_url }}
+          release_notes_file_url: ${{ needs.run-build.outputs.release_notes_file_url }}
+          buildroot_ref: ${{ needs.decide-refs.outputs.buildroot }}
+          monorepo_ref: ${{ needs.decide-refs.outputs.monorepo }}
