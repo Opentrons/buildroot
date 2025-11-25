@@ -2,6 +2,10 @@
 # a new magic directory.
 [Unit]
 Description=Install deferred python packages
+Before=jupyter-notebook.service
+Before=basic.target
+Before=opentrons-robot-server.service
+Before=opentrons-update-server.service
 
 [Service]
 Type=oneshot
