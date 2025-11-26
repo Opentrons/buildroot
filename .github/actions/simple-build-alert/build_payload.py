@@ -46,11 +46,14 @@ def build_payload():
     if failed_jobs:
         fields.append({"type": "mrkdwn", "text": f"*Failed Jobs:* `{failed_jobs}`"})
 
+    # Strip refs/tags/ or refs/heads/ prefixes from refs
     if buildroot_ref:
-        fields.append({"type": "mrkdwn", "text": f"*Buildroot:* `{buildroot_ref}`"})
+        buildroot_display = buildroot_ref.replace('refs/tags/', '').replace('refs/heads/', '')
+        fields.append({"type": "mrkdwn", "text": f"*Buildroot:* `{buildroot_display}`"})
 
     if monorepo_ref:
-        fields.append({"type": "mrkdwn", "text": f"*Monorepo:* `{monorepo_ref}`"})
+        monorepo_display = monorepo_ref.replace('refs/tags/', '').replace('refs/heads/', '')
+        fields.append({"type": "mrkdwn", "text": f"*Monorepo:* `{monorepo_display}`"})
 
     # Build blocks array
     blocks = [
