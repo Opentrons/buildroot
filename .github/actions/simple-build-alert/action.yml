@@ -42,75 +42,161 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: 'Extract tag name'
+      id: tag-name
+      shell: bash
+      run: |
+        # Extract tag name from monorepo_ref if provided, otherwise use github.ref_name
+        if [[ -n "${{ inputs.monorepo_ref }}" ]]; then
+          tag_ref="${{ inputs.monorepo_ref }}"
+          # Remove refs/tags/ prefix if present
+          tag_name="${tag_ref#refs/tags/}"
+        else
+          tag_name="${{ github.ref_name }}"
+        fi
+        echo "tag=${tag_name}" >> $GITHUB_OUTPUT
+
     - name: 'Build payload'
       id: build-payload
       shell: bash
       run: |
+        # Use Python to build JSON payload properly
+        payload_json=$(python3 << 'PYTHON_SCRIPT'
+        import json
+        import os
+        
+        # Get inputs
+        status = os.environ.get('INPUT_STATUS', '')
+        workflow_name = os.environ.get('INPUT_WORKFLOW_NAME', '')
+        tag_name = os.environ.get('TAG_NAME', '')
+        failed_jobs = os.environ.get('INPUT_FAILED_JOBS', '')
+        buildroot_ref = os.environ.get('INPUT_BUILDROOT_REF', '')
+        monorepo_ref = os.environ.get('INPUT_MONOREPO_REF', '')
+        console_url = os.environ.get('INPUT_CONSOLE_URL', '')
+        system_url = os.environ.get('INPUT_SYSTEM_URL', '')
+        fullimage_url = os.environ.get('INPUT_FULLIMAGE_URL', '')
+        version_file_url = os.environ.get('INPUT_VERSION_FILE_URL', '')
+        release_notes_file_url = os.environ.get('INPUT_RELEASE_NOTES_FILE_URL', '')
+        channel_override = os.environ.get('INPUT_CHANNEL_OVERRIDE', '')
+        github_server_url = os.environ.get('GITHUB_SERVER_URL', '')
+        github_repository = os.environ.get('GITHUB_REPOSITORY', '')
+        github_run_id = os.environ.get('GITHUB_RUN_ID', '')
+        
+        # Build status text and color
+        if status == 'success':
+            status_text = '✅ Build Success'
+            color = 'good'
+        elif status == 'failure':
+            status_text = '❌ Build Failed'
+            color = 'danger'
+        else:
+            status_text = '⚠️ Build Cancelled'
+            color = 'warning'
+        
         # Build fields array
-        fields='[{"type":"mrkdwn","text":"*Tag:* `${{ github.ref_name }}`"},{"type":"mrkdwn","text":"*Workflow:* `${{ inputs.workflow_name }}`"},{"type":"mrkdwn","text":"*Status:* `${{ inputs.status }}`"},{"type":"mrkdwn","text":"*View Details:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Open Workflow>"}'
+        fields = [
+            {"type": "mrkdwn", "text": f"*Tag:* `{tag_name}`"},
+            {"type": "mrkdwn", "text": f"*Workflow:* `{workflow_name}`"},
+            {"type": "mrkdwn", "text": f"*Status:* `{status}`"},
+            {"type": "mrkdwn", "text": f"*View Details:* <{github_server_url}/{github_repository}/actions/runs/{github_run_id}|Open Workflow>"}
+        ]
         
-        if [[ -n "${{ inputs.failed_jobs }}" ]]; then
-          fields="${fields},{\"type\":\"mrkdwn\",\"text\":\"*Failed Jobs:* \`${{ inputs.failed_jobs }}\`\"}"
-        fi
+        if failed_jobs:
+            fields.append({"type": "mrkdwn", "text": f"*Failed Jobs:* `{failed_jobs}`"})
         
-        if [[ -n "${{ inputs.buildroot_ref }}" ]]; then
-          fields="${fields},{\"type\":\"mrkdwn\",\"text\":\"*Buildroot:* \`${{ inputs.buildroot_ref }}\`\"}"
-        fi
+        if buildroot_ref:
+            fields.append({"type": "mrkdwn", "text": f"*Buildroot:* `{buildroot_ref}`"})
         
-        if [[ -n "${{ inputs.monorepo_ref }}" ]]; then
-          fields="${fields},{\"type\":\"mrkdwn\",\"text\":\"*Monorepo:* \`${{ inputs.monorepo_ref }}\`\"}"
-        fi
-        
-        fields="${fields}]"
+        if monorepo_ref:
+            fields.append({"type": "mrkdwn", "text": f"*Monorepo:* `{monorepo_ref}`"})
         
         # Build blocks array
-        status_text="${{ inputs.status == 'success' && '✅ Build Success' || inputs.status == 'failure' && '❌ Build Failed' || '⚠️ Build Cancelled' }}"
-        color="${{ inputs.status == 'success' && 'good' || inputs.status == 'failure' && 'danger' || 'warning' }}"
-        blocks="[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${status_text}\"}},{\"type\":\"section\",\"fields\":${fields}}"
+        blocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": status_text
+                }
+            },
+            {
+                "type": "section",
+                "fields": fields
+            }
+        ]
         
         # Add artifacts section if URLs are provided
-        if [[ -n "${{ inputs.console_url }}" ]] || [[ -n "${{ inputs.system_url }}" ]] || [[ -n "${{ inputs.fullimage_url }}" ]] || [[ -n "${{ inputs.version_file_url }}" ]]; then
-          artifacts_text="*Artifacts:*"
-          
-          if [[ -n "${{ inputs.console_url }}" ]]; then
-            artifacts_text="${artifacts_text}\\n*Download at:* <${{ inputs.console_url }}|S3 Console>"
-          fi
-          
-          if [[ -n "${{ inputs.system_url }}" ]]; then
-            artifacts_text="${artifacts_text}\\n*System Image (For Updates):* <${{ inputs.system_url }}|Download>"
-          fi
-          
-          if [[ -n "${{ inputs.fullimage_url }}" ]]; then
-            artifacts_text="${artifacts_text}\\n*Full Image (For Flashing):* <${{ inputs.fullimage_url }}|Download>"
-          fi
-          
-          if [[ -n "${{ inputs.version_file_url }}" ]]; then
-            artifacts_text="${artifacts_text}\\n*Version file:* <${{ inputs.version_file_url }}|Download>"
-          fi
-          
-          if [[ -n "${{ inputs.release_notes_file_url }}" ]]; then
-            artifacts_text="${artifacts_text}\\n*Release notes:* <${{ inputs.release_notes_file_url }}|Download>"
-          fi
-          
-          # Escape for JSON
-          artifacts_text_escaped=$(printf '%s' "$artifacts_text" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-          blocks="${blocks},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"${artifacts_text_escaped}\"}}"
-        fi
-        
-        blocks="${blocks}]"
+        if console_url or system_url or fullimage_url or version_file_url or release_notes_file_url:
+            artifacts_lines = ["*Artifacts:*"]
+            
+            if console_url:
+                artifacts_lines.append(f"*Download at:* <{console_url}|S3 Console>")
+            
+            if system_url:
+                artifacts_lines.append(f"*System Image (For Updates):* <{system_url}|Download>")
+            
+            if fullimage_url:
+                artifacts_lines.append(f"*Full Image (For Flashing):* <{fullimage_url}|Download>")
+            
+            if version_file_url:
+                artifacts_lines.append(f"*Version file:* <{version_file_url}|Download>")
+            
+            if release_notes_file_url:
+                artifacts_lines.append(f"*Release notes:* <{release_notes_file_url}|Download>")
+            
+            artifacts_text = "\n".join(artifacts_lines)
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": artifacts_text
+                }
+            })
         
         # Build full payload
         # Note: Channel is determined by the webhook URL, not set in payload
         # If channel_override is provided, include it; otherwise let webhook determine channel
-        if [[ -n "${{ inputs.channel_override }}" ]]; then
-          payload="{\"channel\":\"${{ inputs.channel_override }}\",\"username\":\"GitHub Actions\",\"icon_emoji\":\":robot_face:\",\"attachments\":[{\"color\":\"${color}\",\"blocks\":${blocks}}]}"
-        else
-          payload="{\"username\":\"GitHub Actions\",\"icon_emoji\":\":robot_face:\",\"attachments\":[{\"color\":\"${color}\",\"blocks\":${blocks}}]}"
-        fi
+        payload = {
+            "username": "GitHub Actions",
+            "icon_emoji": ":robot_face:",
+            "attachments": [
+                {
+                    "color": color,
+                    "blocks": blocks
+                }
+            ]
+        }
         
-        echo "payload<<EOF" >> $GITHUB_OUTPUT
-        echo "$payload" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        if channel_override:
+            payload["channel"] = channel_override
+        
+        # Output JSON
+        print(json.dumps(payload))
+        PYTHON_SCRIPT
+        )
+        
+        # Write to GITHUB_OUTPUT using multiline format
+        {
+          echo "payload<<EOF"
+          echo "$payload_json"
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
+      env:
+        INPUT_STATUS: ${{ inputs.status }}
+        INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+        TAG_NAME: ${{ steps.tag-name.outputs.tag }}
+        INPUT_FAILED_JOBS: ${{ inputs.failed_jobs }}
+        INPUT_BUILDROOT_REF: ${{ inputs.buildroot_ref }}
+        INPUT_MONOREPO_REF: ${{ inputs.monorepo_ref }}
+        INPUT_CONSOLE_URL: ${{ inputs.console_url }}
+        INPUT_SYSTEM_URL: ${{ inputs.system_url }}
+        INPUT_FULLIMAGE_URL: ${{ inputs.fullimage_url }}
+        INPUT_VERSION_FILE_URL: ${{ inputs.version_file_url }}
+        INPUT_RELEASE_NOTES_FILE_URL: ${{ inputs.release_notes_file_url }}
+        INPUT_CHANNEL_OVERRIDE: ${{ inputs.channel_override }}
+        GITHUB_SERVER_URL: ${{ github.server_url }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_RUN_ID: ${{ github.run_id }}
 
     - name: 'Send Slack Alert'
       uses: slackapi/slack-github-action@v2.1.1
