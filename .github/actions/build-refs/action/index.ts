@@ -1,6 +1,39 @@
 import { getOctokit } from '@actions/github'
-import * as core from '@actions/core'
+import * as fs from 'fs'
+import * as os from 'os'
 import * as semver from 'semver'
+
+// Custom implementations to avoid importing @actions/core which contains deprecated set-output
+function getInput(name: string): string {
+  return process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || ''
+}
+
+function info(message: string): void {
+  console.log(message)
+}
+
+function debug(message: string): void {
+  if (process.env['RUNNER_DEBUG'] === '1') {
+    console.log(message)
+  }
+}
+
+function setFailed(message: string): void {
+  console.error(message)
+  process.exit(1)
+}
+
+// Custom setOutput function using Environment Files (no deprecated set-output fallback)
+function customSetOutput(name: string, value: string): void {
+  const filePath = process.env['GITHUB_OUTPUT']
+  if (!filePath) {
+    throw new Error('GITHUB_OUTPUT environment variable is not set')
+  }
+  
+  // Use the simple Environment Files syntax as recommended by GitHub
+  const commandValue = `${name}=${value}${os.EOL}`
+  fs.appendFileSync(filePath, commandValue)
+}
 
 export type Repo = 'buildroot' | 'monorepo'
 export type BuildType = 'develop' | 'release'
@@ -130,7 +163,7 @@ export function authoritativeRef(inputs: Inputs): [Ref, boolean] {
 
 const getInputs = () =>
   orderedRepos.reduce((prev: Inputs, inputName: Repo): Inputs => {
-    const input = core.getInput(inputName)
+    const input = getInput(inputName)
     return prev.set(inputName, input == '-' ? null : input)
   }, new Map())
 
@@ -185,13 +218,13 @@ async function resolveRefs(
   toAttempt: AttemptableRefs,
   variant: Variant
 ): Promise<OutputRefs> {
-  const token = core.getInput('token')
+  const token = getInput('token')
   let resolved = new Map()
   for (const [repo, refList] of toAttempt) {
     const octokit = getOctokit(token)
 
     const fetchTags = async (repoName: Repo): Promise<Ref | null> => {
-      core.info(`finding latest tag for ${repoName}`)
+      info(`finding latest tag for ${repoName}`)
       return Promise.all(
         latestTagPrefixFor(repoName, variant).map(prefix =>
           octokit.rest.git
@@ -219,10 +252,10 @@ async function resolveRefs(
       repoName: Repo,
       ref: AttemptableRef
     ): Promise<Ref | null> => {
-      core.info(`looking for ${ref} on ${repoName}`)
+      info(`looking for ${ref} on ${repoName}`)
       const correctRef = ref === ':latest:' ? await fetchTags(repoName) : ref
       if (correctRef === null) {
-        core.info(`couldn't find ref ${correctRef} for ${ref} on ${repoName}`)
+        info(`couldn't find ref ${correctRef} for ${ref} on ${repoName}`)
         return null
       }
 
@@ -238,7 +271,7 @@ async function resolveRefs(
             )
           }
           const availableRefs = value.data.map(refObj => refObj.ref)
-          core.info(`refs on ${repoName} matching ${ref}: ${availableRefs}`)
+          info(`refs on ${repoName} matching ${ref}: ${availableRefs}`)
           return availableRefs.includes(correctRef) ? correctRef : null
         })
     }
@@ -270,16 +303,16 @@ export function resolveBuildType(ref: Ref, variant: Variant): BuildType {
 async function run() {
   const inputs = getInputs()
   inputs.forEach((ref, repo) => {
-    core.debug(`found input for ${repo}: ${ref}`)
+    debug(`found input for ${repo}: ${ref}`)
   })
   const [authoritative, isMain] = authoritativeRef(inputs)
-  core.debug(`authoritative ref is ${authoritative} (main: ${isMain})`)
+  debug(`authoritative ref is ${authoritative} (main: ${isMain})`)
   const variant = variantForRef(authoritative)
   const buildType = resolveBuildType(authoritative, variant)
-  core.info(`Resolved build variant to ${variant}`)
-  core.info(`Resolved buildroot build-type to ${buildType}`)
-  core.setOutput('build-type', buildType)
-  core.setOutput('variant', variant)
+  info(`Resolved build variant to ${variant}`)
+  info(`Resolved buildroot build-type to ${buildType}`)
+  customSetOutput('build-type', buildType)
+  customSetOutput('variant', variant)
 
   const attemptable = Array.from(inputs.entries()).reduce(
     (prev: AttemptableRefs, [repoName, inputRef]): AttemptableRefs => {
@@ -293,13 +326,13 @@ async function run() {
     new Map()
   )
   attemptable.forEach((refs, repo) => {
-    core.debug(`found attemptable refs for ${repo}: ${refs.join(', ')}`)
+    debug(`found attemptable refs for ${repo}: ${refs.join(', ')}`)
   })
 
   const resolved = await resolveRefs(attemptable, variant)
   resolved.forEach((ref, repo) => {
-    core.info(`Resolved ${repo} to ${ref}`)
-    core.setOutput(repo, ref)
+    info(`Resolved ${repo} to ${ref}`)
+    customSetOutput(repo, ref)
   })
 }
 
@@ -307,7 +340,7 @@ async function _run() {
   try {
     await run()
   } catch (error: any) {
-    core.setFailed(error.toString())
+    setFailed(error.toString())
   }
 }
 
