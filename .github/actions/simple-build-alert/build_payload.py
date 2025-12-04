@@ -101,17 +101,14 @@ def build_payload():
             }
         })
 
-    # Build full payload
+    # Build full payload using Block Kit format
     # Note: Channel is determined by the webhook URL, not set in payload
+    # Using pure Block Kit format (blocks at top level) ensures links render properly
+    # The status emoji (✅, ❌, ⚠️) already provides visual indication
     payload = {
         "username": "GitHub Actions",
         "icon_emoji": ":robot_face:",
-        "attachments": [
-            {
-                "color": color,
-                "blocks": blocks
-            }
-        ]
+        "blocks": blocks
     }
 
     # Output JSON
