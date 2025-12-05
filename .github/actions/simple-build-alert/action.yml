@@ -39,56 +39,32 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: 'Extract tag name'
-      id: tag-name
+    - name: 'Prepare refs for payload'
+      id: prepare-refs
       shell: bash
       run: |
-        # Extract tag name from monorepo_ref if provided, otherwise use github.ref_name
-        if [[ -n "${{ inputs.monorepo_ref }}" ]]; then
-          tag_ref="${{ inputs.monorepo_ref }}"
-          # Remove refs/tags/ or refs/heads/ prefix if present
-          tag_name="${tag_ref#refs/tags/}"
-          tag_name="${tag_name#refs/heads/}"
-        else
-          tag_name="${{ github.ref_name }}"
-        fi
-        echo "tag=${tag_name}" >> $GITHUB_OUTPUT
-
-    - name: 'Build payload'
-      id: build-payload
-      shell: bash
-      run: |
-        # Use Python script to build JSON payload properly
-        # The script is in the same directory as action.yml
-        payload_json=$(python3 build_payload.py)
+        # Strip refs/tags/ or refs/heads/ prefix from refs
+        buildroot_display="${{ inputs.buildroot_ref }}"
+        buildroot_display="${buildroot_display#refs/tags/}"
+        buildroot_display="${buildroot_display#refs/heads/}"
+        echo "buildroot=${buildroot_display}" >> $GITHUB_OUTPUT
         
-        # Write to GITHUB_OUTPUT using multiline format
-        {
-          echo "payload<<EOF"
-          echo "$payload_json"
-          echo "EOF"
-        } >> $GITHUB_OUTPUT
-      working-directory: ${{ github.action_path }}
-      env:
-        INPUT_STATUS: ${{ inputs.status }}
-        INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
-        TAG_NAME: ${{ steps.tag-name.outputs.tag }}
-        INPUT_FAILED_JOBS: ${{ inputs.failed_jobs }}
-        INPUT_BUILDROOT_REF: ${{ inputs.buildroot_ref }}
-        INPUT_MONOREPO_REF: ${{ inputs.monorepo_ref }}
-        INPUT_CONSOLE_URL: ${{ inputs.console_url }}
-        INPUT_SYSTEM_URL: ${{ inputs.system_url }}
-        INPUT_FULLIMAGE_URL: ${{ inputs.fullimage_url }}
-        INPUT_VERSION_FILE_URL: ${{ inputs.version_file_url }}
-        INPUT_RELEASE_NOTES_FILE_URL: ${{ inputs.release_notes_file_url }}
-        GITHUB_SERVER_URL: ${{ github.server_url }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        GITHUB_RUN_ID: ${{ github.run_id }}
+        monorepo_display="${{ inputs.monorepo_ref }}"
+        monorepo_display="${monorepo_display#refs/tags/}"
+        monorepo_display="${monorepo_display#refs/heads/}"
+        echo "monorepo=${monorepo_display}" >> $GITHUB_OUTPUT
+        
+        # Determine if this is a tagged release
+        if [[ "${{ inputs.monorepo_ref }}" == refs/tags/* ]]; then
+          echo "ref_type=tag" >> $GITHUB_OUTPUT
+        else
+          echo "ref_type=branch" >> $GITHUB_OUTPUT
+        fi
 
     - name: 'Send Slack Alert'
-      uses: slackapi/slack-github-action@v2.1.1
+      uses: slackapi/slack-github-action@v1.14.0
       with:
-        webhook-type: 'incoming-webhook'
-        payload: ${{ steps.build-payload.outputs.payload }}
+        payload: "{\"s3-url\":\"${{ inputs.console_url }}/\",\"type\":\"${{ steps.prepare-refs.outputs.ref_type }}\",\"reflike\":\"${{ steps.prepare-refs.outputs.buildroot }}\",\"monorepo-reflike\":\"${{ steps.prepare-refs.outputs.monorepo }}\",\"full-image\":\"${{ inputs.fullimage_url }}\",\"system-update\":\"${{ inputs.system_url }}\",\"version-file\":\"${{ inputs.version_file_url }}\",\"release-notes\":\"${{ inputs.release_notes_file_url }}\"}"
       env:
         SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}
+      continue-on-error: false
