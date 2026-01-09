@@ -35,7 +35,7 @@ cp -r ${BINARIES_DIR}/*.dtb ${TARGET_DIR}/boot/
 sed -i s/kernel=zImage/kernel=u-boot.bin/ ${BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH}/board/opentrons/ot2/config.txt
 hostname_to_write=$(cat ${TARGET_DIR}/etc/hostname)
 
-if [ ${OT_BUILD_TYPE} != "release" ]; then
+if [ "${OT_BUILD_TYPE}" != "release" ]; then
     echo "Build type is NOT RELEASE, adding default ssh key and removing signing"
     # write common pubkey to authorized keys
     cat ${TARGET_DIR}/var/home/.ssh/robot_key.pub > ${TARGET_DIR}/var/home/.ssh/authorized_keys

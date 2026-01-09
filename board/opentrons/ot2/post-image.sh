@@ -68,7 +68,7 @@ shasum -a 256 ${BINARIES_DIR}/boot.vfat | grep -oh "^.\+ " > ${BINARIES_DIR}/boo
 
 boot_files="${BINARIES_DIR}/boot.vfat ${BINARIES_DIR}/boot.vfat.hash"
 
-if [ ${OT_BUILD_TYPE} = "release" ]; then
+if [ "${OT_BUILD_TYPE}" = "release" ]; then
     echo "Build type is RELEASE"
 else
     echo "Build type is NOT RELEASE"
