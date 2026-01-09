@@ -9,9 +9,15 @@ fi
 
 githubname="$(git describe --all --dirty --always | tr '[:upper:]' '[:lower:]')"
 imgname=ghcr.io/opentrons/buildroot
-noheads=${githubname/heads//}
-noheads=${noheads/tags//}
-imgtag=${noheads:2}
+# Remove common git ref prefixes
+noheads=${githubname#heads/}
+noheads=${noheads#tags/}
+noheads=${noheads#refs/heads/}
+noheads=${noheads#refs/tags/}
+# Remove any remaining leading slashes
+imgtag=${noheads#/}
+# Replace @ with - to make it a valid Docker tag (Docker tags cannot contain @)
+imgtag=${imgtag//@/-}
 
 
 
