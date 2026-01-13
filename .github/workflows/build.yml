@@ -150,7 +150,7 @@ jobs:
         id: get-image
         run: |
           cd buildroot
-          if [ "${{inputs.build-own-container}}" = "true" ] ; then
+          if [ "${{inputs.force-own-container}}" = "true" ] ; then
             imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
           else
             imgname=$(./opentrons-build-container.sh build)
