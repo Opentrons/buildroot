@@ -151,9 +151,9 @@ jobs:
         run: |
           cd buildroot
           if [ "${{inputs.force-own-container}}" = "true" ] ; then
-            imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
-          else
             imgname=$(./opentrons-build-container.sh build)
+          else
+            imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
           fi
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
