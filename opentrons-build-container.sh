@@ -32,19 +32,21 @@ EOF
     exit 1
 }
 
+imgref=${2:-latest}
+
 build () {
-    docker build ${filter_arg} -t ${imgname}:${imgtag} -t ${imgname}:latest . 1>&2 || exit 1
+    docker build ${filter_arg} -t ${imgname}:${imgtag} -t ${imgname}:${imgref} . 1>&2 || exit 1
     echo ${imgname}:${imgtag}
 }
 
 push () {
-    docker push ${imgname}:latest 1>&2 || exit 1
-    echo ${imgname}:latest
+    docker push ${imgname}:${imgref} 1>&2 || exit 1
+    echo ${imgname}:${imgref}
 }
 
 pull () {
-    docker pull ${imgname}:latest 1>&2 || exit 1
-    echo ${imgname}:latest
+    docker pull ${imgname}:${imgref} 1>&2 || exit 1
+    echo ${imgname}:${imgref}
 }
 
 

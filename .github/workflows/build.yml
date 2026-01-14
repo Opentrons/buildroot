@@ -30,6 +30,12 @@ on:
         required: false
         default: false
         type: boolean
+      container-ref-override:
+        description: |
+          GHCR ref of the container to use.
+        required: false
+        default: 'latest'
+        type: string
 
 env:
   CI: true
@@ -151,9 +157,9 @@ jobs:
         run: |
           cd buildroot
           if [ "${{inputs.force-own-container}}" = "true" ] ; then
-            imgname=$(./opentrons-build-container.sh build)
+            imgname=$(./opentrons-build-container.sh build "${{inputs.container-ref-override}}")
           else
-            imgname=$(./opentrons-build-container.sh pull || ./opentrons-build-container.sh build)
+            imgname=$(./opentrons-build-container.sh pull "${{inputs.container-ref-override}}" || ./opentrons-build-container.sh build "${{inputs.container-ref-override}}")
           fi
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
