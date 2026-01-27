@@ -74,7 +74,7 @@ else
     echo "Build type is NOT RELEASE"
 fi
 
-if [ -e .signing-key ]; then
+if [ -e ${BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH}/.signing-key ]; then
     echo "Signing rootfs hash"
     openssl dgst -sha256 -sign ${BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH}/.signing-key -out ${BINARIES_DIR}/rootfs.ext4.hash.sig ${BINARIES_DIR}/rootfs.ext4.hash
     system_files="${BINARIES_DIR}/rootfs.ext4 ${BINARIES_DIR}/rootfs.ext4.hash ${BINARIES_DIR}/VERSION.json ${BINARIES_DIR}/rootfs.ext4.hash.sig ${boot_files}"
