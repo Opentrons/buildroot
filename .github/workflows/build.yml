@@ -35,6 +35,7 @@ on:
           True to sign the build even if it's not a release.
         required: false
         default: false
+        type: boolean
 
 env:
   CI: true
