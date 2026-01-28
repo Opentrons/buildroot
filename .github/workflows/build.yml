@@ -30,6 +30,11 @@ on:
         required: false
         default: false
         type: boolean
+      force-sign:
+        description: |
+          True to sign the build even if it's not a release.
+        required: false
+        default: false
 
 env:
   CI: true
@@ -158,7 +163,7 @@ jobs:
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
       - name: Set up signing
-        if: needs.decide-refs.outputs.build-type == 'release'
+        if: needs.decide-refs.outputs.build-type == 'release' || inputs.force-sign == true
         run: |
           echo "${{secrets.ROBOT_SIGNING_KEY}}" > ./buildroot/.signing-key
 
