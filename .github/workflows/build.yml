@@ -1,8 +1,5 @@
 name: 'Build OT2 image on github workflows'
 run-name: 'image: mono ${{ inputs.monorepo-ref }}, buildroot ${{ inputs.buildroot-ref }}'
-permissions:
-  actions: read
-  contents: read
 on:
   workflow_dispatch:
     inputs:
@@ -107,51 +104,18 @@ jobs:
             -d "{\"labels\":${LABELS_JSON},\"workflow_run_id\":\"${GITHUB_RUN_ID}\",\"repository\":\"${GITHUB_REPOSITORY}\"}" \
             "${API_URL%/}/request-runner"
 
-  wait-ephemeral-runner:
-    name: wait for ephemeral runner registration
-    needs: request-ephemeral-runner
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wait for runner with label to be online
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUNNER_LABEL: ${{ needs.request-ephemeral-runner.outputs.runner_label }}
-        run: |
-          set -euo pipefail
-
-          api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners?per_page=100"
-          echo "Waiting for runner to be online with label: ${RUNNER_LABEL}"
-
-          for i in $(seq 1 60); do
-            json="$(curl -fsS \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H "Accept: application/vnd.github+json" \
-              "${api}")"
-
-            found="$(python3 -c 'import json,os,sys; data=json.load(sys.stdin); want=os.environ["RUNNER_LABEL"]; online=[r for r in data.get("runners",[]) if (want in [l.get("name") for l in r.get("labels",[])]) and r.get("status")=="online"]; sys.exit(1) if not online else (print(online[0].get("name","(unnamed)")) or sys.exit(0))' <<<"${json}" 2>/dev/null || true)"
-
-            if [[ -n "${found}" ]]; then
-              echo "Runner is online: ${found}"
-              exit 0
-            fi
-
-            echo "Not ready yet (${i}/60); sleeping 10s..."
-            sleep 10
-          done
-
-          echo "Timed out waiting for runner label ${RUNNER_LABEL} to become online." >&2
-          echo "Runners visible to this repo (name,status,busy,labels):" >&2
-          python3 -c 'import json,sys; data=json.load(sys.stdin); [print("- %s (%s busy=%s): %s" % (r.get("name"), r.get("status"), r.get("busy"), [l.get("name") for l in r.get("labels", [])])) for r in data.get("runners", [])]' <<<"${json}" >&2 || true
-          exit 1
-
   run-build:
-    needs: [decide-refs, request-ephemeral-runner, wait-ephemeral-runner]
+    needs: [decide-refs, request-ephemeral-runner]
     strategy:
       matrix:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ matrix.build_env }}'
     timeout-minutes: 480
-    runs-on: ${{ fromJSON(format('["self-hosted","{0}"]', needs.request-ephemeral-runner.outputs.runner_label)) }}
+    runs-on:
+      group: ephemeral-system-builders
+      labels:
+        - self-hosted
+        - ${{ needs.request-ephemeral-runner.outputs.runner_label }}
     concurrency:
       group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
       cancel-in-progress: false
