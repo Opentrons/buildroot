@@ -96,7 +96,10 @@ jobs:
 
           # Request an ephemeral runner that matches the existing build job labels
           # plus a unique label so only THIS workflow run can claim it.
-          LABELS_JSON=$(python3 -c 'import json,os; print(json.dumps(["x64","linux-x64","sb-x64", os.environ["INFRA_STAGE"], os.environ["VARIANT"], os.environ["RUNNER_LABEL"]]))')
+          repo_label="${GITHUB_REPOSITORY##*/}"
+          LABELS_JSON=$(
+            REPO_LABEL="${repo_label}" python3 -c 'import json,os; print(json.dumps(["x64","linux-x64","sb-x64", os.environ["INFRA_STAGE"], os.environ["VARIANT"], os.environ["RUNNER_LABEL"], os.environ["REPO_LABEL"]]))'
+          )
           echo "Requested labels: ${LABELS_JSON}"
 
           curl -fsS -X POST \
