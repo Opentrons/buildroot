@@ -1,5 +1,8 @@
 name: 'Build OT2 image on github workflows'
 run-name: 'image: mono ${{ inputs.monorepo-ref }}, buildroot ${{ inputs.buildroot-ref }}'
+permissions:
+  actions: read
+  contents: read
 on:
   workflow_dispatch:
     inputs:
