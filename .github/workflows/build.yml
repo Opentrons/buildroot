@@ -459,12 +459,7 @@ jobs:
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
-      - name: remove build data
-        if: always()
-        run: |
-          rm -rf ./*
-          output_check=${{steps.cache-setup.outputs.output}}
-          rm -rf ${output_check:-/does/not/exist}
+      # Ephemeral runners are destroyed after the job, so no cleanup needed.
 
   notify-tagged-success:
     name: 'Notify Tagged Build Success'
