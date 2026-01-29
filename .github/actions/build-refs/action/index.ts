@@ -52,7 +52,7 @@ export type AttemptableRef = AttemptableTag | Branch
 
 export type AttemptableRefs = Map<Repo, AttemptableRef[]>
 
-export type OutputRefs = Map<Repo, Ref | null>
+export type OutputRefs = Map<Repo, Ref>
 
 export function variantForRef(ref: Ref): Variant {
   if (ref.startsWith('refs/heads')) {
@@ -279,7 +279,7 @@ async function resolveRefs(
     resolved.set(
       repo,
       await Promise.all(refList.map(ref => refResolves(repo, ref))).then(
-        presentRefs => presentRefs.find(maybeRef => maybeRef !== null) ?? null
+        presentRefs => presentRefs.find(maybeRef => maybeRef !== null)
       )
     )
   }
@@ -332,12 +332,6 @@ async function run() {
   const resolved = await resolveRefs(attemptable, variant)
   resolved.forEach((ref, repo) => {
     info(`Resolved ${repo} to ${ref}`)
-    if (ref == null) {
-      throw new Error(
-        `Could not resolve a valid ref for ${repo}. ` +
-          `Provide a full ref (e.g. refs/heads/edge or refs/tags/vX.Y.Z) as workflow input.`
-      )
-    }
     customSetOutput(repo, ref)
   })
 }
