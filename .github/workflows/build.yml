@@ -91,10 +91,12 @@ jobs:
           fi
 
           echo "runner_label=${RUNNER_LABEL}" >> "$GITHUB_OUTPUT"
+          echo "Requesting runner with unique label: ${RUNNER_LABEL}"
 
           # Request an ephemeral runner that matches the existing build job labels
           # plus a unique label so only THIS workflow run can claim it.
           LABELS_JSON=$(python3 -c 'import json,os; print(json.dumps(["x64","linux-x64","sb-x64", os.environ["INFRA_STAGE"], os.environ["VARIANT"], os.environ["RUNNER_LABEL"]]))')
+          echo "Requested labels: ${LABELS_JSON}"
 
           curl -fsS -X POST \
             -H "Content-Type: application/json" \
@@ -108,11 +110,7 @@ jobs:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ matrix.build_env }}'
     timeout-minutes: 480
-    runs-on:
-      [
-        'self-hosted',
-        '${{ needs.request-ephemeral-runner.outputs.runner_label }}',
-      ]
+    runs-on: ${{ fromJSON(format('["self-hosted","{0}"]', needs.request-ephemeral-runner.outputs.runner_label)) }}
     concurrency:
       group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
       cancel-in-progress: false
