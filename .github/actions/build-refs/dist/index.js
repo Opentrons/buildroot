@@ -32322,7 +32322,7 @@ function resolveRefs(toAttempt, variant) {
                     return availableRefs.includes(correctRef) ? correctRef : null;
                 });
             });
-            resolved.set(repo, yield Promise.all(refList.map(ref => refResolves(repo, ref))).then(presentRefs => presentRefs.find(maybeRef => maybeRef !== null)));
+            resolved.set(repo, yield Promise.all(refList.map(ref => refResolves(repo, ref))).then(presentRefs => { var _a; return (_a = presentRefs.find(maybeRef => maybeRef !== null)) !== null && _a !== void 0 ? _a : null; }));
         }
         return resolved;
     });
@@ -32363,6 +32363,10 @@ function run() {
         const resolved = yield resolveRefs(attemptable, variant);
         resolved.forEach((ref, repo) => {
             info(`Resolved ${repo} to ${ref}`);
+            if (ref == null) {
+                throw new Error(`Could not resolve a valid ref for ${repo}. ` +
+                    `Provide a full ref (e.g. refs/heads/edge or refs/tags/vX.Y.Z) as workflow input.`);
+            }
             customSetOutput(repo, ref);
         });
     });
