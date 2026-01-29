@@ -131,10 +131,20 @@ jobs:
     steps:
       - name: Set up vm requirements
         run: |
-          echo 'fs.inotify.max_user_watches=655360' | tee -a /etc/sysctl.conf
-          echo 'fs.inotify.max_user_instances=1280' | tee -a /etc/sysctl.conf
-          echo 'fs.file-max=100000' | tee -a /etc/sysctl.conf
-          sysctl -p
+          # Ephemeral runners may not permit writing /etc/sysctl*; apply runtime settings.
+          apply_sysctl() {
+            local key="$1"
+            local value="$2"
+            if command -v sudo >/dev/null 2>&1; then
+              sudo sysctl -w "${key}=${value}" || sysctl -w "${key}=${value}" || true
+            else
+              sysctl -w "${key}=${value}" || true
+            fi
+          }
+
+          apply_sysctl fs.inotify.max_user_watches 655360
+          apply_sysctl fs.inotify.max_user_instances 1280
+          apply_sysctl fs.file-max 100000
       - name: Fetch initial sources for action
         uses: 'actions/checkout@v3'
         with:
