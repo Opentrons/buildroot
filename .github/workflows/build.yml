@@ -81,7 +81,9 @@ jobs:
           API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_API_URL_DEV || secrets.EPHEMERAL_RUNNER_API_URL_PROD }}
           INFRA_STAGE: ${{ inputs.infra-stage }}
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
-          RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
+          # Use a stable label per workflow run id so re-runs (new run_attempt)
+          # can still match an already-provisioned runner.
+          RUNNER_LABEL: ephemeral-${{ github.run_id }}
         run: |
           set -euo pipefail
 
