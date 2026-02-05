@@ -125,9 +125,11 @@ jobs:
       - id: request-forked-ephemeral-runner
         env:
           # Set these repo secrets:
-          # - EPHEMERAL_RUNNER_FORKED_API_URL_PROD
-          # - EPHEMERAL_RUNNER_FORKED_API_URL_DEV
-          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_FORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_FORKED_API_URL_PROD }}
+          # - EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD
+          # - EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV
+          # - EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD
+          # - EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV
+          API_URL: ${{ case(inputs.infra-stage == 'stage-dev' && needs.decide-refs.outputs.variant == 'release', secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV, inputs.infra-stage == 'stage-dev' && needs.decide-refs.outputs.variant == 'internal-release', secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV, needs.decide-refs.outputs.variant == 'internal-release', secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD, needs.decide-refs.outputs.variant == 'release', secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD, '') }}
           INFRA_STAGE: ${{ inputs.infra-stage }}
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
           # Ephemeral runner per attempt (re-runs create a new runner)
@@ -136,7 +138,7 @@ jobs:
           set -euo pipefail
 
           if [[ -z "${API_URL:-}" ]]; then
-            echo "Missing EPHEMERAL_RUNNER_API_FORKED_URL_* secret for infra-stage=${INFRA_STAGE}" >&2
+            echo "Missing EPHEMERAL_RUNNER_API_FORKED_*_URL_* secret for infra-stage=${INFRA_STAGE} and variant=${VARIANT}" >&2
             exit 1
           fi
 
