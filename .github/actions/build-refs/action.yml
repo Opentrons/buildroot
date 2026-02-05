@@ -12,6 +12,10 @@ inputs:
     description: "ref of https://github.com/opentrons/buildroot to build"
     required: false
     default: "-"
+  monorepo-repo:
+    description: "repo name for the monorepo (i.e. opentrons or opentrons-ot2)"
+    required: false
+    default: "opentrons"
 outputs:
   monorepo:
     description: "the ref of the monorepo to use"
@@ -21,6 +25,8 @@ outputs:
     description: "the type of build oe-core will create (develop, release)"
   variant:
     description: "Which variant to build (release, internal-release)"
+  monorepo-repo:
+    description: "Which repository under Opentrons to use for the monorepo (opentrons, opentrons-ot2)"
 runs:
   using: 'node16'
   main: 'dist/index.js'
