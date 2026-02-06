@@ -347,10 +347,15 @@ async function run() {
   })
 
   const resolved = await resolveRefs(attemptable, variant, fork)
-  resolved.forEach((ref, repo) => {
+  for (const [repo, ref] of resolved) {
+    if (ref == null || ref === undefined) {
+      setFailed(
+        `Could not resolve a valid ref for ${repo}. Provide a full ref (e.g. refs/heads/edge or refs/tags/vX.Y.Z) as workflow input.`
+      )
+    }
     info(`Resolved ${repo} to ${ref}`)
     customSetOutput(repo, ref)
-  })
+  }
 }
 
 async function _run() {
