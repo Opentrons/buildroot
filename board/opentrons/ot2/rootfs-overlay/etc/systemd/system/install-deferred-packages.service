@@ -12,5 +12,4 @@ Type=oneshot
 ExecStart=/usr/bin/mkdir -p /var/system-packages/usr/lib/python3.12/site-packages
 
 [Install]
-WantedBy=jupyter-notebook.service
 WantedBy=basic.target
