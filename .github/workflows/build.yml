@@ -86,8 +86,8 @@ jobs:
     needs: decide-refs
     runs-on: ubuntu-latest
     outputs:
-      runner_labels: ${{ case(needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && ! inputs.force-ephemeral-infra, steps.static-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-runner, steps.request-unforked-ephemeral-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', steps.request-forked-ephemeral-runner.outputs.runner_labels, '[\"unknown infra stage\"]') }}
-      runner_group: ${{ case(inputs.force-ephemeral-infra || needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', 'ephemeral-system-builders', 'Custom Runners') }}
+      runner_labels: ${{ case(needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == false, steps.static-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == true, steps.request-unforked-ephemeral-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', steps.request-forked-ephemeral-runner.outputs.runner_labels, '[\"unknown infra stage\"]') }}
+      runner_group: ${{ case(inputs.force-ephemeral-infra == true || needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', 'ephemeral-system-builders', 'Custom Runners') }}
     steps:
       - id: request-unforked-ephemeral-runner
         name: Request merged-stack ephemeral runner
