@@ -480,7 +480,7 @@ jobs:
         shell: bash
         run: |
           pushd buildroot
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read s3://${{steps.upload-results.outputs.machine_root}}/releases.json releases.json
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read s3://${{steps.upload-results.outputs.machine_root}}/releases.json releases.json || echo '{"production":{}}' > releases.json
           python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url ${{ steps.upload-results.outputs.root_url }}
           aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json s3://${{steps.upload-results.outputs.machine_root}}/releases.json
           popd
