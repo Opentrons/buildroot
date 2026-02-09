@@ -3,13 +3,14 @@
 [Unit]
 Description=Install deferred python packages
 Before=jupyter-notebook.service
-Before=basic.target
-Before=opentrons-robot-server.service
-Before=opentrons-update-server.service
+Wants=local-fs.target
+After=local-fs.target
 
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/mkdir -p /var/system-packages/usr/lib/python3.12/site-packages
+RemainAfterExit=yes
+TimeoutStartSec=5m
 
 [Install]
-WantedBy=basic.target
+WantedBy=basic.target juypter-notebook.service
