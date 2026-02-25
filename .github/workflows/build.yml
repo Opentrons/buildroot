@@ -42,6 +42,18 @@ on:
         required: false
         default: false
         type: boolean
+      runner-request-max-attempts:
+        description: |
+          Maximum number of retries when requesting an ephemeral runner after 429 capacity responses.
+        required: false
+        default: 30
+        type: number
+      runner-request-retry-seconds:
+        description: |
+          Seconds to wait between ephemeral runner request retries on 429 capacity responses.
+        required: false
+        default: 20
+        type: number
 
 env:
   CI: true
@@ -86,12 +98,10 @@ jobs:
     needs: decide-refs
     runs-on: ubuntu-latest
     outputs:
-      runner_labels: ${{ case(needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == false, steps.static-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == true, steps.request-unforked-ephemeral-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', steps.request-forked-ephemeral-runner.outputs.runner_labels, '[\"unknown infra stage\"]') }}
-      runner_group: ${{ case(inputs.force-ephemeral-infra == true || needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', 'ephemeral-system-builders', 'Custom Runners') }}
+      runner_labels: ${{ case(needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && ! inputs.force-ephemeral-infra, steps.static-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra, steps.request-unforked-ephemeral-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', steps.request-forked-ephemeral-runner.outputs.runner_labels, ['unknown infra stage']) }}
+      runner_group: ${{ case(inputs.force-ephemeral-infra || needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', 'ephemeral-system-builders', 'Custom Runners') }}
     steps:
       - id: request-unforked-ephemeral-runner
-        name: Request merged-stack ephemeral runner
-        if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == true }}
         env:
           # Set these repo secrets:
           # - EPHEMERAL_RUNNER_API_URL_PROD
@@ -101,6 +111,8 @@ jobs:
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
           # Ephemeral runner per attempt (re-runs create a new runner)
           RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
+          MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
+          RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
         run: |
           set -euo pipefail
 
@@ -119,30 +131,48 @@ jobs:
             REPO_LABEL="${repo_label}" python3 -c 'import json,os; print(json.dumps(["x64","linux-x64","sb-x64", os.environ["INFRA_STAGE"], os.environ["VARIANT"], os.environ["RUNNER_LABEL"], os.environ["REPO_LABEL"]]))'
           )
           echo "Requested labels: ${LABELS_JSON}"
-
-          curl -fsS -X POST \
-            -H "Content-Type: application/json" \
-            -d "{\"labels\":${LABELS_JSON},\"workflow_run_id\":\"${GITHUB_RUN_ID}\",\"repository\":\"${GITHUB_REPOSITORY}\"}" \
-            "${API_URL%/}/request-runner"
+          requested=false
+          for attempt in $(seq 1 "${MAX_ATTEMPTS}"); do
+            http_code="$(
+              curl -sS -o /tmp/request-runner-response.json -w "%{http_code}" -X POST \
+                -H "Content-Type: application/json" \
+                -d "{\"labels\":${LABELS_JSON},\"workflow_run_id\":\"${GITHUB_RUN_ID}\",\"repository\":\"${GITHUB_REPOSITORY}\"}" \
+                "${API_URL%/}/request-runner"
+            )"
+            if [[ "${http_code}" == "200" ]]; then
+              requested=true
+              break
+            fi
+            if [[ "${http_code}" == "429" ]]; then
+              echo "Runner capacity full (429), waiting ${RETRY_SECONDS}s before retry (${attempt}/${MAX_ATTEMPTS})..."
+              sleep "${RETRY_SECONDS}"
+              continue
+            fi
+            echo "Runner request failed with HTTP ${http_code}" >&2
+            cat /tmp/request-runner-response.json >&2 || true
+            exit 1
+          done
+          if [[ "${requested}" != "true" ]]; then
+            echo "Timed out waiting for ephemeral runner capacity after ${MAX_ATTEMPTS} attempts." >&2
+            exit 1
+          fi
       - id: request-forked-ephemeral-runner
-        name: Request OT-2 fork stack ephemeral runners
-        if: ${{ inputs.monorepo-is-fork == true }}
         env:
           # Set these repo secrets:
-          # - EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD
-          # - EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV
-          # - EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD
-          # - EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV
-          API_URL: ${{ case(inputs.infra-stage == 'stage-dev' && needs.decide-refs.outputs.variant == 'release', secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV, inputs.infra-stage == 'stage-dev' && needs.decide-refs.outputs.variant == 'internal-release', secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV, needs.decide-refs.outputs.variant == 'internal-release', secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD, needs.decide-refs.outputs.variant == 'release', secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD, '') }}
+          # - EPHEMERAL_RUNNER_FORKED_API_URL_PROD
+          # - EPHEMERAL_RUNNER_FORKED_API_URL_DEV
+          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_FORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_FORKED_API_URL_PROD }}
           INFRA_STAGE: ${{ inputs.infra-stage }}
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
           # Ephemeral runner per attempt (re-runs create a new runner)
           RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
+          MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
+          RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
         run: |
           set -euo pipefail
 
           if [[ -z "${API_URL:-}" ]]; then
-            echo "Missing EPHEMERAL_RUNNER_API_FORKED_*_URL_* secret for infra-stage=${INFRA_STAGE} and variant=${VARIANT}" >&2
+            echo "Missing EPHEMERAL_RUNNER_API_FORKED_URL_* secret for infra-stage=${INFRA_STAGE}" >&2
             exit 1
           fi
 
@@ -156,17 +186,36 @@ jobs:
             REPO_LABEL="${repo_label}" python3 -c 'import json,os; print(json.dumps(["x64","linux-x64","sb-x64", os.environ["INFRA_STAGE"], os.environ["VARIANT"], os.environ["RUNNER_LABEL"], os.environ["REPO_LABEL"]]))'
           )
           echo "Requested labels: ${LABELS_JSON}"
-
-          curl -fsS -X POST \
-            -H "Content-Type: application/json" \
-            -d "{\"labels\":${LABELS_JSON},\"workflow_run_id\":\"${GITHUB_RUN_ID}\",\"repository\":\"${GITHUB_REPOSITORY}\"}" \
-            "${API_URL%/}/request-runner"
+          requested=false
+          for attempt in $(seq 1 "${MAX_ATTEMPTS}"); do
+            http_code="$(
+              curl -sS -o /tmp/request-runner-response.json -w "%{http_code}" -X POST \
+                -H "Content-Type: application/json" \
+                -d "{\"labels\":${LABELS_JSON},\"workflow_run_id\":\"${GITHUB_RUN_ID}\",\"repository\":\"${GITHUB_REPOSITORY}\"}" \
+                "${API_URL%/}/request-runner"
+            )"
+            if [[ "${http_code}" == "200" ]]; then
+              requested=true
+              break
+            fi
+            if [[ "${http_code}" == "429" ]]; then
+              echo "Runner capacity full (429), waiting ${RETRY_SECONDS}s before retry (${attempt}/${MAX_ATTEMPTS})..."
+              sleep "${RETRY_SECONDS}"
+              continue
+            fi
+            echo "Runner request failed with HTTP ${http_code}" >&2
+            cat /tmp/request-runner-response.json >&2 || true
+            exit 1
+          done
+          if [[ "${requested}" != "true" ]]; then
+            echo "Timed out waiting for ephemeral runner capacity after ${MAX_ATTEMPTS} attempts." >&2
+            exit 1
+          fi
       - id: static-runner
-        name: Select merged-stack static runners
-        if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == false }}
         run: |
           echo "runner_labels=[\"self-hosted\", \"${{inputs.infra-stage}}\", \"${{needs.decide-refs.outputs.variant}}\"]" >> "$GITHUB_OUTPUT"
 
+  # Build job runs on ephemeral or static runner per initialize-infra
   run-build:
     needs: [decide-refs, initialize-infra]
     name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ inputs.infra-stage }}'
