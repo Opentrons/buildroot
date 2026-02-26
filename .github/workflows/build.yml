@@ -46,13 +46,13 @@ on:
         description: |
           Maximum number of retries when requesting an ephemeral runner after 429 capacity responses.
         required: false
-        default: 30
+        default: 120
         type: number
       runner-request-retry-seconds:
         description: |
           Seconds to wait between ephemeral runner request retries on 429 capacity responses.
         required: false
-        default: 20
+        default: 60
         type: number
 
 env:
@@ -117,6 +117,9 @@ jobs:
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
         run: |
           set -euo pipefail
+          request_start_epoch="$(date +%s)"
+          retries_on_429=0
+          final_attempt=0
 
           if [[ -z "${API_URL:-}" ]]; then
             echo "Missing EPHEMERAL_RUNNER_UNFORKED_API_URL_* secret for infra-stage=${INFRA_STAGE}" >&2
@@ -133,8 +136,34 @@ jobs:
             REPO_LABEL="${repo_label}" python3 -c 'import json,os; print(json.dumps(["x64","linux-x64","sb-x64", os.environ["INFRA_STAGE"], os.environ["VARIANT"], os.environ["RUNNER_LABEL"], os.environ["REPO_LABEL"]]))'
           )
           echo "Requested labels: ${LABELS_JSON}"
+
+          emit_request_summary() {
+            local status="$1"
+            local now_epoch elapsed_seconds waited_seconds
+            now_epoch="$(date +%s)"
+            elapsed_seconds="$((now_epoch - request_start_epoch))"
+            waited_seconds="$((retries_on_429 * RETRY_SECONDS))"
+            {
+              echo "### Runner Request Metrics (unforked)"
+              echo ""
+              echo "| Field | Value |"
+              echo "|---|---|"
+              echo "| Status | ${status} |"
+              echo "| Final HTTP status | ${http_code:-n/a} |"
+              echo "| Attempts used | ${final_attempt}/${MAX_ATTEMPTS} |"
+              echo "| 429 retries | ${retries_on_429} |"
+              echo "| Retry wait seconds | ${waited_seconds} |"
+              echo "| Total elapsed seconds | ${elapsed_seconds} |"
+              echo "| Runner label | ${RUNNER_LABEL} |"
+              echo "| Infra stage | ${INFRA_STAGE} |"
+              echo "| Variant | ${VARIANT} |"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
           requested=false
           for attempt in $(seq 1 "${MAX_ATTEMPTS}"); do
+            final_attempt="${attempt}"
             http_code="$(
               curl -sS -o /tmp/request-runner-response.json -w "%{http_code}" -X POST \
                 -H "Content-Type: application/json" \
@@ -146,18 +175,22 @@ jobs:
               break
             fi
             if [[ "${http_code}" == "429" ]]; then
+              retries_on_429="$((retries_on_429 + 1))"
               echo "Runner capacity full (429), waiting ${RETRY_SECONDS}s before retry (${attempt}/${MAX_ATTEMPTS})..."
               sleep "${RETRY_SECONDS}"
               continue
             fi
+            emit_request_summary "failed"
             echo "Runner request failed with HTTP ${http_code}" >&2
             cat /tmp/request-runner-response.json >&2 || true
             exit 1
           done
           if [[ "${requested}" != "true" ]]; then
+            emit_request_summary "timed_out"
             echo "Timed out waiting for ephemeral runner capacity after ${MAX_ATTEMPTS} attempts." >&2
             exit 1
           fi
+          emit_request_summary "success"
       - id: request-forked-ephemeral-runner
         name: Request OT-2 fork stack ephemeral runners
         if: ${{ inputs.monorepo-is-fork == true }}
@@ -174,6 +207,9 @@ jobs:
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
         run: |
           set -euo pipefail
+          request_start_epoch="$(date +%s)"
+          retries_on_429=0
+          final_attempt=0
 
           if [[ -z "${API_URL:-}" ]]; then
             echo "Missing EPHEMERAL_RUNNER_API_FORKED_URL_* secret for infra-stage=${INFRA_STAGE}" >&2
@@ -190,8 +226,34 @@ jobs:
             REPO_LABEL="${repo_label}" python3 -c 'import json,os; print(json.dumps(["x64","linux-x64","sb-x64", os.environ["INFRA_STAGE"], os.environ["VARIANT"], os.environ["RUNNER_LABEL"], os.environ["REPO_LABEL"]]))'
           )
           echo "Requested labels: ${LABELS_JSON}"
+
+          emit_request_summary() {
+            local status="$1"
+            local now_epoch elapsed_seconds waited_seconds
+            now_epoch="$(date +%s)"
+            elapsed_seconds="$((now_epoch - request_start_epoch))"
+            waited_seconds="$((retries_on_429 * RETRY_SECONDS))"
+            {
+              echo "### Runner Request Metrics (forked)"
+              echo ""
+              echo "| Field | Value |"
+              echo "|---|---|"
+              echo "| Status | ${status} |"
+              echo "| Final HTTP status | ${http_code:-n/a} |"
+              echo "| Attempts used | ${final_attempt}/${MAX_ATTEMPTS} |"
+              echo "| 429 retries | ${retries_on_429} |"
+              echo "| Retry wait seconds | ${waited_seconds} |"
+              echo "| Total elapsed seconds | ${elapsed_seconds} |"
+              echo "| Runner label | ${RUNNER_LABEL} |"
+              echo "| Infra stage | ${INFRA_STAGE} |"
+              echo "| Variant | ${VARIANT} |"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
           requested=false
           for attempt in $(seq 1 "${MAX_ATTEMPTS}"); do
+            final_attempt="${attempt}"
             http_code="$(
               curl -sS -o /tmp/request-runner-response.json -w "%{http_code}" -X POST \
                 -H "Content-Type: application/json" \
@@ -203,18 +265,22 @@ jobs:
               break
             fi
             if [[ "${http_code}" == "429" ]]; then
+              retries_on_429="$((retries_on_429 + 1))"
               echo "Runner capacity full (429), waiting ${RETRY_SECONDS}s before retry (${attempt}/${MAX_ATTEMPTS})..."
               sleep "${RETRY_SECONDS}"
               continue
             fi
+            emit_request_summary "failed"
             echo "Runner request failed with HTTP ${http_code}" >&2
             cat /tmp/request-runner-response.json >&2 || true
             exit 1
           done
           if [[ "${requested}" != "true" ]]; then
+            emit_request_summary "timed_out"
             echo "Timed out waiting for ephemeral runner capacity after ${MAX_ATTEMPTS} attempts." >&2
             exit 1
           fi
+          emit_request_summary "success"
       - id: static-runner
         name: Select merged-stack static runners
         if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == false }}
