@@ -230,7 +230,7 @@ jobs:
       group: ${{ needs.initialize-infra.outputs.runner_group }}
       labels: ${{ fromJSON(needs.initialize-infra.outputs.runner_labels) }}
     concurrency:
-      group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}} ${{ needs.decide-refs.outputs.monorepo-repo }}
+      group: build-${{ github.run_id }}-${{ github.run_attempt }}
       cancel-in-progress: false
     outputs:
       console_url: ${{ steps.upload-results.outputs.console_url }}
