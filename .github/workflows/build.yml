@@ -385,11 +385,7 @@ jobs:
           apply_sysctl() {
             local key="$1"
             local value="$2"
-            if command -v sudo >/dev/null 2>&1; then
-              sudo sysctl -w "${key}=${value}" || sysctl -w "${key}=${value}" || true
-            else
-              sysctl -w "${key}=${value}" || true
-            fi
+            sudo sysctl -w "${key}=${value}" 2>/dev/null || sysctl -w "${key}=${value}" || true
           }
 
           apply_sysctl fs.inotify.max_user_watches 655360
@@ -428,36 +424,28 @@ jobs:
           region: us-east-2
           stage: ${{ inputs.infra-stage }}
 
-      - name: Pull or create cache locations
+      - name: Set up cache locations and pull S3 cache
         id: cache-setup
-        run: |
-          cachedir="${LOCAL_CACHE:-./cache}"
-          for cachetype in downloads ccache output ; do
-            absdir="${cachedir}/${cachetype}"
-            mkdir -p "${absdir}"
-            echo "${cachetype}=${absdir}" >> $GITHUB_OUTPUT
-            here=$(pwd)
-            reldir=$(realpath --relative-to=${here} ${cachedir}/${cachetype})
-            echo "Created ${cachetype} cache at ${absdir} (${reldir})"
-            echo "${cachetype}-rel=${reldir}" >> $GITHUB_OUTPUT
-          done
-
-      - name: Pull S3 cache
         shell: bash
-        continue-on-error: true
         run: |
           set -euo pipefail
 
           aws_cp="aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --no-progress"
-          cachedir=${LOCAL_CACHE:-./cache}
+          cachedir="${LOCAL_CACHE:-./cache}"
           cache_prefix=ot2-br
 
-          for cachetype in downloads ccache ; do
+          for cachetype in downloads ; do
             thiscache="${cachedir}/${cachetype}"
             localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
             remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
 
             mkdir -p "${thiscache}"
+            echo "${cachetype}=${thiscache}" >> "$GITHUB_OUTPUT"
+            here=$(pwd)
+            reldir=$(realpath --relative-to="${here}" "${thiscache}")
+            echo "Created ${cachetype} cache at ${thiscache} (${reldir})"
+            echo "${cachetype}-rel=${reldir}" >> "$GITHUB_OUTPUT"
+
             echo "Fetching cache ${remotezip} -> ${localzip}"
             if ${aws_cp} "${remotezip}" "${localzip}" ; then
               echo "Extracting ${localzip} -> ${thiscache}"
@@ -467,6 +455,14 @@ jobs:
               echo "No cache found at ${remotezip} (continuing)"
             fi
           done
+
+          outputdir="${cachedir}/output"
+          mkdir -p "${outputdir}"
+          echo "output=${outputdir}" >> "$GITHUB_OUTPUT"
+          here=$(pwd)
+          output_reldir=$(realpath --relative-to=${here} "${outputdir}")
+          echo "Created output dir at ${outputdir} (${output_reldir})"
+          echo "output-rel=${output_reldir}" >> "$GITHUB_OUTPUT"
       - name: Set up docker environment file
         id: docker-env
         run: |
@@ -505,7 +501,6 @@ jobs:
           mount_args="type=bind,consistency=delegated"
           bind_ot="--mount source=$(pwd)/opentrons,destination=/opentrons,${mount_args}"
           bind_dl="--mount source=${{steps.cache-setup.outputs.downloads}},destination=/downloads,${mount_args}"
-          bind_ccache="--mount source=${{steps.cache-setup.outputs.ccache}},destination=/ccache,${mount_args}"
           bind_op="--mount source=${{steps.cache-setup.outputs.output}},destination=/output,${mount_args}"
           if [ -e ./buildroot/buildroot-upstream-ref ] ; then
              echo "New-style overlay build"
@@ -518,7 +513,7 @@ jobs:
              bind_up=
              entry=
           fi
-          binds="${bind_br} ${bind_ot} ${bind_dl} ${bind_ccache} ${bind_op} ${bind_up}"
+          binds="${bind_br} ${bind_ot} ${bind_dl} ${bind_op} ${bind_up}"
           env="--env-file ${{steps.docker-env.outputs.envfile}}"
           echo "run-binds=${binds}" >> $GITHUB_OUTPUT
           echo "env=${env}" >> $GITHUB_OUTPUT
@@ -575,7 +570,7 @@ jobs:
           cachedir=${LOCAL_CACHE:-./cache}
           cache_prefix=ot2-br
 
-          for cachetype in downloads ccache ; do
+          for cachetype in downloads ; do
             thiscache="${cachedir}/${cachetype}"
             localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
             remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
@@ -675,7 +670,7 @@ jobs:
         shell: bash
         run: |
           pushd buildroot
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read s3://${{steps.upload-results.outputs.machine_root}}/releases.json releases.json || echo '{"production":{}}' > releases.json
+          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read s3://${{steps.upload-results.outputs.machine_root}}/releases.json releases.json || true
           python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url ${{ steps.upload-results.outputs.root_url }}
           aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json s3://${{steps.upload-results.outputs.machine_root}}/releases.json
           popd
