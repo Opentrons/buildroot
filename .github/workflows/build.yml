@@ -366,7 +366,7 @@ jobs:
         with:
           status: 'success'
           workflow_name: 'Build OT2 image on github workflows'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_TAGGED }}
+          webhook_url: ${{ vars.SLACK_WEBHOOK_URL_TAGGED }}
           console_url: ${{ needs.run-build.outputs.console_url }}
           system_url: ${{ needs.run-build.outputs.system_url }}
           fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
@@ -389,7 +389,7 @@ jobs:
         with:
           status: 'failure'
           workflow_name: 'Build OT2 image on github workflows'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_TAGGED }}
+          webhook_url: ${{ vars.SLACK_WEBHOOK_URL_TAGGED }}
           console_url: ${{ needs.run-build.outputs.console_url }}
           system_url: ${{ needs.run-build.outputs.system_url }}
           fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
