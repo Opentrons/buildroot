@@ -127,12 +127,13 @@ jobs:
       #   ROBOT_STACK_AWS_OIDC_ROLE_ARN_DEV  — IAM role in the dev account (stage-dev)
       #   ROBOT_STACK_AWS_OIDC_ROLE_ARN_PROD — IAM role in prod/staging (stage-prod)
       # Each role must trust GitHub's OIDC provider for this repo and allow MaxSessionDuration
-      # >= role-duration-seconds in .github/actions/aws-credentials/action.yml (default 12h).
+      # >= role-duration-seconds below (default 12h).
       - name: Configure AWS Credentials
-        uses: './buildroot-for-workflow/.github/actions/aws-credentials'
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ matrix.build_env == 'stage-dev' && vars.ROBOT_STACK_AWS_OIDC_ROLE_ARN_DEV || vars.ROBOT_STACK_AWS_OIDC_ROLE_ARN_PROD }}
           aws-region: us-east-2
+          role-duration-seconds: 43200
 
       - name: Pull or create cache locations
         id: cache-setup
