@@ -1,0 +1,2 @@
+# bind the usb ethernet adapter to eth0 for compatibility with pre-9.0.0
+ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", ATTRS{idVendor}=="0424", ATTRS{idProduct}=="ec00", NAME="eth0"

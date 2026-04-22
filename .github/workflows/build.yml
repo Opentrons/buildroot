@@ -54,6 +54,12 @@ on:
         required: false
         default: 60
         type: number
+      force-sign:
+        description: |
+          True to sign the build even if it's not a release.
+        required: false
+        default: false
+        type: boolean
 
 env:
   CI: true
@@ -363,8 +369,14 @@ jobs:
 
   # Build job runs on ephemeral or static runner per initialize-infra
   run-build:
-    needs: [decide-refs, initialize-infra]
-    name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ inputs.infra-stage }}'
+    needs: decide-refs
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      matrix:
+        build_env: [ '${{ inputs.infra-stage }}', ]
+    name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ matrix.build_env }}'
     timeout-minutes: 480
     runs-on:
       group: ${{ needs.initialize-infra.outputs.runner_group }}
@@ -415,14 +427,17 @@ jobs:
           ref: ${{ needs.decide-refs.outputs.monorepo }}
           repository: ${{ format('Opentrons/{0}', needs.decide-refs.outputs.monorepo-repo) }}
           path: ./opentrons
+      # Repository Variables (Settings → Secrets and variables → Actions → Variables):
+      #   ROBOT_STACK_AWS_OIDC_ROLE_ARN_DEV  — IAM role in the dev account (stage-dev)
+      #   ROBOT_STACK_AWS_OIDC_ROLE_ARN_PROD — IAM role in prod/staging (stage-prod)
+      # Each role must trust GitHub's OIDC provider for this repo and allow MaxSessionDuration
+      # >= role-duration-seconds below (default 12h).
       - name: Configure AWS Credentials
-        uses: './buildroot-for-workflow/.github/actions/aws-credentials'
-        id: aws
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          access_key_id: ${{ secrets.ROBOT_STACK_AWS_ACCESS_KEY_ID }}
-          secret_access_key: ${{ secrets.ROBOT_STACK_AWS_SECRET_ACCESS_KEY }}
-          region: us-east-2
-          stage: ${{ inputs.infra-stage }}
+          role-to-assume: ${{ matrix.build_env == 'stage-dev' && vars.ROBOT_STACK_AWS_OIDC_ROLE_ARN_DEV || vars.ROBOT_STACK_AWS_OIDC_ROLE_ARN_PROD }}
+          aws-region: us-east-2
+          role-duration-seconds: 43200
 
       - name: Set up cache locations and pull S3 cache
         id: cache-setup
@@ -485,7 +500,7 @@ jobs:
           echo "image-name=$imgname" >> $GITHUB_OUTPUT
 
       - name: Set up signing
-        if: needs.decide-refs.outputs.build-type == 'release'
+        if: needs.decide-refs.outputs.build-type == 'release' || inputs.force-sign == true
         run: |
           echo "${{secrets.ROBOT_SIGNING_KEY}}" > ./buildroot/.signing-key
 
@@ -651,7 +666,7 @@ jobs:
           root_uri=${arnslug}/${prefix}/${{github.run_id}}
 
           pushd ${{steps.artifact-copy.outputs.prepped_artifact_dir}}
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --recursive --acl=public-read . s3://${root_uri}/
+          aws s3 cp --recursive --acl=public-read . s3://${root_uri}/
 
           root_url=https://${root_uri}
           echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${arnslug}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
@@ -670,9 +685,9 @@ jobs:
         shell: bash
         run: |
           pushd buildroot
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read s3://${{steps.upload-results.outputs.machine_root}}/releases.json releases.json || true
+          aws s3 cp --acl=public-read s3://${{steps.upload-results.outputs.machine_root}}/releases.json releases.json
           python3 update_releases_file.py --releases-file releases.json --version-file ${{steps.artifact-copy.outputs.version_json}} --base-url ${{ steps.upload-results.outputs.root_url }}
-          aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --acl=public-read releases.json s3://${{steps.upload-results.outputs.machine_root}}/releases.json
+          aws s3 cp --acl=public-read releases.json s3://${{steps.upload-results.outputs.machine_root}}/releases.json
           popd
 
       - name: Upload system zip to monorepo release
@@ -720,7 +735,7 @@ jobs:
         with:
           status: 'success'
           workflow_name: 'Build OT2 image on github workflows'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_TAGGED }}
+          webhook_url: ${{ vars.SLACK_WEBHOOK_URL_TAGGED }}
           console_url: ${{ needs.run-build.outputs.console_url }}
           system_url: ${{ needs.run-build.outputs.system_url }}
           fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}
@@ -743,7 +758,7 @@ jobs:
         with:
           status: 'failure'
           workflow_name: 'Build OT2 image on github workflows'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_TAGGED }}
+          webhook_url: ${{ vars.SLACK_WEBHOOK_URL_TAGGED }}
           console_url: ${{ needs.run-build.outputs.console_url }}
           system_url: ${{ needs.run-build.outputs.system_url }}
           fullimage_url: ${{ needs.run-build.outputs.fullimage_url }}

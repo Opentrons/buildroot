@@ -1,6 +1,8 @@
 [Unit]
 Description=Opentrons: Run status LEDs
 Before=opentrons-robot-server.service
+Wants=NetworkManager.service
+After=NetworkManager.service
 
 [Service]
 Type=notify
