@@ -40,7 +40,7 @@ on:
         description: |
           Use ephemeral builder infrastructure, even if this is a non-fork build.
         required: false
-        default: false
+        default: true
         type: boolean
       runner-request-max-attempts:
         description: |
