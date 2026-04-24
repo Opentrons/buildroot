@@ -369,7 +369,7 @@ jobs:
 
   # Build job runs on ephemeral or static runner per initialize-infra
   run-build:
-    needs: decide-refs
+    needs: [decide-refs, initialize-infra]
     permissions:
       contents: read
       id-token: write
@@ -449,7 +449,7 @@ jobs:
           cachedir="${LOCAL_CACHE:-./cache}"
           cache_prefix=ot2-br
 
-          for cachetype in downloads ; do
+          for cachetype in downloads ccache ; do
             thiscache="${cachedir}/${cachetype}"
             localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
             remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
@@ -516,6 +516,7 @@ jobs:
           mount_args="type=bind,consistency=delegated"
           bind_ot="--mount source=$(pwd)/opentrons,destination=/opentrons,${mount_args}"
           bind_dl="--mount source=${{steps.cache-setup.outputs.downloads}},destination=/downloads,${mount_args}"
+          bind_ccache="--mount source=${{steps.cache-setup.outputs.ccache}},destination=/ccache,${mount_args}"
           bind_op="--mount source=${{steps.cache-setup.outputs.output}},destination=/output,${mount_args}"
           if [ -e ./buildroot/buildroot-upstream-ref ] ; then
              echo "New-style overlay build"
@@ -528,7 +529,7 @@ jobs:
              bind_up=
              entry=
           fi
-          binds="${bind_br} ${bind_ot} ${bind_dl} ${bind_op} ${bind_up}"
+          binds="${bind_br} ${bind_ot} ${bind_dl} ${bind_ccache} ${bind_op} ${bind_up}"
           env="--env-file ${{steps.docker-env.outputs.envfile}}"
           echo "run-binds=${binds}" >> $GITHUB_OUTPUT
           echo "env=${env}" >> $GITHUB_OUTPUT
@@ -585,7 +586,7 @@ jobs:
           cachedir=${LOCAL_CACHE:-./cache}
           cache_prefix=ot2-br
 
-          for cachetype in downloads ; do
+          for cachetype in downloads ccache ; do
             thiscache="${cachedir}/${cachetype}"
             localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
             remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
