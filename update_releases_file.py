@@ -5,6 +5,44 @@ import sys
 import json
 import argparse
 
+
+def load_releases(path):
+    """Load releases JSON, tolerating missing/empty/invalid files."""
+    default = {"production": {}}
+    if not os.path.exists(path):
+        print(f"releases file {path} not found; creating a new one")
+        return default
+
+    print(f"reading releases file - {path}")
+    with open(path, "r") as fh:
+        raw = fh.read().strip()
+
+    if not raw:
+        print(f"releases file {path} is empty; initializing default structure")
+        return default
+
+    try:
+        loaded = json.loads(raw)
+    except json.JSONDecodeError:
+        print(
+            f"releases file {path} is invalid JSON; initializing default structure",
+            file=sys.stderr,
+        )
+        return default
+
+    if not isinstance(loaded, dict):
+        print(
+            f"releases file {path} is not a JSON object; initializing default structure",
+            file=sys.stderr,
+        )
+        return default
+
+    loaded.setdefault("production", {})
+    if not isinstance(loaded["production"], dict):
+        loaded["production"] = {}
+    return loaded
+
+
 def main(args):
     releases_file = args.releases_file
     version_file = args.version_file
@@ -20,11 +58,7 @@ def main(args):
         exit(1)
 
     # Get the releases from the releases file
-    releases = {"production": {}}
-    if os.path.exists(releases_file):
-        print(f"reading releases file - {releases_file}")
-        with open(releases_file, "r") as fh:
-            releases = json.load(fh)
+    releases = load_releases(releases_file)
 
     # Update the releases dict with the latest version
     prod = releases.get('production', {})

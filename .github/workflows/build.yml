@@ -5,10 +5,16 @@ on:
     inputs:
       monorepo-ref:
         description: |
-          Ref of https://github.com/opentrons/opentrons to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the oe-core ref if specified, and then default to edge.
+          Ref of https://github.com/opentrons/opentrons or https://github.com/opentrons/opentrons-ot2 to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the oe-core ref if specified, and then default to edge.
         required: true
         default: '-'
         type: string
+      monorepo-is-fork:
+        description: |
+          Whether the monorepo-ref refers to https://github.com/opentrons/opentrons (false, the default) or https://github.com/opentrons/opentrons-ot2 (true, must be explicitly selected)
+        required: false
+        default: false
+        type: boolean
       buildroot-ref:
         description: |
           Ref of https://github.com/opentrons/buildroot to build. This is different from the ref specified in the github api/webUI when starting this workflow - that ref is what contains this workflow, this ref specifies what gets built. It MUST be a full ref, e.g. refs/heads/main, or '-' to indicate not-specified. If not specified, will be decided based on the monorepo ref; if that isn't specified, will be main.
@@ -30,6 +36,24 @@ on:
         required: false
         default: false
         type: boolean
+      force-ephemeral-infra:
+        description: |
+          Use ephemeral builder infrastructure, even if this is a non-fork build.
+        required: false
+        default: false
+        type: boolean
+      runner-request-max-attempts:
+        description: |
+          Maximum number of retries when requesting an ephemeral runner after 429 capacity responses.
+        required: false
+        default: 120
+        type: number
+      runner-request-retry-seconds:
+        description: |
+          Seconds to wait between ephemeral runner request retries on 429 capacity responses.
+        required: false
+        default: 60
+        type: number
       force-sign:
         description: |
           True to sign the build even if it's not a release.
@@ -49,6 +73,7 @@ jobs:
       monorepo: ${{ steps.build-refs.outputs.monorepo }}
       variant: ${{ steps.build-refs.outputs.variant }}
       build-type: ${{ steps.build-refs.outputs.build-type }}
+      monorepo-repo: ${{ steps.build-refs.outputs.monorepo-repo }}
     steps:
       - name: Check out sources for action
         uses: 'actions/checkout@v4'
@@ -61,17 +86,288 @@ jobs:
           token: ${{ github.token }}
           monorepo: ${{ inputs.monorepo-ref }}
           buildroot: ${{ inputs.buildroot-ref }}
+          monorepo-repo: ${{ case(inputs.monorepo-is-fork, 'opentrons-ot2', 'opentrons')}}
       - name: Add refs to the summary
         run: |
-          echo "### Decide refs" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **buildroot** | ${{ steps.build-refs.outputs.buildroot }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **monorepo** | ${{ steps.build-refs.outputs.monorepo }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **variant** | ${{ steps.build-refs.outputs.variant }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **build type** | ${{ steps.build-refs.outputs.build-type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "### Decide refs" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Parameter | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **buildroot** | ${{ steps.build-refs.outputs.buildroot }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **monorepo ref** | ${{ steps.build-refs.outputs.monorepo }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **monorepo repo** | ${{ steps.build-refs.outputs.monorepo-repo }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **variant** | ${{ steps.build-refs.outputs.variant }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **build type** | ${{ steps.build-refs.outputs.build-type }} |" >> "$GITHUB_STEP_SUMMARY"
 
+  initialize-infra:
+    name: initialize build infrastructure
+    needs: decide-refs
+    runs-on: ubuntu-latest
+    outputs:
+      runner_labels: ${{ case(needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == false, steps.static-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == true, steps.request-unforked-ephemeral-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', steps.request-forked-ephemeral-runner.outputs.runner_labels, '[\"unknown infra stage\"]') }}
+      runner_group: ${{ case(inputs.force-ephemeral-infra || needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', 'ephemeral-system-builders', 'Custom Runners') }}
+    steps:
+      - id: request-unforked-ephemeral-runner
+        name: Request merged-stack ephemeral runner
+        if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == true }}
+        env:
+          # Set these repo secrets:
+          # - EPHEMERAL_RUNNER_API_URL_PROD
+          # - EPHEMERAL_RUNNER_API_URL_DEV
+          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
+          INFRA_STAGE: ${{ inputs.infra-stage }}
+          VARIANT: ${{ needs.decide-refs.outputs.variant }}
+          # Ephemeral runner per attempt (re-runs create a new runner)
+          RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
+          MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
+          RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
+          REQUEST_KIND: unforked
+          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_UNFORKED_API_URL_* secret for infra-stage=${{ inputs.infra-stage }}
+        shell: python
+        run: |
+          import json
+          import os
+          import sys
+          import time
+          import urllib.error
+          import urllib.request
+
+          api_url = os.environ.get("API_URL", "").strip()
+          if not api_url:
+              print(os.environ.get("MISSING_SECRET_MESSAGE", "Missing runner API URL secret"), file=sys.stderr)
+              raise SystemExit(1)
+
+          infra_stage = os.environ["INFRA_STAGE"]
+          variant = os.environ["VARIANT"]
+          runner_label = os.environ["RUNNER_LABEL"]
+          max_attempts = int(os.environ.get("MAX_ATTEMPTS", "120"))
+          retry_seconds = int(os.environ.get("RETRY_SECONDS", "60"))
+          request_kind = os.environ.get("REQUEST_KIND", "unknown")
+
+          repository = os.environ.get("GITHUB_REPOSITORY", "")
+          repo_label = repository.split("/")[-1] if repository else ""
+          labels = ["x64", "linux-x64", "sb-x64", infra_stage, variant, runner_label, repo_label]
+          labels_json = json.dumps(labels)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f'runner_labels=["{runner_label}"]\n')
+
+          print(f"Requesting runner with unique label: [{runner_label}]")
+          print(f"Requested labels: {labels_json}")
+
+          start_epoch = int(time.time())
+          retries_on_429 = 0
+          final_attempt = 0
+          http_code = "n/a"
+
+          payload = json.dumps(
+              {
+                  "labels": labels,
+                  "workflow_run_id": os.environ.get("GITHUB_RUN_ID", ""),
+                  "repository": repository,
+              }
+          ).encode("utf-8")
+          request_url = f"{api_url.rstrip('/')}/request-runner"
+
+          def emit_request_summary(status: str) -> None:
+              now_epoch = int(time.time())
+              elapsed_seconds = now_epoch - start_epoch
+              waited_seconds = retries_on_429 * retry_seconds
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+                  fh.write(f"### Runner Request Metrics ({request_kind})\n\n")
+                  fh.write("| Field | Value |\n")
+                  fh.write("|---|---|\n")
+                  fh.write(f"| Status | {status} |\n")
+                  fh.write(f"| Final HTTP status | {http_code} |\n")
+                  fh.write(f"| Attempts used | {final_attempt}/{max_attempts} |\n")
+                  fh.write(f"| 429 retries | {retries_on_429} |\n")
+                  fh.write(f"| Retry wait seconds | {waited_seconds} |\n")
+                  fh.write(f"| Total elapsed seconds | {elapsed_seconds} |\n")
+                  fh.write(f"| Runner label | {runner_label} |\n")
+                  fh.write(f"| Infra stage | {infra_stage} |\n")
+                  fh.write(f"| Variant | {variant} |\n\n")
+
+          requested = False
+          for attempt in range(1, max_attempts + 1):
+              final_attempt = attempt
+              response_body = ""
+              req = urllib.request.Request(
+                  request_url,
+                  data=payload,
+                  method="POST",
+                  headers={"Content-Type": "application/json"},
+              )
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      http_code = str(resp.getcode())
+                      response_body = resp.read().decode("utf-8", errors="replace")
+              except urllib.error.HTTPError as exc:
+                  http_code = str(exc.code)
+                  response_body = exc.read().decode("utf-8", errors="replace")
+              except Exception as exc:
+                  http_code = "request_error"
+                  response_body = str(exc)
+
+              if http_code == "200":
+                  requested = True
+                  break
+              if http_code == "429":
+                  retries_on_429 += 1
+                  print(
+                      f"Runner capacity full (429), waiting {retry_seconds}s before retry ({attempt}/{max_attempts})..."
+                  )
+                  time.sleep(retry_seconds)
+                  continue
+
+              emit_request_summary("failed")
+              print(f"Runner request failed with HTTP {http_code}", file=sys.stderr)
+              if response_body:
+                  print(response_body, file=sys.stderr)
+              raise SystemExit(1)
+
+          if not requested:
+              emit_request_summary("timed_out")
+              print(
+                  f"Timed out waiting for ephemeral runner capacity after {max_attempts} attempts.",
+                  file=sys.stderr,
+              )
+              raise SystemExit(1)
+
+          emit_request_summary("success")
+      - id: request-forked-ephemeral-runner
+        name: Request OT-2 fork stack ephemeral runners
+        if: ${{ inputs.monorepo-is-fork == true }}
+        env:
+          # Set these repo secrets:
+          # - EPHEMERAL_RUNNER_FORKED_API_URL_PROD
+          # - EPHEMERAL_RUNNER_FORKED_API_URL_DEV
+          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_FORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_FORKED_API_URL_PROD }}
+          INFRA_STAGE: ${{ inputs.infra-stage }}
+          VARIANT: ${{ needs.decide-refs.outputs.variant }}
+          # Ephemeral runner per attempt (re-runs create a new runner)
+          RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
+          MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
+          RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
+          REQUEST_KIND: forked
+          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_API_FORKED_URL_* secret for infra-stage=${{ inputs.infra-stage }}
+        shell: python
+        run: |
+          import json
+          import os
+          import sys
+          import time
+          import urllib.error
+          import urllib.request
+
+          api_url = os.environ.get("API_URL", "").strip()
+          if not api_url:
+              print(os.environ.get("MISSING_SECRET_MESSAGE", "Missing runner API URL secret"), file=sys.stderr)
+              raise SystemExit(1)
+
+          infra_stage = os.environ["INFRA_STAGE"]
+          variant = os.environ["VARIANT"]
+          runner_label = os.environ["RUNNER_LABEL"]
+          max_attempts = int(os.environ.get("MAX_ATTEMPTS", "120"))
+          retry_seconds = int(os.environ.get("RETRY_SECONDS", "60"))
+          request_kind = os.environ.get("REQUEST_KIND", "unknown")
+
+          repository = os.environ.get("GITHUB_REPOSITORY", "")
+          repo_label = repository.split("/")[-1] if repository else ""
+          labels = ["x64", "linux-x64", "sb-x64", infra_stage, variant, runner_label, repo_label]
+          labels_json = json.dumps(labels)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f'runner_labels=["{runner_label}"]\n')
+
+          print(f"Requesting runner with unique label: [{runner_label}]")
+          print(f"Requested labels: {labels_json}")
+
+          start_epoch = int(time.time())
+          retries_on_429 = 0
+          final_attempt = 0
+          http_code = "n/a"
+
+          payload = json.dumps(
+              {
+                  "labels": labels,
+                  "workflow_run_id": os.environ.get("GITHUB_RUN_ID", ""),
+                  "repository": repository,
+              }
+          ).encode("utf-8")
+          request_url = f"{api_url.rstrip('/')}/request-runner"
+
+          def emit_request_summary(status: str) -> None:
+              now_epoch = int(time.time())
+              elapsed_seconds = now_epoch - start_epoch
+              waited_seconds = retries_on_429 * retry_seconds
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+                  fh.write(f"### Runner Request Metrics ({request_kind})\n\n")
+                  fh.write("| Field | Value |\n")
+                  fh.write("|---|---|\n")
+                  fh.write(f"| Status | {status} |\n")
+                  fh.write(f"| Final HTTP status | {http_code} |\n")
+                  fh.write(f"| Attempts used | {final_attempt}/{max_attempts} |\n")
+                  fh.write(f"| 429 retries | {retries_on_429} |\n")
+                  fh.write(f"| Retry wait seconds | {waited_seconds} |\n")
+                  fh.write(f"| Total elapsed seconds | {elapsed_seconds} |\n")
+                  fh.write(f"| Runner label | {runner_label} |\n")
+                  fh.write(f"| Infra stage | {infra_stage} |\n")
+                  fh.write(f"| Variant | {variant} |\n\n")
+
+          requested = False
+          for attempt in range(1, max_attempts + 1):
+              final_attempt = attempt
+              response_body = ""
+              req = urllib.request.Request(
+                  request_url,
+                  data=payload,
+                  method="POST",
+                  headers={"Content-Type": "application/json"},
+              )
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      http_code = str(resp.getcode())
+                      response_body = resp.read().decode("utf-8", errors="replace")
+              except urllib.error.HTTPError as exc:
+                  http_code = str(exc.code)
+                  response_body = exc.read().decode("utf-8", errors="replace")
+              except Exception as exc:
+                  http_code = "request_error"
+                  response_body = str(exc)
+
+              if http_code == "200":
+                  requested = True
+                  break
+              if http_code == "429":
+                  retries_on_429 += 1
+                  print(
+                      f"Runner capacity full (429), waiting {retry_seconds}s before retry ({attempt}/{max_attempts})..."
+                  )
+                  time.sleep(retry_seconds)
+                  continue
+
+              emit_request_summary("failed")
+              print(f"Runner request failed with HTTP {http_code}", file=sys.stderr)
+              if response_body:
+                  print(response_body, file=sys.stderr)
+              raise SystemExit(1)
+
+          if not requested:
+              emit_request_summary("timed_out")
+              print(
+                  f"Timed out waiting for ephemeral runner capacity after {max_attempts} attempts.",
+                  file=sys.stderr,
+              )
+              raise SystemExit(1)
+
+          emit_request_summary("success")
+      - id: static-runner
+        name: Select merged-stack static runners
+        if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == false }}
+        run: |
+          echo "runner_labels=[\"self-hosted\", \"${{inputs.infra-stage}}\", \"${{needs.decide-refs.outputs.variant}}\"]" >> "$GITHUB_OUTPUT"
+
+  # Build job runs on ephemeral or static runner per initialize-infra
   run-build:
     needs: decide-refs
     permissions:
@@ -82,9 +378,11 @@ jobs:
         build_env: [ '${{ inputs.infra-stage }}', ]
     name: 'Building ${{needs.decide-refs.outputs.variant}} images on ${{ matrix.build_env }}'
     timeout-minutes: 480
-    runs-on: ['self-hosted', '${{matrix.build_env}}', '${{needs.decide-refs.outputs.variant}}']
+    runs-on:
+      group: ${{ needs.initialize-infra.outputs.runner_group }}
+      labels: ${{ fromJSON(needs.initialize-infra.outputs.runner_labels) }}
     concurrency:
-      group: ${{needs.decide-refs.outputs.monorepo}} ${{needs.decide-refs.outputs.buildroot}} ${{needs.decide-refs.outputs.variant}} ${{needs.decide-refs.outputs.build-type}} ${{inputs.infra-stage}}
+      group: build-${{ github.run_id }}-${{ github.run_attempt }}
       cancel-in-progress: false
     outputs:
       console_url: ${{ steps.upload-results.outputs.console_url }}
@@ -95,10 +393,16 @@ jobs:
     steps:
       - name: Set up vm requirements
         run: |
-          echo 'fs.inotify.max_user_watches=655360' | tee -a /etc/sysctl.conf
-          echo 'fs.inotify.max_user_instances=1280' | tee -a /etc/sysctl.conf
-          echo 'fs.file-max=100000' | tee -a /etc/sysctl.conf
-          sysctl -p
+          # Ephemeral runners may not permit writing /etc/sysctl*; apply runtime settings.
+          apply_sysctl() {
+            local key="$1"
+            local value="$2"
+            sudo sysctl -w "${key}=${value}" 2>/dev/null || sysctl -w "${key}=${value}" || true
+          }
+
+          apply_sysctl fs.inotify.max_user_watches 655360
+          apply_sysctl fs.inotify.max_user_instances 1280
+          apply_sysctl fs.file-max 100000
       - name: Fetch initial sources for action
         uses: 'actions/checkout@v3'
         with:
@@ -121,7 +425,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ needs.decide-refs.outputs.monorepo }}
-          repository: Opentrons/opentrons
+          repository: ${{ format('Opentrons/{0}', needs.decide-refs.outputs.monorepo-repo) }}
           path: ./opentrons
       # Repository Variables (Settings → Secrets and variables → Actions → Variables):
       #   ROBOT_STACK_AWS_OIDC_ROLE_ARN_DEV  — IAM role in the dev account (stage-dev)
@@ -135,19 +439,45 @@ jobs:
           aws-region: us-east-2
           role-duration-seconds: 43200
 
-      - name: Pull or create cache locations
+      - name: Set up cache locations and pull S3 cache
         id: cache-setup
+        shell: bash
         run: |
-          cachedir=${LOCAL_CACHE:-./cache}
-          for cachetype in downloads output ; do
-            absdir="${cachedir}/${cachetype}"
-            mkdir -p ${absdir}
-            echo "${cachetype}=${absdir}" >> $GITHUB_OUTPUT
+          set -euo pipefail
+
+          aws_cp="aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --no-progress"
+          cachedir="${LOCAL_CACHE:-./cache}"
+          cache_prefix=ot2-br
+
+          for cachetype in downloads ; do
+            thiscache="${cachedir}/${cachetype}"
+            localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
+            remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
+
+            mkdir -p "${thiscache}"
+            echo "${cachetype}=${thiscache}" >> "$GITHUB_OUTPUT"
             here=$(pwd)
-            reldir=$(realpath --relative-to=${here} ${cachedir}/${cachetype})
-            echo "Created ${cachetype} cache at ${absdir} (${reldir})"
-            echo "${cachetype}-rel=${reldir}" >> $GITHUB_OUTPUT
+            reldir=$(realpath --relative-to="${here}" "${thiscache}")
+            echo "Created ${cachetype} cache at ${thiscache} (${reldir})"
+            echo "${cachetype}-rel=${reldir}" >> "$GITHUB_OUTPUT"
+
+            echo "Fetching cache ${remotezip} -> ${localzip}"
+            if ${aws_cp} "${remotezip}" "${localzip}" ; then
+              echo "Extracting ${localzip} -> ${thiscache}"
+              unzip -q -u -o "${localzip}" -d "${thiscache}"
+              rm -f "${localzip}"
+            else
+              echo "No cache found at ${remotezip} (continuing)"
+            fi
           done
+
+          outputdir="${cachedir}/output"
+          mkdir -p "${outputdir}"
+          echo "output=${outputdir}" >> "$GITHUB_OUTPUT"
+          here=$(pwd)
+          output_reldir=$(realpath --relative-to=${here} "${outputdir}")
+          echo "Created output dir at ${outputdir} (${output_reldir})"
+          echo "output-rel=${output_reldir}" >> "$GITHUB_OUTPUT"
       - name: Set up docker environment file
         id: docker-env
         run: |
@@ -244,6 +574,38 @@ jobs:
         run: |
           cd buildroot
           docker run ${{steps.docker-args.outputs.args}} all
+      - name: Push S3 cache
+        if: success()
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+
+          aws_cp="aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --no-progress"
+          cachedir=${LOCAL_CACHE:-./cache}
+          cache_prefix=ot2-br
+
+          for cachetype in downloads ; do
+            thiscache="${cachedir}/${cachetype}"
+            localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
+            remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
+
+            if [ ! -d "${thiscache}" ]; then
+              echo "Cache dir ${thiscache} does not exist; skipping upload"
+              continue
+            fi
+
+            df -h || true
+            echo "Refreshing cache for ${cachetype} from ${thiscache} -> ${localzip}"
+            rm -f "${localzip}"
+            pushd "${thiscache}" >/dev/null
+            zip -q -r --filesync --symlinks "${localzip}" ./*
+            popd >/dev/null
+
+            echo "Uploading ${localzip} -> ${remotezip}"
+            ${aws_cp} "${localzip}" "${remotezip}"
+            rm -f "${localzip}"
+          done
       - name: Upload build log result
         if: always()
         uses: actions/upload-artifact@v4
@@ -337,7 +699,7 @@ jobs:
           omitName: true
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
-          repo: opentrons
+          repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip"
           artifactContentType: application/zip
@@ -351,18 +713,13 @@ jobs:
           omitName: true
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
-          repo: opentrons
+          repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
           artifactContentType: application/json
           token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
 
-      - name: remove build data
-        if: always()
-        run: |
-          rm -rf ./*
-          output_check=${{steps.cache-setup.outputs.output}}
-          rm -rf ${output_check:-/does/not/exist}
+      # Ephemeral runners are destroyed after the job, so no cleanup needed.
 
   notify-tagged-success:
     name: 'Notify Tagged Build Success'

@@ -29,12 +29,13 @@ function customSetOutput(name: string, value: string): void {
   if (!filePath) {
     throw new Error('GITHUB_OUTPUT environment variable is not set')
   }
-  
+
   // Use the simple Environment Files syntax as recommended by GitHub
   const commandValue = `${name}=${value}${os.EOL}`
   fs.appendFileSync(filePath, commandValue)
 }
 
+export type Fork = 'opentrons' | 'opentrons-ot2'
 export type Repo = 'buildroot' | 'monorepo'
 export type BuildType = 'develop' | 'release'
 export type Variant = 'release' | 'internal-release'
@@ -45,7 +46,7 @@ export type Branch = string
 export type Tag = string
 export type Ref = Branch | Tag
 
-export type Inputs = Map<Repo, Ref | null>
+export type Inputs = { [K in Repo]: Ref | null } & { 'monorepo-repo': Fork }
 
 export type AttemptableTag = Tag | ':latest:'
 export type AttemptableRef = AttemptableTag | Branch
@@ -101,45 +102,48 @@ function latestTagPrefixFor(repo: Repo, variant: Variant): string[] {
 
 export function latestTag(tagRefs: GitHubApiTag[]): Tag | null {
   if (tagRefs.length === 0) return null
-  
+
   // Extract and parse version numbers from tag refs
   const tagVersions = tagRefs
     .map(tag => {
       const tagName = tag.ref.replace('refs/tags/', '')
-      
+
       // Handle v* tags (e.g., "v1.19.4")
       if (tagName.startsWith('v')) {
         const version = tagName.substring(1)
         return { tag: tag.ref, version, isValid: semver.valid(version) }
       }
-      
+
       // Handle internal@* tags (e.g., "internal@1.2.0-alpha.0")
       if (tagName.startsWith('internal@')) {
         const version = tagName.substring(9) // Remove "internal@"
         return { tag: tag.ref, version, isValid: semver.valid(version) }
       }
-      
+
       // Handle ot3@* tags (e.g., "ot3@1.2.0-alpha.0")
       if (tagName.startsWith('ot3@')) {
         const version = tagName.substring(4) // Remove "ot3@"
         return { tag: tag.ref, version, isValid: semver.valid(version) }
       }
-      
+
       // Unknown tag format
       return { tag: tag.ref, version: null, isValid: false }
     })
     .filter(tv => tv.isValid) // Only keep valid semantic versions
-  
+
   if (tagVersions.length === 0) return null
-  
+
   // Sort by semantic version and return the latest
   tagVersions.sort((a, b) => semver.compare(a.version!, b.version!))
   return tagVersions[tagVersions.length - 1].tag
 }
 
-function restDetailsFor(input: Repo): { owner: string; repo: string } {
+function restDetailsFor(
+  input: Repo,
+  fork: Fork
+): { owner: string; repo: string } {
   return {
-    monorepo: { owner: 'Opentrons', repo: 'opentrons' },
+    monorepo: { owner: 'Opentrons', repo: fork },
     buildroot: { owner: 'Opentrons', repo: 'buildroot' },
   }[input]
 }
@@ -152,7 +156,7 @@ export function authoritativeRef(inputs: Inputs): [Ref, boolean] {
   return (
     orderedRepos
       .map((repoName): [Ref, boolean] | null => {
-        const inputRefForRepo = inputs.get(repoName)
+        const inputRefForRepo = inputs[repoName]
         return inputRefForRepo
           ? [inputRefForRepo, refIsMain(inputRefForRepo, repoName)]
           : null
@@ -162,10 +166,13 @@ export function authoritativeRef(inputs: Inputs): [Ref, boolean] {
 }
 
 const getInputs = () =>
-  orderedRepos.reduce((prev: Inputs, inputName: Repo): Inputs => {
-    const input = getInput(inputName)
-    return prev.set(inputName, input == '-' ? null : input)
-  }, new Map())
+  [...orderedRepos, 'monorepo-repo'].reduce(
+    (prev: Inputs, inputName: string): Inputs => {
+      const input = getInput(inputName)
+      return { ...prev, [inputName]: input == '-' ? null : input }
+    },
+    {} as Inputs
+  )
 
 function visitRefsByType<T>(
   ref: Ref,
@@ -216,7 +223,8 @@ export function refsToAttempt(
 
 async function resolveRefs(
   toAttempt: AttemptableRefs,
-  variant: Variant
+  variant: Variant,
+  fork: Fork
 ): Promise<OutputRefs> {
   const token = getInput('token')
   let resolved = new Map()
@@ -229,7 +237,7 @@ async function resolveRefs(
         latestTagPrefixFor(repoName, variant).map(prefix =>
           octokit.rest.git
             .listMatchingRefs({
-              ...restDetailsFor(repoName),
+              ...restDetailsFor(repoName, fork),
               ref: restAPICompliantRef(prefix),
             })
             .then(response => {
@@ -261,7 +269,7 @@ async function resolveRefs(
 
       return octokit.rest.git
         .listMatchingRefs({
-          ...restDetailsFor(repoName),
+          ...restDetailsFor(repoName, fork),
           ref: restAPICompliantRef(correctRef),
         })
         .then(value => {
@@ -300,11 +308,16 @@ export function resolveBuildType(ref: Ref, variant: Variant): BuildType {
     : resolveBuildTypeExternal(ref)
 }
 
+function resolveFork(inputs: Inputs): Fork {
+  return inputs['monorepo-repo']
+}
+
 async function run() {
   const inputs = getInputs()
-  inputs.forEach((ref, repo) => {
-    debug(`found input for ${repo}: ${ref}`)
+  Object.entries(inputs).forEach((inputName, inputValue) => {
+    debug(`found input for ${inputName}: ${inputValue}`)
   })
+  const fork = resolveFork(inputs)
   const [authoritative, isMain] = authoritativeRef(inputs)
   debug(`authoritative ref is ${authoritative} (main: ${isMain})`)
   const variant = variantForRef(authoritative)
@@ -313,14 +326,18 @@ async function run() {
   info(`Resolved buildroot build-type to ${buildType}`)
   customSetOutput('build-type', buildType)
   customSetOutput('variant', variant)
+  customSetOutput('monorepo-repo', fork)
 
-  const attemptable = Array.from(inputs.entries()).reduce(
-    (prev: AttemptableRefs, [repoName, inputRef]): AttemptableRefs => {
+  const attemptable = Array.from(Object.entries(inputs)).reduce(
+    (prev: AttemptableRefs, [inputName, inputValue]): AttemptableRefs => {
+      if (inputName == 'monorepo-repo') {
+        return prev
+      }
       return prev.set(
-        repoName,
-        inputRef
-          ? [inputRef]
-          : refsToAttempt(authoritative, isMain, mainRefFor(repoName))
+        inputName as Repo,
+        inputValue
+          ? [inputValue]
+          : refsToAttempt(authoritative, isMain, mainRefFor(inputName as Repo))
       )
     },
     new Map()
@@ -329,11 +346,16 @@ async function run() {
     debug(`found attemptable refs for ${repo}: ${refs.join(', ')}`)
   })
 
-  const resolved = await resolveRefs(attemptable, variant)
-  resolved.forEach((ref, repo) => {
+  const resolved = await resolveRefs(attemptable, variant, fork)
+  for (const [repo, ref] of resolved) {
+    if (ref == null || ref === undefined) {
+      setFailed(
+        `Could not resolve a valid ref for ${repo}. Provide a full ref (e.g. refs/heads/edge or refs/tags/vX.Y.Z) as workflow input.`
+      )
+    }
     info(`Resolved ${repo} to ${ref}`)
     customSetOutput(repo, ref)
-  })
+  }
 }
 
 async function _run() {

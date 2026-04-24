@@ -8,7 +8,8 @@ const AUTHORITATIVE_REF_TEST_SPECS: Array<[string, Inputs, [string, boolean]]> =
       new Map([
         ['buildroot', null],
         ['monorepo', 'refs/heads/edge'],
-      ]),
+        ['monorepo-repo', 'opentrons'],
+      ] as const) as unknown as Inputs,
       ['refs/heads/edge', true],
     ],
     [
@@ -16,7 +17,8 @@ const AUTHORITATIVE_REF_TEST_SPECS: Array<[string, Inputs, [string, boolean]]> =
       new Map([
         ['buildroot', 'refs/heads/opentrons-develop'],
         ['monorepo', null],
-      ]),
+        ['monorepo-repo', 'opentrons'],
+      ] as const) as unknown as Inputs,
       ['refs/heads/opentrons-develop', true],
     ],
     [
@@ -24,7 +26,8 @@ const AUTHORITATIVE_REF_TEST_SPECS: Array<[string, Inputs, [string, boolean]]> =
       new Map([
         ['buildroot', 'refs/heads/opentrons-develop'],
         ['monorepo', 'refs/heads/edge'],
-      ]),
+        ['monorepo-repo', 'opentrons'],
+      ] as const) as unknown as Inputs,
       ['refs/heads/edge', true],
     ],
     [
@@ -32,7 +35,8 @@ const AUTHORITATIVE_REF_TEST_SPECS: Array<[string, Inputs, [string, boolean]]> =
       new Map([
         ['buildroot', 'refs/heads/opentrons-develop'],
         ['monorepo', 'refs/heads/some-test-branch'],
-      ]),
+        ['monorepo-repo', 'opentrons'],
+      ] as const) as unknown as Inputs,
       ['refs/heads/some-test-branch', false],
     ],
     [
@@ -40,7 +44,8 @@ const AUTHORITATIVE_REF_TEST_SPECS: Array<[string, Inputs, [string, boolean]]> =
       new Map([
         ['buildroot', 'refs/heads/some-test-branch'],
         ['monorepo', null],
-      ]),
+        ['monorepo-repo', 'opentrons'],
+      ] as const) as unknown as Inputs,
       ['refs/heads/some-test-branch', false],
     ],
     [
@@ -48,7 +53,8 @@ const AUTHORITATIVE_REF_TEST_SPECS: Array<[string, Inputs, [string, boolean]]> =
       new Map([
         ['buildroot', null],
         ['monorepo', null],
-      ]),
+        ['monorepo-repo', 'opentrons'],
+      ] as const) as unknown as Inputs,
       ['refs/heads/edge', true],
     ],
   ]

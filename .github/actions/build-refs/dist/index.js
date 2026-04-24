@@ -32238,9 +32238,9 @@ function latestTag(tagRefs) {
     tagVersions.sort((a, b) => semver__WEBPACK_IMPORTED_MODULE_3__.compare(a.version, b.version));
     return tagVersions[tagVersions.length - 1].tag;
 }
-function restDetailsFor(input) {
+function restDetailsFor(input, fork) {
     return {
-        monorepo: { owner: 'Opentrons', repo: 'opentrons' },
+        monorepo: { owner: 'Opentrons', repo: fork },
         buildroot: { owner: 'Opentrons', repo: 'buildroot' },
     }[input];
 }
@@ -32251,17 +32251,17 @@ function authoritativeRef(inputs) {
     var _a;
     return ((_a = orderedRepos
         .map((repoName) => {
-        const inputRefForRepo = inputs.get(repoName);
+        const inputRefForRepo = inputs[repoName];
         return inputRefForRepo
             ? [inputRefForRepo, refIsMain(inputRefForRepo, repoName)]
             : null;
     })
         .find(el => el !== null)) !== null && _a !== void 0 ? _a : ['refs/heads/edge', true]);
 }
-const getInputs = () => orderedRepos.reduce((prev, inputName) => {
+const getInputs = () => [...orderedRepos, 'monorepo-repo'].reduce((prev, inputName) => {
     const input = getInput(inputName);
-    return prev.set(inputName, input == '-' ? null : input);
-}, new Map());
+    return Object.assign(Object.assign({}, prev), { [inputName]: input == '-' ? null : input });
+}, {});
 function visitRefsByType(ref, ifBranch, ifTag) {
     if (ref.startsWith('refs/heads'))
         return ifBranch(ref);
@@ -32285,7 +32285,7 @@ function refsToAttempt(requesterRef, requesterIsMain, requestedMain) {
     // try.
     return visitRefsByType(requesterRef, requesterBranch => branchesToAttempt(requesterBranch, requesterIsMain, requestedMain), requesterTag => tagsToAttempt(requesterTag, requestedMain));
 }
-function resolveRefs(toAttempt, variant) {
+function resolveRefs(toAttempt, variant, fork) {
     return __awaiter(this, void 0, void 0, function* () {
         const token = getInput('token');
         let resolved = new Map();
@@ -32294,7 +32294,7 @@ function resolveRefs(toAttempt, variant) {
             const fetchTags = (repoName) => __awaiter(this, void 0, void 0, function* () {
                 info(`finding latest tag for ${repoName}`);
                 return Promise.all(latestTagPrefixFor(repoName, variant).map(prefix => octokit.rest.git
-                    .listMatchingRefs(Object.assign(Object.assign({}, restDetailsFor(repoName)), { ref: restAPICompliantRef(prefix) }))
+                    .listMatchingRefs(Object.assign(Object.assign({}, restDetailsFor(repoName, fork)), { ref: restAPICompliantRef(prefix) }))
                     .then(response => {
                     if (response.status != 200) {
                         throw new Error(`Bad response from github api for ${repoName} get tags: ${response.status}`);
@@ -32312,7 +32312,7 @@ function resolveRefs(toAttempt, variant) {
                     return null;
                 }
                 return octokit.rest.git
-                    .listMatchingRefs(Object.assign(Object.assign({}, restDetailsFor(repoName)), { ref: restAPICompliantRef(correctRef) }))
+                    .listMatchingRefs(Object.assign(Object.assign({}, restDetailsFor(repoName, fork)), { ref: restAPICompliantRef(correctRef) }))
                     .then(value => {
                     if (value.status != 200 || !value.data) {
                         throw new Error(`Bad response from github api for ${repoName} get matching refs: ${value.status}`);
@@ -32338,12 +32338,16 @@ function resolveBuildType(ref, variant) {
         ? resolveBuildTypeInternal(ref)
         : resolveBuildTypeExternal(ref);
 }
+function resolveFork(inputs) {
+    return inputs['monorepo-repo'];
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const inputs = getInputs();
-        inputs.forEach((ref, repo) => {
-            debug(`found input for ${repo}: ${ref}`);
+        Object.entries(inputs).forEach((inputName, inputValue) => {
+            debug(`found input for ${inputName}: ${inputValue}`);
         });
+        const fork = resolveFork(inputs);
         const [authoritative, isMain] = authoritativeRef(inputs);
         debug(`authoritative ref is ${authoritative} (main: ${isMain})`);
         const variant = variantForRef(authoritative);
@@ -32352,19 +32356,26 @@ function run() {
         info(`Resolved buildroot build-type to ${buildType}`);
         customSetOutput('build-type', buildType);
         customSetOutput('variant', variant);
-        const attemptable = Array.from(inputs.entries()).reduce((prev, [repoName, inputRef]) => {
-            return prev.set(repoName, inputRef
-                ? [inputRef]
-                : refsToAttempt(authoritative, isMain, mainRefFor(repoName)));
+        customSetOutput('monorepo-repo', fork);
+        const attemptable = Array.from(Object.entries(inputs)).reduce((prev, [inputName, inputValue]) => {
+            if (inputName == 'monorepo-repo') {
+                return prev;
+            }
+            return prev.set(inputName, inputValue
+                ? [inputValue]
+                : refsToAttempt(authoritative, isMain, mainRefFor(inputName)));
         }, new Map());
         attemptable.forEach((refs, repo) => {
             debug(`found attemptable refs for ${repo}: ${refs.join(', ')}`);
         });
-        const resolved = yield resolveRefs(attemptable, variant);
-        resolved.forEach((ref, repo) => {
+        const resolved = yield resolveRefs(attemptable, variant, fork);
+        for (const [repo, ref] of resolved) {
+            if (ref == null || ref === undefined) {
+                setFailed(`Could not resolve a valid ref for ${repo}. Provide a full ref (e.g. refs/heads/edge or refs/tags/vX.Y.Z) as workflow input.`);
+            }
             info(`Resolved ${repo} to ${ref}`);
             customSetOutput(repo, ref);
-        });
+        }
     });
 }
 function _run() {
