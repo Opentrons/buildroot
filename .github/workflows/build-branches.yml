@@ -26,5 +26,6 @@ jobs:
             {
               "buildroot-ref": "${{ github.ref }}",
               "monorepo-ref": "-",
-              "infra-stage": "stage-prod"
+              "infra-stage": "stage-prod",
+              "force-ephemeral-infra": "true"
             }

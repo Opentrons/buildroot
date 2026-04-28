@@ -40,7 +40,7 @@ on:
         description: |
           Use ephemeral builder infrastructure, even if this is a non-fork build.
         required: false
-        default: false
+        default: true
         type: boolean
       runner-request-max-attempts:
         description: |
@@ -595,6 +595,9 @@ jobs:
               echo "Cache dir ${thiscache} does not exist; skipping upload"
               continue
             fi
+
+            # Docker bind mounts often leave root-owned files; zip cannot read them otherwise.
+            sudo chown -R "$(id -u):$(id -g)" "${thiscache}"
 
             df -h || true
             echo "Refreshing cache for ${cachetype} from ${thiscache} -> ${localzip}"
