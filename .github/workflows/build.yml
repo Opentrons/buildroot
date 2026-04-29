@@ -249,7 +249,7 @@ jobs:
           MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
           REQUEST_KIND: forked
-          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_API_FORKED_URL_* secret for infra-stage=${{ inputs.infra-stage }}
+          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_FORKED_API_URL_* secret for infra-stage=${{ inputs.infra-stage }}
         shell: python
         run: |
           import json
