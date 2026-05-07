@@ -32328,7 +32328,10 @@ function resolveRefs(toAttempt, variant, fork) {
     });
 }
 function resolveBuildTypeInternal(ref) {
-    return ref.includes('refs/tags/ot3@') ? 'release' : 'develop';
+    return ref.includes('refs/tags/ot3@') ||
+        ref.includes('refs/tags/internal@')
+        ? 'release'
+        : 'develop';
 }
 function resolveBuildTypeExternal(ref) {
     return ref.includes('refs/tags/v') ? 'release' : 'develop';
