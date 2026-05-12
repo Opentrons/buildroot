@@ -111,10 +111,10 @@ jobs:
         name: Request merged-stack ephemeral runner
         if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == true }}
         env:
-          # Set these repo secrets:
-          # - EPHEMERAL_RUNNER_API_URL_PROD
-          # - EPHEMERAL_RUNNER_API_URL_DEV
-          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
+          # Set these repository variables:
+          # - EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD
+          # - EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV
+          API_URL: ${{ inputs.infra-stage == 'stage-dev' && vars.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV || vars.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
           INFRA_STAGE: ${{ inputs.infra-stage }}
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
           # Ephemeral runner per attempt (re-runs create a new runner)
@@ -122,7 +122,7 @@ jobs:
           MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
           REQUEST_KIND: unforked
-          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_UNFORKED_API_URL_* secret for infra-stage=${{ inputs.infra-stage }}
+          MISSING_API_URL_MESSAGE: Missing EPHEMERAL_RUNNER_UNFORKED_API_URL_* variable for infra-stage=${{ inputs.infra-stage }}
         shell: python
         run: |
           import json
@@ -134,7 +134,13 @@ jobs:
 
           api_url = os.environ.get("API_URL", "").strip()
           if not api_url:
-              print(os.environ.get("MISSING_SECRET_MESSAGE", "Missing runner API URL secret"), file=sys.stderr)
+              print(
+                  os.environ.get(
+                      "MISSING_API_URL_MESSAGE",
+                      "Missing runner API URL (set EPHEMERAL_RUNNER_UNFORKED_API_URL_* repository variable)",
+                  ),
+                  file=sys.stderr,
+              )
               raise SystemExit(1)
 
           infra_stage = os.environ["INFRA_STAGE"]
@@ -238,10 +244,10 @@ jobs:
         name: Request OT-2 fork stack ephemeral runners
         if: ${{ inputs.monorepo-is-fork == true }}
         env:
-          # Set these repo secrets:
+          # Set these repository variables:
           # - EPHEMERAL_RUNNER_FORKED_API_URL_PROD
           # - EPHEMERAL_RUNNER_FORKED_API_URL_DEV
-          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_FORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_FORKED_API_URL_PROD }}
+          API_URL: ${{ inputs.infra-stage == 'stage-dev' && vars.EPHEMERAL_RUNNER_FORKED_API_URL_DEV || vars.EPHEMERAL_RUNNER_FORKED_API_URL_PROD }}
           INFRA_STAGE: ${{ inputs.infra-stage }}
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
           # Ephemeral runner per attempt (re-runs create a new runner)
@@ -249,7 +255,7 @@ jobs:
           MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
           REQUEST_KIND: forked
-          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_FORKED_API_URL_* secret for infra-stage=${{ inputs.infra-stage }}
+          MISSING_API_URL_MESSAGE: Missing EPHEMERAL_RUNNER_FORKED_API_URL_* variable for infra-stage=${{ inputs.infra-stage }}
         shell: python
         run: |
           import json
@@ -261,7 +267,13 @@ jobs:
 
           api_url = os.environ.get("API_URL", "").strip()
           if not api_url:
-              print(os.environ.get("MISSING_SECRET_MESSAGE", "Missing runner API URL secret"), file=sys.stderr)
+              print(
+                  os.environ.get(
+                      "MISSING_API_URL_MESSAGE",
+                      "Missing runner API URL (set EPHEMERAL_RUNNER_FORKED_API_URL_* repository variable)",
+                  ),
+                  file=sys.stderr,
+              )
               raise SystemExit(1)
 
           infra_stage = os.environ["INFRA_STAGE"]
