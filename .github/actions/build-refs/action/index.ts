@@ -295,8 +295,7 @@ async function resolveRefs(
 }
 
 function resolveBuildTypeInternal(ref: Ref): BuildType {
-  return ref.includes('refs/tags/ot3@') ||
-    ref.includes('refs/tags/internal@')
+  return ref.includes('refs/tags/internal@')
     ? 'release'
     : 'develop'
 }
