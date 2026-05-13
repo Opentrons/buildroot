@@ -34,10 +34,10 @@ A lightweight GitHub Action that sends Slack notifications for tagged build fail
 
 The action automatically routes notifications to different Slack channels based on the tag pattern:
 
-### Main Releases → `#release-cycle`
+### Main & internal releases → `#release-cycle`
 
-- `v*` - Version releases (v7.2.0, v8.0.0, etc.)
-- `ot3@*` - OT3 releases (ot3@7.2.0, ot3@8.0.0, etc.)
+- `v*` — public semver tags (e.g. `v7.2.0`, `v8.0.0`)
+- `internal@*` — internal semver tags (e.g. `internal@1.2.0-alpha.0`), same channel routing as `v*`
 
 ### Component Releases → `#builds`
 
@@ -71,7 +71,7 @@ You need to set up these repository secrets:
 
 - **Secret Name**: `OT_APP_RELEASE_SLACK_NOTIFICATION_WEBHOOK_URL`
 - **Channel**: `#release-cycle`
-- **Used for**: Main releases (v*, ot3@*)
+- **Used for**: Main and internal releases (`v*`, `internal@*`)
 
 ### 2. Builds Channel Webhook
 
@@ -205,8 +205,10 @@ View Details: [Open Workflow]
 ### Test with Real Tags
 
 ```bash
-# Test main release (goes to #release-cycle)
+# Test main or internal release (goes to #release-cycle)
 git tag v7.2.0-test && git push origin v7.2.0-test
+# or
+git tag internal@1.0.0-test && git push origin internal@1.0.0-test
 
 # Test component release (goes to #builds)
 git tag protocol-designer-v1.0.0-test && git push origin protocol-designer-v1.0.0-test
