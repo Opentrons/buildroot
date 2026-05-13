@@ -63,9 +63,7 @@ export function variantForRef(ref: Ref): Variant {
       return 'release'
     }
   } else if (ref.startsWith('refs/tags')) {
-    if (ref.includes('ot3@')) {
-      return 'internal-release'
-    } else if (ref.startsWith('refs/tags/v')) {
+    if (ref.startsWith('refs/tags/v')) {
       return 'release'
     }
   }
@@ -92,9 +90,6 @@ function latestTagPrefixFor(repo: Repo, variant: Variant): string[] {
     return ['refs/tags/v']
   }
   if (variant === 'internal-release') {
-    if (repo === 'monorepo') {
-      return ['refs/tags/internal@', 'refs/tags/ot3@']
-    }
     return ['refs/tags/internal@']
   }
   throw new Error(`Unknown variant ${variant}`)
@@ -117,12 +112,6 @@ export function latestTag(tagRefs: GitHubApiTag[]): Tag | null {
       // Handle internal@* tags (e.g., "internal@1.2.0-alpha.0")
       if (tagName.startsWith('internal@')) {
         const version = tagName.substring(9) // Remove "internal@"
-        return { tag: tag.ref, version, isValid: semver.valid(version) }
-      }
-
-      // Handle ot3@* tags (e.g., "ot3@1.2.0-alpha.0")
-      if (tagName.startsWith('ot3@')) {
-        const version = tagName.substring(4) // Remove "ot3@"
         return { tag: tag.ref, version, isValid: semver.valid(version) }
       }
 
@@ -295,7 +284,9 @@ async function resolveRefs(
 }
 
 function resolveBuildTypeInternal(ref: Ref): BuildType {
-  return ref.includes('refs/tags/ot3@') ? 'release' : 'develop'
+  return ref.includes('refs/tags/internal@')
+    ? 'release'
+    : 'develop'
 }
 
 function resolveBuildTypeExternal(ref: Ref): BuildType {

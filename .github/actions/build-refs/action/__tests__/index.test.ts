@@ -145,8 +145,8 @@ const BUILD_TYPE_TEST_SPECS: Array<[string, [Ref], BuildType, Variant]> = [
     'internal-release',
   ],
   [
-    'when monorepo ref is a ot3-prefix tag is release on i-r',
-    ['refs/tags/ot3@0.0.0-dev'],
+    'when monorepo ref is a internal-prefix tag is release on i-r',
+    ['refs/tags/internal@0.0.0-dev'],
     'release',
     'internal-release',
   ],
@@ -175,8 +175,8 @@ const BUILD_TYPE_TEST_SPECS: Array<[string, [Ref], BuildType, Variant]> = [
     'release',
   ],
   [
-    'when monorepo ref is ot3-tag is develop on f-r',
-    ['refs/tags/ot3@0.0.0-dev'],
+    'when monorepo ref is internal-tag is develop on f-r',
+    ['refs/tags/internal@0.0.0-dev'],
     'develop',
     'release',
   ],
@@ -223,7 +223,7 @@ const VARIANT_TEST_SPECS: Array<[string, Ref, Variant]> = [
   ['when monorepo ref is a release tag', 'refs/tags/v123.213.8', 'release'],
   [
     'when monorepo ref is an internal-release tag',
-    'refs/tags/ot3@0.1231.8-alpha.2',
+    'refs/tags/internal@0.1231.8-alpha.2',
     'internal-release',
   ],
 ]
