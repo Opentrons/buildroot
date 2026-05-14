@@ -720,6 +720,22 @@ jobs:
           echo "Browser (release tag page; GitHub may normalize encoding):"
           echo "  ${web_base}/${owner}/${repo}/releases/tag/${enc_tag}"
 
+      # GitHub UI: Settings → Secrets and variables → Actions
+      #   Variables: OT2_APP_ID (numeric App ID, optional / informational)
+      #              OT2_CLIENT_ID (App "Client ID", Iv1… — required by create-github-app-token)
+      #   Secret:    OT2_APP_PRIVATE_KEY (full PEM private key)
+      # Install the GitHub App on Opentrons with access to opentrons + opentrons-ot2 as needed.
+      - name: Create GitHub App token for monorepo releases
+        if: needs.decide-refs.outputs.build-type == 'release'
+        id: ot2-app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          client-id: ${{ vars.OT2_CLIENT_ID }}
+          private-key: ${{ secrets.OT2_APP_PRIVATE_KEY }}
+          owner: Opentrons
+          repositories: ${{ needs.decide-refs.outputs.monorepo-repo }}
+          permission-contents: write
+
       - name: Upload system zip to monorepo release
         if: needs.decide-refs.outputs.build-type == 'release'
         uses: 'ncipollo/release-action@v1.12.0'
@@ -737,7 +753,7 @@ jobs:
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip"
           artifactContentType: application/zip
-          token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
+          token: ${{ steps.ot2-app-token.outputs.token }}
       - name: Upload version json to monorepo release
         if: needs.decide-refs.outputs.build-type == 'release'
         uses: 'ncipollo/release-action@v1.12.0'
@@ -753,7 +769,7 @@ jobs:
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
           artifactContentType: application/json
-          token: ${{secrets.MONOREPO_RELEASE_ARTIFACT_UPLOAD_TOKEN}}
+          token: ${{ steps.ot2-app-token.outputs.token }}
 
       # Ephemeral runners are destroyed after the job, so no cleanup needed.
 
