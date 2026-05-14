@@ -704,6 +704,8 @@ jobs:
           omitName: true
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
+          # ncipollo/release-action uses separate owner + repo (not owner/repo in repo).
+          owner: Opentrons
           repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip"
@@ -718,6 +720,7 @@ jobs:
           omitName: true
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
+          owner: Opentrons
           repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
