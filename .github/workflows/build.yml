@@ -704,7 +704,7 @@ jobs:
           omitName: true
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
-          repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
+          repo: ${{ format('Opentrons/{0}', needs.decide-refs.outputs.monorepo-repo) }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip"
           artifactContentType: application/zip
@@ -718,7 +718,7 @@ jobs:
           omitName: true
           omitPrereleaseDuringUpdate: true
           omitDraftDuringUpdate: true
-          repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
+          repo: ${{ format('Opentrons/{0}', needs.decide-refs.outputs.monorepo-repo) }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
           artifactContentType: application/json
