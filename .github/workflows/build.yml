@@ -421,6 +421,7 @@ jobs:
             ./checkout-buildroot.sh
           fi
       - name: Fetch monorepo source
+        id: monorepo-checkout
         uses: 'actions/checkout@v3'
         with:
           fetch-depth: 0
@@ -695,6 +696,30 @@ jobs:
           aws s3 cp --acl=public-read releases.json s3://${{steps.upload-results.outputs.machine_root}}/releases.json
           popd
 
+      - name: Log monorepo release API targets
+        if: needs.decide-refs.outputs.build-type == 'release'
+        shell: bash
+        run: |
+          set -euo pipefail
+          owner='Opentrons'
+          repo='${{ needs.decide-refs.outputs.monorepo-repo }}'
+          tag='${{ steps.artifact-copy.outputs.monorepo_shorttag }}'
+          commit='${{ steps.monorepo-checkout.outputs.commit }}'
+          api_base="${GITHUB_API_URL:-https://api.github.com}"
+          web_base="${GITHUB_SERVER_URL:-https://github.com}"
+          enc_tag="$(TAG="$tag" python3 -c "import urllib.parse, os; print(urllib.parse.quote(os.environ['TAG'], safe=''))")"
+          echo '=== Monorepo release (ncipollo/release-action) targets ==='
+          echo "owner=${owner} repo=${repo} tag=${tag}"
+          echo "monorepo checkout commit=${commit}"
+          echo "GET release by tag (first call when allowUpdates: true):"
+          echo "  ${api_base}/repos/${owner}/${repo}/releases/tags/${enc_tag}"
+          echo "GET releases list (draft matching same tag_name):"
+          echo "  ${api_base}/repos/${owner}/${repo}/releases?per_page=100"
+          echo "POST create release (when no published release for tag):"
+          echo "  ${api_base}/repos/${owner}/${repo}/releases"
+          echo "Browser (release tag page; GitHub may normalize encoding):"
+          echo "  ${web_base}/${owner}/${repo}/releases/tag/${enc_tag}"
+
       - name: Upload system zip to monorepo release
         if: needs.decide-refs.outputs.build-type == 'release'
         uses: 'ncipollo/release-action@v1.12.0'
@@ -707,6 +732,8 @@ jobs:
           # ncipollo/release-action uses separate owner + repo (not owner/repo in repo).
           owner: Opentrons
           repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
+          # Create the tag on this SHA when the release (or tag) does not exist yet.
+          commit: ${{ steps.monorepo-checkout.outputs.commit }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/ot2-*.zip"
           artifactContentType: application/zip
@@ -722,6 +749,7 @@ jobs:
           omitDraftDuringUpdate: true
           owner: Opentrons
           repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
+          commit: ${{ steps.monorepo-checkout.outputs.commit }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
           artifactContentType: application/json
