@@ -721,20 +721,20 @@ jobs:
           echo "  ${web_base}/${owner}/${repo}/releases/tag/${enc_tag}"
 
       # GitHub UI: Settings → Secrets and variables → Actions
-      #   Variables: OT2_APP_ID (numeric App ID, optional / informational)
-      #              OT2_CLIENT_ID (App "Client ID", Iv1… — required by create-github-app-token)
+      #   Variables: OT2_APP_ID (numeric App ID from the app General page — required)
+      #              OT2_CLIENT_ID (Iv1… Client ID; unused by pinned action v1.11, optional to keep)
       #   Secret:    OT2_APP_PRIVATE_KEY (full PEM private key)
+      # Pin v1.11.x: self-hosted runners (e.g. 2.317) accept node12/16/20 only; v3.x uses node24.
       # Install the GitHub App on Opentrons with access to opentrons + opentrons-ot2 as needed.
       - name: Create GitHub App token for monorepo releases
         if: needs.decide-refs.outputs.build-type == 'release'
         id: ot2-app-token
-        uses: actions/create-github-app-token@v3.2.0
+        uses: actions/create-github-app-token@v1.11.0
         with:
-          client-id: ${{ vars.OT2_CLIENT_ID }}
+          app-id: ${{ vars.OT2_APP_ID }}
           private-key: ${{ secrets.OT2_APP_PRIVATE_KEY }}
           owner: Opentrons
           repositories: ${{ needs.decide-refs.outputs.monorepo-repo }}
-          permission-contents: write
 
       - name: Upload system zip to monorepo release
         if: needs.decide-refs.outputs.build-type == 'release'
