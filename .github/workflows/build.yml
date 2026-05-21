@@ -104,14 +104,15 @@ jobs:
     needs: decide-refs
     runs-on: ubuntu-latest
     outputs:
-      runner_labels: ${{ case(inputs.force-ephemeral-infra == false, steps.static-runner.outputs.runner_labels, needs.decide-refs.outputs.variant == 'internal-release', steps.request-internal-ephemeral-runner.outputs.runner_labels, inputs.monorepo-is-fork == true, steps.request-external-ot2-ephemeral-runner.outputs.runner_labels, inputs.force-ephemeral-infra == true, steps.request-unforked-ephemeral-runner.outputs.runner_labels, '[\"unknown infra stage\"]') }}
-      runner_group: ${{ case(inputs.force-ephemeral-infra || needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', 'ephemeral-system-builders', 'Custom Runners') }}
+      runner_labels: ${{ steps.resolve-runner.outputs.runner_labels }}
+      runner_group: ${{ steps.resolve-runner.outputs.runner_group }}
     steps:
       - name: Check out buildroot for runner request script
         uses: actions/checkout@v6
         with:
           sparse-checkout: |
             request_ephemeral_runner.py
+            resolve_runner_config.py
           sparse-checkout-cone-mode: false
       - id: request-unforked-ephemeral-runner
         name: Request merged-stack ephemeral runner
@@ -162,6 +163,20 @@ jobs:
         if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == false }}
         run: |
           echo "runner_labels=[\"self-hosted\", \"${{inputs.infra-stage}}\", \"${{needs.decide-refs.outputs.variant}}\"]" >> "$GITHUB_OUTPUT"
+      - id: resolve-runner
+        name: Resolve runner labels and group
+        env:
+          FORCE_EPHEMERAL: ${{ inputs.force-ephemeral-infra }}
+          MONOREPO_IS_FORK: ${{ inputs.monorepo-is-fork }}
+          VARIANT: ${{ needs.decide-refs.outputs.variant }}
+          INFRA_STAGE: ${{ inputs.infra-stage }}
+          MONOREPO_REPO: ${{ needs.decide-refs.outputs.monorepo-repo }}
+          STATIC_LABELS: ${{ steps.static-runner.outputs.runner_labels }}
+          INTERNAL_LABELS: ${{ steps.request-internal-ephemeral-runner.outputs.runner_labels }}
+          EXTERNAL_LABELS: ${{ steps.request-external-ot2-ephemeral-runner.outputs.runner_labels }}
+          UNFORKED_LABELS: ${{ steps.request-unforked-ephemeral-runner.outputs.runner_labels }}
+        shell: python
+        run: python3 "${{ github.workspace }}/resolve_runner_config.py"
 
   # Build job runs on ephemeral or static runner per initialize-infra
   run-build:
