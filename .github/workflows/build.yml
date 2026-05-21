@@ -104,268 +104,33 @@ jobs:
     needs: decide-refs
     runs-on: ubuntu-latest
     outputs:
-      runner_labels: ${{ case(needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == false, steps.static-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo != 'opentrons-ot2' && inputs.force-ephemeral-infra == true, steps.request-unforked-ephemeral-runner.outputs.runner_labels, needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', steps.request-forked-ephemeral-runner.outputs.runner_labels, '[\"unknown infra stage\"]') }}
-      runner_group: ${{ case(inputs.force-ephemeral-infra || needs.decide-refs.outputs.monorepo-repo == 'opentrons-ot2', 'ephemeral-system-builders', 'Custom Runners') }}
+      runner_labels: ${{ steps.initialize-runner.outputs.runner_labels }}
+      runner_group: ${{ steps.initialize-runner.outputs.runner_group }}
     steps:
-      - id: request-unforked-ephemeral-runner
-        name: Request merged-stack ephemeral runner
-        if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == true }}
+      - name: Check out buildroot for runner initialization script
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: initialize_runner.py
+          sparse-checkout-cone-mode: false
+      - id: initialize-runner
+        name: Initialize runner
         env:
-          # Set these repo secrets:
-          # - EPHEMERAL_RUNNER_API_URL_PROD
-          # - EPHEMERAL_RUNNER_API_URL_DEV
-          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
-          INFRA_STAGE: ${{ inputs.infra-stage }}
+          FORCE_EPHEMERAL: ${{ inputs.force-ephemeral-infra }}
+          MONOREPO_IS_FORK: ${{ inputs.monorepo-is-fork }}
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
-          # Ephemeral runner per attempt (re-runs create a new runner)
+          INFRA_STAGE: ${{ inputs.infra-stage }}
+          MONOREPO_REPO: ${{ needs.decide-refs.outputs.monorepo-repo }}
           RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
           MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
-          REQUEST_KIND: unforked
-          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_UNFORKED_API_URL_* secret for infra-stage=${{ inputs.infra-stage }}
+          EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV: ${{ secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV }}
+          EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD }}
+          EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV: ${{ secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV }}
+          EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD }}
+          EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV: ${{ secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV }}
+          EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
         shell: python
-        run: |
-          import json
-          import os
-          import sys
-          import time
-          import urllib.error
-          import urllib.request
-
-          api_url = os.environ.get("API_URL", "").strip()
-          if not api_url:
-              print(os.environ.get("MISSING_SECRET_MESSAGE", "Missing runner API URL secret"), file=sys.stderr)
-              raise SystemExit(1)
-
-          infra_stage = os.environ["INFRA_STAGE"]
-          variant = os.environ["VARIANT"]
-          runner_label = os.environ["RUNNER_LABEL"]
-          max_attempts = int(os.environ.get("MAX_ATTEMPTS", "120"))
-          retry_seconds = int(os.environ.get("RETRY_SECONDS", "60"))
-          request_kind = os.environ.get("REQUEST_KIND", "unknown")
-
-          repository = os.environ.get("GITHUB_REPOSITORY", "")
-          repo_label = repository.split("/")[-1] if repository else ""
-          labels = ["x64", "linux-x64", "sb-x64", infra_stage, variant, runner_label, repo_label]
-          labels_json = json.dumps(labels)
-
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write(f'runner_labels=["{runner_label}"]\n')
-
-          print(f"Requesting runner with unique label: [{runner_label}]")
-          print(f"Requested labels: {labels_json}")
-
-          start_epoch = int(time.time())
-          retries_on_429 = 0
-          final_attempt = 0
-          http_code = "n/a"
-
-          payload = json.dumps(
-              {
-                  "labels": labels,
-                  "workflow_run_id": os.environ.get("GITHUB_RUN_ID", ""),
-                  "repository": repository,
-              }
-          ).encode("utf-8")
-          request_url = f"{api_url.rstrip('/')}/request-runner"
-
-          def emit_request_summary(status: str) -> None:
-              now_epoch = int(time.time())
-              elapsed_seconds = now_epoch - start_epoch
-              waited_seconds = retries_on_429 * retry_seconds
-              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
-                  fh.write(f"### Runner Request Metrics ({request_kind})\n\n")
-                  fh.write("| Field | Value |\n")
-                  fh.write("|---|---|\n")
-                  fh.write(f"| Status | {status} |\n")
-                  fh.write(f"| Final HTTP status | {http_code} |\n")
-                  fh.write(f"| Attempts used | {final_attempt}/{max_attempts} |\n")
-                  fh.write(f"| 429 retries | {retries_on_429} |\n")
-                  fh.write(f"| Retry wait seconds | {waited_seconds} |\n")
-                  fh.write(f"| Total elapsed seconds | {elapsed_seconds} |\n")
-                  fh.write(f"| Runner label | {runner_label} |\n")
-                  fh.write(f"| Infra stage | {infra_stage} |\n")
-                  fh.write(f"| Variant | {variant} |\n\n")
-
-          requested = False
-          for attempt in range(1, max_attempts + 1):
-              final_attempt = attempt
-              response_body = ""
-              req = urllib.request.Request(
-                  request_url,
-                  data=payload,
-                  method="POST",
-                  headers={"Content-Type": "application/json"},
-              )
-              try:
-                  with urllib.request.urlopen(req) as resp:
-                      http_code = str(resp.getcode())
-                      response_body = resp.read().decode("utf-8", errors="replace")
-              except urllib.error.HTTPError as exc:
-                  http_code = str(exc.code)
-                  response_body = exc.read().decode("utf-8", errors="replace")
-              except Exception as exc:
-                  http_code = "request_error"
-                  response_body = str(exc)
-
-              if http_code == "200":
-                  requested = True
-                  break
-              if http_code == "429":
-                  retries_on_429 += 1
-                  print(
-                      f"Runner capacity full (429), waiting {retry_seconds}s before retry ({attempt}/{max_attempts})..."
-                  )
-                  time.sleep(retry_seconds)
-                  continue
-
-              emit_request_summary("failed")
-              print(f"Runner request failed with HTTP {http_code}", file=sys.stderr)
-              if response_body:
-                  print(response_body, file=sys.stderr)
-              raise SystemExit(1)
-
-          if not requested:
-              emit_request_summary("timed_out")
-              print(
-                  f"Timed out waiting for ephemeral runner capacity after {max_attempts} attempts.",
-                  file=sys.stderr,
-              )
-              raise SystemExit(1)
-
-          emit_request_summary("success")
-      - id: request-forked-ephemeral-runner
-        name: Request OT-2 fork stack ephemeral runners
-        if: ${{ inputs.monorepo-is-fork == true }}
-        env:
-          # Set these repo secrets:
-          # - EPHEMERAL_RUNNER_FORKED_API_URL_PROD
-          # - EPHEMERAL_RUNNER_FORKED_API_URL_DEV
-          API_URL: ${{ inputs.infra-stage == 'stage-dev' && secrets.EPHEMERAL_RUNNER_FORKED_API_URL_DEV || secrets.EPHEMERAL_RUNNER_FORKED_API_URL_PROD }}
-          INFRA_STAGE: ${{ inputs.infra-stage }}
-          VARIANT: ${{ needs.decide-refs.outputs.variant }}
-          # Ephemeral runner per attempt (re-runs create a new runner)
-          RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
-          MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
-          RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
-          REQUEST_KIND: forked
-          MISSING_SECRET_MESSAGE: Missing EPHEMERAL_RUNNER_FORKED_API_URL_* secret for infra-stage=${{ inputs.infra-stage }}
-        shell: python
-        run: |
-          import json
-          import os
-          import sys
-          import time
-          import urllib.error
-          import urllib.request
-
-          api_url = os.environ.get("API_URL", "").strip()
-          if not api_url:
-              print(os.environ.get("MISSING_SECRET_MESSAGE", "Missing runner API URL secret"), file=sys.stderr)
-              raise SystemExit(1)
-
-          infra_stage = os.environ["INFRA_STAGE"]
-          variant = os.environ["VARIANT"]
-          runner_label = os.environ["RUNNER_LABEL"]
-          max_attempts = int(os.environ.get("MAX_ATTEMPTS", "120"))
-          retry_seconds = int(os.environ.get("RETRY_SECONDS", "60"))
-          request_kind = os.environ.get("REQUEST_KIND", "unknown")
-
-          repository = os.environ.get("GITHUB_REPOSITORY", "")
-          repo_label = repository.split("/")[-1] if repository else ""
-          labels = ["x64", "linux-x64", "sb-x64", infra_stage, variant, runner_label, repo_label]
-          labels_json = json.dumps(labels)
-
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write(f'runner_labels=["{runner_label}"]\n')
-
-          print(f"Requesting runner with unique label: [{runner_label}]")
-          print(f"Requested labels: {labels_json}")
-
-          start_epoch = int(time.time())
-          retries_on_429 = 0
-          final_attempt = 0
-          http_code = "n/a"
-
-          payload = json.dumps(
-              {
-                  "labels": labels,
-                  "workflow_run_id": os.environ.get("GITHUB_RUN_ID", ""),
-                  "repository": repository,
-              }
-          ).encode("utf-8")
-          request_url = f"{api_url.rstrip('/')}/request-runner"
-
-          def emit_request_summary(status: str) -> None:
-              now_epoch = int(time.time())
-              elapsed_seconds = now_epoch - start_epoch
-              waited_seconds = retries_on_429 * retry_seconds
-              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
-                  fh.write(f"### Runner Request Metrics ({request_kind})\n\n")
-                  fh.write("| Field | Value |\n")
-                  fh.write("|---|---|\n")
-                  fh.write(f"| Status | {status} |\n")
-                  fh.write(f"| Final HTTP status | {http_code} |\n")
-                  fh.write(f"| Attempts used | {final_attempt}/{max_attempts} |\n")
-                  fh.write(f"| 429 retries | {retries_on_429} |\n")
-                  fh.write(f"| Retry wait seconds | {waited_seconds} |\n")
-                  fh.write(f"| Total elapsed seconds | {elapsed_seconds} |\n")
-                  fh.write(f"| Runner label | {runner_label} |\n")
-                  fh.write(f"| Infra stage | {infra_stage} |\n")
-                  fh.write(f"| Variant | {variant} |\n\n")
-
-          requested = False
-          for attempt in range(1, max_attempts + 1):
-              final_attempt = attempt
-              response_body = ""
-              req = urllib.request.Request(
-                  request_url,
-                  data=payload,
-                  method="POST",
-                  headers={"Content-Type": "application/json"},
-              )
-              try:
-                  with urllib.request.urlopen(req) as resp:
-                      http_code = str(resp.getcode())
-                      response_body = resp.read().decode("utf-8", errors="replace")
-              except urllib.error.HTTPError as exc:
-                  http_code = str(exc.code)
-                  response_body = exc.read().decode("utf-8", errors="replace")
-              except Exception as exc:
-                  http_code = "request_error"
-                  response_body = str(exc)
-
-              if http_code == "200":
-                  requested = True
-                  break
-              if http_code == "429":
-                  retries_on_429 += 1
-                  print(
-                      f"Runner capacity full (429), waiting {retry_seconds}s before retry ({attempt}/{max_attempts})..."
-                  )
-                  time.sleep(retry_seconds)
-                  continue
-
-              emit_request_summary("failed")
-              print(f"Runner request failed with HTTP {http_code}", file=sys.stderr)
-              if response_body:
-                  print(response_body, file=sys.stderr)
-              raise SystemExit(1)
-
-          if not requested:
-              emit_request_summary("timed_out")
-              print(
-                  f"Timed out waiting for ephemeral runner capacity after {max_attempts} attempts.",
-                  file=sys.stderr,
-              )
-              raise SystemExit(1)
-
-          emit_request_summary("success")
-      - id: static-runner
-        name: Select merged-stack static runners
-        if: ${{ inputs.monorepo-is-fork == false && inputs.force-ephemeral-infra == false }}
-        run: |
-          echo "runner_labels=[\"self-hosted\", \"${{inputs.infra-stage}}\", \"${{needs.decide-refs.outputs.variant}}\"]" >> "$GITHUB_OUTPUT"
+        run: python3 "${{ github.workspace }}/initialize_runner.py"
 
   # Build job runs on ephemeral or static runner per initialize-infra
   run-build:
@@ -662,28 +427,57 @@ jobs:
           echo "Prepared unversioned artifacts: $(find ${prepped_artifact_dir}/)"
           echo "Prepared versioned artifacts: $(find ${versioned_artifact_dir}/)"
 
+      - name: Resolve OT2 artifact channel
+        id: artifact-channel
+        shell: bash
+        env:
+          VARIANT: ${{ needs.decide-refs.outputs.variant }}
+          INFRA_STAGE: ${{ matrix.build_env }}
+          HOST_INTERNAL_PROD: ${{ vars.OT2_ARTIFACT_HOST_INTERNAL_PROD }}
+          HOST_INTERNAL_DEV: ${{ vars.OT2_ARTIFACT_HOST_INTERNAL_DEV }}
+          HOST_RELEASE_PROD: ${{ vars.OT2_ARTIFACT_HOST_RELEASE_PROD }}
+          HOST_RELEASE_DEV: ${{ vars.OT2_ARTIFACT_HOST_RELEASE_DEV }}
+        run: |
+          set -euo pipefail
+          prefix=ot2-br
+          if [ "$VARIANT" = "internal-release" ]; then
+            if [ "$INFRA_STAGE" = "stage-dev" ]; then
+              artifact_host="${HOST_INTERNAL_DEV:-ot2-development-dev.builds.opentrons.com}"
+            else
+              artifact_host="${HOST_INTERNAL_PROD:-ot2-development.builds.opentrons.com}"
+            fi
+          else
+            if [ "$INFRA_STAGE" = "stage-dev" ]; then
+              artifact_host="${HOST_RELEASE_DEV:-ot2-dev.builds.opentrons.com}"
+            else
+              artifact_host="${HOST_RELEASE_PROD:-ot2.builds.opentrons.com}"
+            fi
+          fi
+          echo "artifact_host=$artifact_host" >> "$GITHUB_OUTPUT"
+          echo "machine_root=${artifact_host}/${prefix}" >> "$GITHUB_OUTPUT"
+          echo "Resolved artifact channel: variant=$VARIANT host=$artifact_host" >> "$GITHUB_STEP_SUMMARY"
       - name: Upload results to S3
         shell: bash
         id: 'upload-results'
         run: |
           prefix=ot2-br
-          arnslug=${S3_ARTIFACT_ARN/arn:aws:s3:::/}
-          root_uri=${arnslug}/${prefix}/${{github.run_id}}
+          artifact_host="${{ steps.artifact-channel.outputs.artifact_host }}"
+          root_uri="${artifact_host}/${prefix}/${{ github.run_id }}"
 
           pushd ${{steps.artifact-copy.outputs.prepped_artifact_dir}}
-          aws s3 cp --recursive --acl=public-read . s3://${root_uri}/
+          aws s3 cp --recursive --acl=public-read . "s3://${root_uri}/"
 
-          root_url=https://${root_uri}
-          echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${arnslug}?prefix=${{github.run_id}}" >> $GITHUB_OUTPUT
+          root_url="https://${root_uri}"
+          echo "console_url=https://s3.console.aws.amazon.com/s3/buckets/${artifact_host}?prefix=${prefix}/${{ github.run_id }}" >> $GITHUB_OUTPUT
           echo "version_file_url=$root_url/VERSION.json" >> $GITHUB_OUTPUT
           echo "release_notes_file_url=$root_url/release-notes.md" >> $GITHUB_OUTPUT
           echo "system_url=$root_url/ot2-system.zip" >> $GITHUB_OUTPUT
           echo "fullimage_url=$root_url/ot2-fullimage.zip" >> $GITHUB_OUTPUT
-          echo "arnslug=$arnslug" >> $GITHUB_OUTPUT
+          echo "arnslug=$artifact_host" >> $GITHUB_OUTPUT
           echo "root_uri=$root_uri" >> $GITHUB_OUTPUT
           echo "root_url=$root_url" >> $GITHUB_OUTPUT
-          echo "root_prefix=ot2-br" >> $GITHUB_OUTPUT
-          echo "machine_root=${arnslug}/${prefix}" >> $GITHUB_OUTPUT
+          echo "root_prefix=$prefix" >> $GITHUB_OUTPUT
+          echo "machine_root=${{ steps.artifact-channel.outputs.machine_root }}" >> $GITHUB_OUTPUT
           popd
       - name: Handle release manifest
         if: ${{ needs.decide-refs.outputs.build-type == 'release' }}
