@@ -129,7 +129,6 @@ jobs:
           EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD }}
           EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV: ${{ secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV }}
           EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
-        shell: python
         run: python3 "${{ github.workspace }}/initialize_runner.py"
 
   # Build job runs on ephemeral or static runner per initialize-infra
