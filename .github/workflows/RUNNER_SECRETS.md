@@ -1,6 +1,6 @@
 # Ephemeral runner API secrets (buildroot)
 
-Workflow: `build.yml` routes OT2 builds to the correct artifact host by **variant** (`internal-release` vs `release`).
+Workflow: `build.yml` job `initialize-infra` runs `initialize_runner.py`, which picks static vs ephemeral runners from **variant** (`internal-release` vs `release`), fork status, and `force-ephemeral-infra`.
 
 | Secret | Infra stack | S3 / CloudFront host (prod) |
 |--------|-------------|-----------------------------|
