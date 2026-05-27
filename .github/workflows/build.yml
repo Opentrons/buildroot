@@ -478,6 +478,23 @@ jobs:
           echo "root_prefix=$prefix" >> $GITHUB_OUTPUT
           echo "machine_root=${{ steps.artifact-channel.outputs.machine_root }}" >> $GITHUB_OUTPUT
           popd
+      - name: Show public S3 download links (summary)
+        if: success()
+        shell: bash
+        env:
+          SYSTEM_URL: ${{ steps.upload-results.outputs.system_url }}
+          FULLIMAGE_URL: ${{ steps.upload-results.outputs.fullimage_url }}
+          VERSION_URL: ${{ steps.upload-results.outputs.version_file_url }}
+        run: |
+          {
+            echo '## OT2 public downloads (S3)'
+            echo ''
+            echo "| File | URL |"
+            echo "|------|-----|"
+            echo "| ot2-system.zip | ${SYSTEM_URL} |"
+            echo "| ot2-fullimage.zip | ${FULLIMAGE_URL} |"
+            echo "| VERSION.json | ${VERSION_URL} |"
+          } >> "${GITHUB_STEP_SUMMARY}"
       - name: Handle release manifest
         if: ${{ needs.decide-refs.outputs.build-type == 'release' }}
         shell: bash
