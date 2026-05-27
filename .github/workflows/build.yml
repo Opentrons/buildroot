@@ -123,12 +123,14 @@ jobs:
           RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
           MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}
-          EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV: ${{ secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV }}
-          EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD }}
-          EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV: ${{ secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV }}
-          EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD }}
-          EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV: ${{ secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV }}
-          EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD: ${{ secrets.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
+          # Repository variables (Settings → Secrets and variables → Actions → Variables).
+          # See .github/workflows/RUNNER_SECRETS.md for names and infra mapping.
+          EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV: ${{ vars.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_DEV }}
+          EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD: ${{ vars.EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_PROD }}
+          EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV: ${{ vars.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_DEV }}
+          EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD: ${{ vars.EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_PROD }}
+          EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV: ${{ vars.EPHEMERAL_RUNNER_UNFORKED_API_URL_DEV }}
+          EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD: ${{ vars.EPHEMERAL_RUNNER_UNFORKED_API_URL_PROD }}
         run: python3 "${{ github.workspace }}/initialize_runner.py"
 
   # Build job runs on ephemeral or static runner per initialize-infra

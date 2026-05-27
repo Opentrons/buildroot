@@ -19,7 +19,7 @@ def env_bool(name: str) -> bool:
 
 
 def api_url_for(resolution: str, infra_stage: str) -> tuple[str, str]:
-    """Return (api_url, missing_secret_message) for the given resolution."""
+    """Return (api_url, missing_variable_message) for the given resolution."""
     is_dev = infra_stage == "stage-dev"
     if resolution == "ephemeral-internal":
         url = os.environ.get(
@@ -28,7 +28,7 @@ def api_url_for(resolution: str, infra_stage: str) -> tuple[str, str]:
             "",
         ).strip()
         missing = (
-            "Missing EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_* secret "
+            "Missing EPHEMERAL_RUNNER_FORKED_INTERNAL_API_URL_* repository variable "
             f"for infra-stage={infra_stage}"
         )
     elif resolution == "ephemeral-ot2-external":
@@ -38,7 +38,7 @@ def api_url_for(resolution: str, infra_stage: str) -> tuple[str, str]:
             "",
         ).strip()
         missing = (
-            "Missing EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_* secret "
+            "Missing EPHEMERAL_RUNNER_FORKED_RELEASE_API_URL_* repository variable "
             f"for infra-stage={infra_stage}"
         )
     elif resolution == "ephemeral-unforked":
@@ -48,7 +48,7 @@ def api_url_for(resolution: str, infra_stage: str) -> tuple[str, str]:
             "",
         ).strip()
         missing = (
-            "Missing EPHEMERAL_RUNNER_UNFORKED_API_URL_* secret "
+            "Missing EPHEMERAL_RUNNER_UNFORKED_API_URL_* repository variable "
             f"for infra-stage={infra_stage}"
         )
     else:
