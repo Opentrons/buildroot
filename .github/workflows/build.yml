@@ -272,11 +272,18 @@ jobs:
       - name: Set up docker args
         id: docker-args
         run: |
-          if [ "${{needs.decide-refs.outputs.variant}}" = "release" ] ; then
-             _project=robot-stack
-          else
-            _project=ot3
-          fi
+          case "${{ needs.decide-refs.outputs.variant }}" in
+            release)
+              _project=robot-stack
+              ;;
+            internal-release)
+              _project=robot-stack-internal
+              ;;
+            *)
+              echo "Unknown variant: ${{ needs.decide-refs.outputs.variant }}"
+              exit 1
+              ;;
+          esac
           echo "Stack name ${_project} from variant ${{needs.decide-refs.outputs.variant}}"
           mount_args="type=bind,consistency=delegated"
           bind_ot="--mount source=$(pwd)/opentrons,destination=/opentrons,${mount_args}"
