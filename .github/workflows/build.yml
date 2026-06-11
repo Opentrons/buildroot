@@ -76,7 +76,7 @@ jobs:
       monorepo-repo: ${{ steps.build-refs.outputs.monorepo-repo }}
     steps:
       - name: Check out sources for action
-        uses: 'actions/checkout@v4'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           path: ./buildroot-for-workflow
       - name: Get the refs
@@ -108,7 +108,7 @@ jobs:
       runner_group: ${{ steps.initialize-runner.outputs.runner_group }}
     steps:
       - name: Check out buildroot for runner initialization script
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           sparse-checkout: initialize_runner.py
           sparse-checkout-cone-mode: false
@@ -168,12 +168,12 @@ jobs:
           apply_sysctl fs.inotify.max_user_instances 1280
           apply_sysctl fs.file-max 100000
       - name: Fetch initial sources for action
-        uses: 'actions/checkout@v3'
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
         with:
           fetch-depth: 0
           path: ./buildroot-for-workflow
       - name: Fetch buildroot source
-        uses: 'actions/checkout@v3'
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
         with:
           fetch-depth: 0
           ref: ${{needs.decide-refs.outputs.buildroot}}
@@ -186,7 +186,7 @@ jobs:
           fi
       - name: Fetch monorepo source
         id: monorepo-checkout
-        uses: 'actions/checkout@v3'
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
         with:
           fetch-depth: 0
           ref: ${{ needs.decide-refs.outputs.monorepo }}
@@ -198,7 +198,7 @@ jobs:
       # Each role must trust GitHub's OIDC provider for this repo and allow MaxSessionDuration
       # >= role-duration-seconds below (default 12h).
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
           role-to-assume: ${{ matrix.build_env == 'stage-dev' && vars.ROBOT_STACK_AWS_OIDC_ROLE_ARN_DEV || vars.ROBOT_STACK_AWS_OIDC_ROLE_ARN_PROD }}
           aws-region: us-east-2
@@ -384,7 +384,7 @@ jobs:
           done
       - name: Upload build log result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: buildlog.txt
           path: ./buildroot/buildlog.txt
@@ -546,7 +546,7 @@ jobs:
       - name: Create GitHub App token for monorepo releases
         if: needs.decide-refs.outputs.build-type == 'release'
         id: ot2-app-token
-        uses: actions/create-github-app-token@v1.11.0
+        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
         with:
           app-id: ${{ vars.OT2_APP_ID }}
           private-key: ${{ secrets.OT2_APP_PRIVATE_KEY }}
@@ -555,7 +555,7 @@ jobs:
 
       - name: Upload system zip to monorepo release
         if: needs.decide-refs.outputs.build-type == 'release'
-        uses: 'ncipollo/release-action@v1.12.0'
+        uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e # v1.12.0
         with:
           allowUpdates: true
           omitBody: true
@@ -573,7 +573,7 @@ jobs:
           token: ${{ steps.ot2-app-token.outputs.token }}
       - name: Upload version json to monorepo release
         if: needs.decide-refs.outputs.build-type == 'release'
-        uses: 'ncipollo/release-action@v1.12.0'
+        uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e # v1.12.0
         with:
           allowUpdates: true
           omitBody: true
@@ -597,7 +597,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'success'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send success alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -620,7 +620,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'failure'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send failure alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -643,7 +643,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'success' && needs.decide-refs.outputs.variant == 'internal-release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send success alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -666,7 +666,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'failure' && needs.decide-refs.outputs.variant == 'internal-release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send failure alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -689,7 +689,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'cancelled' && needs.decide-refs.outputs.variant == 'internal-release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send cancelled alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -712,7 +712,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'success' && needs.decide-refs.outputs.variant == 'release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send success alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -735,7 +735,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'failure' && needs.decide-refs.outputs.variant == 'release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send failure alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -758,7 +758,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'cancelled' && needs.decide-refs.outputs.variant == 'release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: 'Send cancelled alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
