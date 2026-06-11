@@ -44,22 +44,25 @@ runs:
       shell: bash
       run: |
         # Strip refs/tags/ or refs/heads/ prefix from refs
-        buildroot_display="${{ inputs.buildroot_ref }}"
+        buildroot_display="${INPUTS_BUILDROOT_REF}"
         buildroot_display="${buildroot_display#refs/tags/}"
         buildroot_display="${buildroot_display#refs/heads/}"
         echo "buildroot=${buildroot_display}" >> $GITHUB_OUTPUT
         
-        monorepo_display="${{ inputs.monorepo_ref }}"
+        monorepo_display="${INPUTS_MONOREPO_REF}"
         monorepo_display="${monorepo_display#refs/tags/}"
         monorepo_display="${monorepo_display#refs/heads/}"
         echo "monorepo=${monorepo_display}" >> $GITHUB_OUTPUT
         
         # Determine if this is a tagged release
-        if [[ "${{ inputs.monorepo_ref }}" == refs/tags/* ]]; then
+        if [[ "${INPUTS_MONOREPO_REF}" == refs/tags/* ]]; then
           echo "ref_type=tag" >> $GITHUB_OUTPUT
         else
           echo "ref_type=branch" >> $GITHUB_OUTPUT
         fi
+      env:
+        INPUTS_BUILDROOT_REF: ${{ inputs.buildroot_ref }}
+        INPUTS_MONOREPO_REF: ${{ inputs.monorepo_ref }}
 
     - name: 'Send Slack Alert'
       uses: slackapi/slack-github-action@d09f6a279ff492756a31df59952ee6dce8c9b772 # v1.14.0

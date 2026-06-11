@@ -1,22 +1,19 @@
 # Rules for checking the security of our GitHub Actions with zizmor.
+# Only disable rules that currently fire in this repo; re-enable incrementally as we fix findings.
 
 rules:
-  # todo(mm, 2026-04-03): Incrementally fix violations and remove `disable: true`.
+  # checkout / composite steps without persist-credentials: false
   artipacked:
     disable: true
-  cache-poisoning:
-    disable: true
+  # workflow-level permissions: {} on jobs that need id-token for AWS OIDC
   excessive-permissions:
     disable: true
-  github-env:
-    disable: true
-  misfeature:
-    disable: true
+  # secrets referenced outside env: (signing key, app private key, Slack webhooks)
   secrets-outside-env:
     disable: true
-  superfluous-actions:
-    disable: true
+  # ${{ ... }} in run: blocks (build.yml, composite actions)
   template-injection:
     disable: true
-  use-trusted-publishing:
+  # ncipollo/release-action vs gh release (intentional)
+  superfluous-actions:
     disable: true
