@@ -1,0 +1,9 @@
+# Copied from https://github.com/numpy/numpy/releases/tag/v1.26.4
+md5 19550cbe7bedd96a928da9d4ad69509d numpy-1.26.4.tar.gz
+sha256  2a02aba9ed12e4ac4eb3ea9421c420301a0c6460d9830d74a9df87efa4912010  numpy-1.26.4.tar.gz
+# License files, locally calculated
+sha256  263223390c43a9d4a0841e0209265fd927a198f8e89c8eee809b7437d7e5e8c2  LICENSE.txt
+sha256  c27d0a8026bdb8876562b720ab24d1688e3827a89f6083cd6e7e8caa9584aba3  numpy/core/src/multiarray/dragon4.c
+sha256  fbc539f47d0cf83bc61378080fb873d5c14630126cacbfe754035c3926daa5ec  numpy/core/include/numpy/libdivide/LICENSE.txt
+sha256  a14cc25e10d40a3aa705b7de2fb764a6535d8ee9b2db4e1724900585457dfd55  numpy/linalg/lapack_lite/LICENSE.txt
+sha256  badf51c7e3e7de9c7630bd069780f5c197b846ef7660b342a1e58d5553592d8e  tools/npy_tempita/license.txt
