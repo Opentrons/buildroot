@@ -1,0 +1,47 @@
+From 3b5299e62aa4ae867affbc64b1c496edd8e4a709 Mon Sep 17 00:00:00 2001
+From: Sanniti <sanniti@opentrons.com>
+Date: Mon, 13 Jul 2026 18:03:08 -0400
+Subject: [PATCH] allow specifying numpy include directory in meson build
+
+---
+ pandas/meson.build | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/pandas/meson.build b/pandas/meson.build
+index 435103a954..198128dcb4 100644
+--- a/pandas/meson.build
++++ b/pandas/meson.build
+@@ -1,7 +1,18 @@
+-incdir_numpy = run_command(py,
+-  [
+-    '-c',
+-    '''
++# This change for specifying the numpy include directory is taken from:
++# https://github.com/pandas-dev/pandas/pull/66139
++# This was necessary for cross-compilation of pandas for the OT-2's 32-bit ARM platform. 
++
++# Allow the numpy include directory to be supplied explicitly via a cross/native
++# file property. This is required when cross-compiling: running numpy.get_include()
++# below executes the build (native) Python, which returns the *host* numpy headers
++# rather than the target's, silently baking in the wrong ABI (e.g. int64_t sized as
++# a 32-bit long). Matches the mechanism used by numpy and scipy. See GH#62883.
++incdir_numpy = meson.get_external_property('numpy-include-dir', 'not-given') 
++if incdir_numpy == 'not-given'
++    incdir_numpy = run_command(py,
++    [
++        '-c',
++        '''
+ import os
+ import numpy as np
+ try:
+@@ -16,6 +27,7 @@ print(incdir)
+   ],
+   check: true
+ ).stdout().strip()
++endif
+ 
+ inc_np = include_directories(incdir_numpy)
+ inc_pd = include_directories('_libs/include')
+-- 
+2.52.0
+

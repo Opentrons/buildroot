@@ -1,6 +1,6 @@
-From ff0bb11e4f2ddced656cade3cd5a620bfba785b4 Mon Sep 17 00:00:00 2001
-From: Seth Foster <seth@opentrons.com>
-Date: Mon, 10 Nov 2025 15:34:19 -0500
+From 9a6d1b48b52246d5c8cf135d4f65281c706f44af Mon Sep 17 00:00:00 2001
+From: Sanniti <sanniti@opentrons.com>
+Date: Mon, 13 Jul 2026 18:41:30 -0400
 Subject: [PATCH] use local numpy version
 
 ---
@@ -8,7 +8,7 @@ Subject: [PATCH] use local numpy version
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/pyproject.toml b/pyproject.toml
-index d5a7f71391..bdf710e422 100644
+index d5a7f71391..0435ffc768 100644
 --- a/pyproject.toml
 +++ b/pyproject.toml
 @@ -6,9 +6,7 @@ requires = [
@@ -18,10 +18,10 @@ index d5a7f71391..bdf710e422 100644
 -    # Force numpy higher than 2.0rc1, so that built wheels are compatible
 -    # with both numpy 1 and 2
 -    "numpy>=2.0",
-+    "numpy==1.25.0",
++    "numpy==1.26.4",   # Use the OT-2 install of numpy
      "versioneer[toml]"
  ]
  
 -- 
-2.43.0
+2.52.0
 
