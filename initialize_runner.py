@@ -57,19 +57,13 @@ def api_url_for(resolution: str, infra_stage: str) -> tuple[str, str]:
     return url, missing
 
 
-def resolve_kind(
-    force_ephemeral: bool, is_fork: bool, variant: str
-) -> tuple[str, str | None]:
+def resolve_kind(force_ephemeral: bool, variant: str) -> tuple[str, str | None]:
     """Return (resolution, request_kind) where request_kind labels the API call."""
-    if not force_ephemeral and not is_fork:
-        return "static", None
     if variant == "internal-release":
         return "ephemeral-internal", "ot2-internal"
-    if is_fork:
-        return "ephemeral-ot2-external", "ot2-external"
     if force_ephemeral:
         return "ephemeral-unforked", "unforked"
-    return "unknown", None
+    return "ephemeral-ot2-external", "ot2-external"
 
 
 def request_ephemeral_runner(
@@ -187,41 +181,29 @@ def request_ephemeral_runner(
 
 def main() -> None:
     force_ephemeral = env_bool("FORCE_EPHEMERAL")
-    is_fork = env_bool("MONOREPO_IS_FORK")
     variant = os.environ["VARIANT"]
     infra_stage = os.environ["INFRA_STAGE"]
-    monorepo_repo = os.environ["MONOREPO_REPO"]
     runner_label = os.environ["RUNNER_LABEL"]
     max_attempts = int(os.environ.get("MAX_ATTEMPTS", "120"))
     retry_seconds = int(os.environ.get("RETRY_SECONDS", "60"))
 
-    resolution, request_kind = resolve_kind(force_ephemeral, is_fork, variant)
+    resolution, request_kind = resolve_kind(force_ephemeral, variant)
 
-    if resolution == "unknown":
-        print("Could not resolve runner configuration from inputs", file=sys.stderr)
+    api_url, missing_message = api_url_for(resolution, infra_stage)
+    if not api_url:
+        print(missing_message, file=sys.stderr)
         raise SystemExit(1)
-
-    if resolution == "static":
-        runner_labels = json.dumps(["self-hosted", infra_stage, variant])
-    else:
-        api_url, missing_message = api_url_for(resolution, infra_stage)
-        if not api_url:
-            print(missing_message, file=sys.stderr)
-            raise SystemExit(1)
-        runner_labels = request_ephemeral_runner(
-            api_url=api_url,
-            request_kind=request_kind or resolution,
-            infra_stage=infra_stage,
-            variant=variant,
-            runner_label=runner_label,
-            max_attempts=max_attempts,
-            retry_seconds=retry_seconds,
-        )
-
-    use_ephemeral_group = force_ephemeral or monorepo_repo == "opentrons-ot2"
-    runner_group = (
-        "ephemeral-system-builders" if use_ephemeral_group else "Custom Runners"
+    runner_labels = request_ephemeral_runner(
+        api_url=api_url,
+        request_kind=request_kind or resolution,
+        infra_stage=infra_stage,
+        variant=variant,
+        runner_label=runner_label,
+        max_attempts=max_attempts,
+        retry_seconds=retry_seconds,
     )
+
+    runner_group = "ephemeral-system-builders"
 
     write_output("runner_labels", runner_labels)
     write_output("runner_group", runner_group)
