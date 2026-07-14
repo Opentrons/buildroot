@@ -18,4 +18,5 @@ CI uses runner env `S3_CACHE_ARN` and `LOCAL_CACHE`. Helper: [`.github/scripts/s
 - Trees: `downloads` (`BR2_DL_DIR`), `ccache` (`BR2_CCACHE_DIR`) under `LOCAL_CACHE`.
 - Objects under `s3://…/ot2-br/`: `<type>.tar.zst` + `<type>.manifest` (fingerprint skip on push).
 - **Pull** is skipped if that prefix is already > 50 GB.
+- **Push** runs after artifact/release upload.
 - Requires **zstd** on the ephemeral runner image. Legacy `ot2-br/*.zip` objects are ignored; first run after merge cold-misses until a successful push seeds the new format.
