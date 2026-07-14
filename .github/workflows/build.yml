@@ -5,16 +5,10 @@ on:
     inputs:
       monorepo-ref:
         description: |
-          Ref of https://github.com/opentrons/opentrons or https://github.com/opentrons/opentrons-ot2 to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the oe-core ref if specified, and then default to edge.
+          Ref of https://github.com/opentrons/opentrons-ot2 to build. This MUST be a full ref, e.g. refs/heads/edge, or '-' to indicate not-specified. If not specified, will be determined from the buildroot ref if specified, and then default to edge.
         required: true
         default: '-'
         type: string
-      monorepo-is-fork:
-        description: |
-          Whether the monorepo-ref refers to https://github.com/opentrons/opentrons (false, the default) or https://github.com/opentrons/opentrons-ot2 (true, must be explicitly selected)
-        required: false
-        default: false
-        type: boolean
       buildroot-ref:
         description: |
           Ref of https://github.com/opentrons/buildroot to build. This is different from the ref specified in the github api/webUI when starting this workflow - that ref is what contains this workflow, this ref specifies what gets built. It MUST be a full ref, e.g. refs/heads/main, or '-' to indicate not-specified. If not specified, will be decided based on the monorepo ref; if that isn't specified, will be main.
@@ -86,7 +80,7 @@ jobs:
           token: ${{ github.token }}
           monorepo: ${{ inputs.monorepo-ref }}
           buildroot: ${{ inputs.buildroot-ref }}
-          monorepo-repo: ${{ case(inputs.monorepo-is-fork, 'opentrons-ot2', 'opentrons')}}
+          monorepo-repo: opentrons-ot2
       - name: Add refs to the summary
         run: |
           echo "### Decide refs" >> "$GITHUB_STEP_SUMMARY"
@@ -116,10 +110,8 @@ jobs:
         name: Initialize runner
         env:
           FORCE_EPHEMERAL: ${{ inputs.force-ephemeral-infra }}
-          MONOREPO_IS_FORK: ${{ inputs.monorepo-is-fork }}
           VARIANT: ${{ needs.decide-refs.outputs.variant }}
           INFRA_STAGE: ${{ inputs.infra-stage }}
-          MONOREPO_REPO: ${{ needs.decide-refs.outputs.monorepo-repo }}
           RUNNER_LABEL: ephemeral-${{ github.run_id }}-${{ github.run_attempt }}
           MAX_ATTEMPTS: ${{ inputs.runner-request-max-attempts }}
           RETRY_SECONDS: ${{ inputs.runner-request-retry-seconds }}

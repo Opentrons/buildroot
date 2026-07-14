@@ -5,7 +5,7 @@ inputs:
     description: "gh token for api calls to resolve refs"
     required: true
   monorepo:
-    description: "ref of https://github.com/opentrons/opentrons to build"
+    description: "ref of https://github.com/opentrons/opentrons-ot2 to build"
     required: false
     default: "-"
   buildroot:
@@ -13,9 +13,9 @@ inputs:
     required: false
     default: "-"
   monorepo-repo:
-    description: "repo name for the monorepo (i.e. opentrons or opentrons-ot2)"
+    description: "repo name for the monorepo (opentrons-ot2)"
     required: false
-    default: "opentrons"
+    default: "opentrons-ot2"
 outputs:
   monorepo:
     description: "the ref of the monorepo to use"
@@ -26,7 +26,7 @@ outputs:
   variant:
     description: "Which variant to build (release, internal-release)"
   monorepo-repo:
-    description: "Which repository under Opentrons to use for the monorepo (opentrons, opentrons-ot2)"
+    description: "OT-2 builds always use opentrons-ot2"
 runs:
   using: 'node16'
   main: 'dist/index.js'
