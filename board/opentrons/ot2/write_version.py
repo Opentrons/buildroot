@@ -11,7 +11,12 @@ def buildroot_repo_dir() -> str:
     if overlay_path:
         return overlay_path
     # Local/dev fallback when BR2_EXTERNAL is not exported.
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    fallback = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    print(
+        'BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH not set; '
+        f'defaulting to local path {fallback}'
+    )
+    return fallback
 
 
 def git_output(repo_dir: str, *args: str) -> str:
