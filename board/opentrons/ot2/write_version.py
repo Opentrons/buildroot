@@ -4,28 +4,42 @@ import sys
 import subprocess
 import argparse
 
+
+def buildroot_repo_dir() -> str:
+    """Return the Opentrons buildroot overlay repo, not upstream buildroot."""
+    overlay_path = os.getenv('BR2_EXTERNAL_OPENTRONS_BUILDROOT_OVERLAYS_PATH', '').strip()
+    if overlay_path:
+        return overlay_path
+    # Local/dev fallback when BR2_EXTERNAL is not exported.
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+
+
+def git_output(repo_dir: str, *args: str) -> str:
+    return subprocess.check_output(
+        ['git', '-C', repo_dir, *args],
+        stderr=subprocess.STDOUT,
+    ).decode().strip()
+
+
+buildroot_repo = buildroot_repo_dir()
+print(f"Reading buildroot git metadata from {buildroot_repo}")
+
 try:
-    br_version = subprocess.check_output(
-        ['git', 'describe', '--tags', '--always'],
-        stderr=subprocess.STDOUT).decode().strip()
+    br_version = git_output(buildroot_repo, 'describe', '--tags', '--always')
 except subprocess.CalledProcessError as cpe:
     print("{}: {}: {}".format(cpe.cmd, cpe.returncode, cpe.stdout))
     print("Defaulting to (unknown)")
     br_version = 'unknown'
 
 try:
-    br_sha = subprocess.check_output(
-        ['git', 'rev-parse', 'HEAD'],
-        stderr=subprocess.STDOUT).decode().strip()
+    br_sha = git_output(buildroot_repo, 'rev-parse', 'HEAD')
 except subprocess.CalledProcessError as cpe:
     print("{}: {}: {}".format(cpe.cmd, cpe.returncode, cpe.stdout))
     print("Defaulting to (unknown)")
     br_sha = 'unknown'
 
 try:
-    br_branch_from_git = subprocess.check_output(
-        ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-        stderr=subprocess.STDOUT).decode().strip()
+    br_branch_from_git = git_output(buildroot_repo, 'rev-parse', '--abbrev-ref', 'HEAD')
 except subprocess.CalledProcessError as cpe:
     print("{}: {}: {}".format(cpe.cmd, cpe.returncode, cpe.stdout))
     print("Defaulting to (unknown)")
