@@ -210,36 +210,34 @@ jobs:
         run: |
           set -euo pipefail
 
-          aws_cp="aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --no-progress"
+          cache_script=./buildroot-for-workflow/.github/scripts/s3-buildroot-cache.sh
+          chmod +x "$cache_script"
           cachedir="${LOCAL_CACHE:-./cache}"
           cache_prefix=ot2-br
+          s3_prefix="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}"
 
+          # Skip pull if the ot2-br cache prefix is already huge so we keep room to build.
+          sizeInBytes=$(aws s3 ls "${s3_prefix}/" --recursive --summarize 2>/dev/null | awk 'END{print}' | grep -o '[0-9].*' || echo 0)
+          sizeInGigabytes=$((sizeInBytes/1024/1024/1024))
+          if [[ $sizeInGigabytes -gt 50 ]]; then
+            echo "Doing clean build without cache pull; size of ${cache_prefix}/ cache: ${sizeInGigabytes}GB"
+          else
+            "$cache_script" pull "$s3_prefix" "$cachedir"
+          fi
+
+          here=$(pwd)
           for cachetype in downloads ccache ; do
             thiscache="${cachedir}/${cachetype}"
-            localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
-            remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
-
             mkdir -p "${thiscache}"
             echo "${cachetype}=${thiscache}" >> "$GITHUB_OUTPUT"
-            here=$(pwd)
             reldir=$(realpath --relative-to="${here}" "${thiscache}")
             echo "Created ${cachetype} cache at ${thiscache} (${reldir})"
             echo "${cachetype}-rel=${reldir}" >> "$GITHUB_OUTPUT"
-
-            echo "Fetching cache ${remotezip} -> ${localzip}"
-            if ${aws_cp} "${remotezip}" "${localzip}" ; then
-              echo "Extracting ${localzip} -> ${thiscache}"
-              unzip -q -u -o "${localzip}" -d "${thiscache}"
-              rm -f "${localzip}"
-            else
-              echo "No cache found at ${remotezip} (continuing)"
-            fi
           done
 
           outputdir="${cachedir}/output"
           mkdir -p "${outputdir}"
           echo "output=${outputdir}" >> "$GITHUB_OUTPUT"
-          here=$(pwd)
           output_reldir=$(realpath --relative-to=${here} "${outputdir}")
           echo "Created output dir at ${outputdir} (${output_reldir})"
           echo "output-rel=${output_reldir}" >> "$GITHUB_OUTPUT"
@@ -347,41 +345,6 @@ jobs:
         run: |
           cd buildroot
           docker run ${{steps.docker-args.outputs.args}} all
-      - name: Push S3 cache
-        if: success()
-        shell: bash
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-
-          aws_cp="aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --no-progress"
-          cachedir=${LOCAL_CACHE:-./cache}
-          cache_prefix=ot2-br
-
-          for cachetype in downloads ccache ; do
-            thiscache="${cachedir}/${cachetype}"
-            localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
-            remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
-
-            if [ ! -d "${thiscache}" ]; then
-              echo "Cache dir ${thiscache} does not exist; skipping upload"
-              continue
-            fi
-
-            # Docker bind mounts often leave root-owned files; zip cannot read them otherwise.
-            sudo chown -R "$(id -u):$(id -g)" "${thiscache}"
-
-            df -h || true
-            echo "Refreshing cache for ${cachetype} from ${thiscache} -> ${localzip}"
-            rm -f "${localzip}"
-            pushd "${thiscache}" >/dev/null
-            zip -q -r --filesync --symlinks "${localzip}" ./*
-            popd >/dev/null
-
-            echo "Uploading ${localzip} -> ${remotezip}"
-            ${aws_cp} "${localzip}" "${remotezip}"
-            rm -f "${localzip}"
-          done
       - name: Upload build log result
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -588,7 +551,34 @@ jobs:
           artifactContentType: application/json
           token: ${{ steps.ot2-app-token.outputs.token }}
 
-      # Ephemeral runners are destroyed after the job, so no cleanup needed.
+      # Defer cache upload until after S3 artifact and monorepo release uploads so
+      # build outputs are published before this slow archive-and-upload step.
+      # Writes <type>.tar.zst + <type>.manifest under ot2-br/; skips when unchanged.
+      - name: Push S3 cache
+        if: success()
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          cache_script=./buildroot-for-workflow/.github/scripts/s3-buildroot-cache.sh
+          chmod +x "$cache_script"
+          cachedir=${LOCAL_CACHE:-./cache}
+          s3_prefix="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/ot2-br"
+          df -h || true
+          "$cache_script" push "$s3_prefix" "$cachedir"
+      - name: Remove poisoned cache
+        if: failure()
+        shell: bash
+        continue-on-error: true
+        run: |
+          cachedir="${LOCAL_CACHE:-./cache}"
+          if [ -d "$cachedir" ]; then
+            sudo chown -R "$(id -u):$(id -g)" "$cachedir"
+            # Some cache entries can remain undeletable by the runner user; remove as root.
+            sudo rm -rf "${cachedir}/"* "${cachedir}"/.[!.]* "${cachedir}"/..?* 2>/dev/null || true
+          fi
+
+      # Ephemeral runners are destroyed after the job, so no further cleanup needed.
 
   notify-tagged-success:
     name: 'Notify Tagged Build Success'
