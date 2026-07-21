@@ -202,36 +202,27 @@ jobs:
         run: |
           set -euo pipefail
 
-          aws_cp="aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --no-progress"
+          cache_script=./buildroot-for-workflow/.github/scripts/s3-buildroot-cache.sh
+          chmod +x "$cache_script"
           cachedir="${LOCAL_CACHE:-./cache}"
           cache_prefix=ot2-br
+          s3_prefix="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}"
 
+          "$cache_script" pull "$s3_prefix" "$cachedir"
+
+          here=$(pwd)
           for cachetype in downloads ccache ; do
             thiscache="${cachedir}/${cachetype}"
-            localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
-            remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
-
             mkdir -p "${thiscache}"
             echo "${cachetype}=${thiscache}" >> "$GITHUB_OUTPUT"
-            here=$(pwd)
             reldir=$(realpath --relative-to="${here}" "${thiscache}")
             echo "Created ${cachetype} cache at ${thiscache} (${reldir})"
             echo "${cachetype}-rel=${reldir}" >> "$GITHUB_OUTPUT"
-
-            echo "Fetching cache ${remotezip} -> ${localzip}"
-            if ${aws_cp} "${remotezip}" "${localzip}" ; then
-              echo "Extracting ${localzip} -> ${thiscache}"
-              unzip -q -u -o "${localzip}" -d "${thiscache}"
-              rm -f "${localzip}"
-            else
-              echo "No cache found at ${remotezip} (continuing)"
-            fi
           done
 
           outputdir="${cachedir}/output"
           mkdir -p "${outputdir}"
           echo "output=${outputdir}" >> "$GITHUB_OUTPUT"
-          here=$(pwd)
           output_reldir=$(realpath --relative-to=${here} "${outputdir}")
           echo "Created output dir at ${outputdir} (${output_reldir})"
           echo "output-rel=${output_reldir}" >> "$GITHUB_OUTPUT"
@@ -345,35 +336,12 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-
-          aws_cp="aws --profile=${{ steps.aws.outputs.profile_name }} s3 cp --no-progress"
+          cache_script=./buildroot-for-workflow/.github/scripts/s3-buildroot-cache.sh
+          chmod +x "$cache_script"
           cachedir=${LOCAL_CACHE:-./cache}
-          cache_prefix=ot2-br
-
-          for cachetype in downloads ccache ; do
-            thiscache="${cachedir}/${cachetype}"
-            localzip="${cachedir}/../${cache_prefix}-${cachetype}.zip"
-            remotezip="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}/${cachetype}.zip"
-
-            if [ ! -d "${thiscache}" ]; then
-              echo "Cache dir ${thiscache} does not exist; skipping upload"
-              continue
-            fi
-
-            # Docker bind mounts often leave root-owned files; zip cannot read them otherwise.
-            sudo chown -R "$(id -u):$(id -g)" "${thiscache}"
-
-            df -h || true
-            echo "Refreshing cache for ${cachetype} from ${thiscache} -> ${localzip}"
-            rm -f "${localzip}"
-            pushd "${thiscache}" >/dev/null
-            zip -q -r --filesync --symlinks "${localzip}" ./*
-            popd >/dev/null
-
-            echo "Uploading ${localzip} -> ${remotezip}"
-            ${aws_cp} "${localzip}" "${remotezip}"
-            rm -f "${localzip}"
-          done
+          s3_prefix="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/ot2-br"
+          df -h || true
+          "$cache_script" push "$s3_prefix" "$cachedir"
       - name: Upload build log result
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
