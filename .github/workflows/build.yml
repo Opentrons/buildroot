@@ -566,8 +566,19 @@ jobs:
           s3_prefix="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/ot2-br"
           df -h || true
           "$cache_script" push "$s3_prefix" "$cachedir"
+      - name: Remove poisoned cache
+        if: failure()
+        shell: bash
+        continue-on-error: true
+        run: |
+          cachedir="${LOCAL_CACHE:-./cache}"
+          if [ -d "$cachedir" ]; then
+            sudo chown -R "$(id -u):$(id -g)" "$cachedir"
+            # Some cache entries can remain undeletable by the runner user; remove as root.
+            sudo rm -rf "${cachedir}/"* "${cachedir}"/.[!.]* "${cachedir}"/..?* 2>/dev/null || true
+          fi
 
-      # Ephemeral runners are destroyed after the job, so no cleanup needed.
+      # Ephemeral runners are destroyed after the job, so no further cleanup needed.
 
   notify-tagged-success:
     name: 'Notify Tagged Build Success'
