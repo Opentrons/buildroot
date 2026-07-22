@@ -216,7 +216,14 @@ jobs:
           cache_prefix=ot2-br
           s3_prefix="s3://${S3_CACHE_ARN/arn:aws:s3:::/}/${cache_prefix}"
 
-          "$cache_script" pull "$s3_prefix" "$cachedir"
+          # Skip pull if the ot2-br cache prefix is already huge so we keep room to build.
+          sizeInBytes=$(aws s3 ls "${s3_prefix}/" --recursive --summarize 2>/dev/null | awk 'END{print}' | grep -o '[0-9].*' || echo 0)
+          sizeInGigabytes=$((sizeInBytes/1024/1024/1024))
+          if [[ $sizeInGigabytes -gt 50 ]]; then
+            echo "Doing clean build without cache pull; size of ${cache_prefix}/ cache: ${sizeInGigabytes}GB"
+          else
+            "$cache_script" pull "$s3_prefix" "$cachedir"
+          fi
 
           here=$(pwd)
           for cachetype in downloads ccache ; do
