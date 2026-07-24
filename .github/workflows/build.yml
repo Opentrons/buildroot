@@ -70,7 +70,7 @@ jobs:
       monorepo-repo: ${{ steps.build-refs.outputs.monorepo-repo }}
     steps:
       - name: Check out sources for action
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           path: ./buildroot-for-workflow
       - name: Get the refs
@@ -160,12 +160,12 @@ jobs:
           apply_sysctl fs.inotify.max_user_instances 1280
           apply_sysctl fs.file-max 100000
       - name: Fetch initial sources for action
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
           path: ./buildroot-for-workflow
       - name: Fetch buildroot source
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
           ref: ${{needs.decide-refs.outputs.buildroot}}
@@ -178,7 +178,7 @@ jobs:
           fi
       - name: Fetch monorepo source
         id: monorepo-checkout
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
           ref: ${{ needs.decide-refs.outputs.monorepo }}
@@ -557,7 +557,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'success'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send success alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -580,7 +580,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'failure'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send failure alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -603,7 +603,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'success' && needs.decide-refs.outputs.variant == 'internal-release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send success alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -626,7 +626,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'failure' && needs.decide-refs.outputs.variant == 'internal-release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send failure alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -649,7 +649,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'cancelled' && needs.decide-refs.outputs.variant == 'internal-release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send cancelled alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -672,7 +672,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'success' && needs.decide-refs.outputs.variant == 'release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send success alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -695,7 +695,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'failure' && needs.decide-refs.outputs.variant == 'release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send failure alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
@@ -718,7 +718,7 @@ jobs:
     if: always() && inputs.infra-stage == 'stage-prod' && !startsWith(needs.decide-refs.outputs.monorepo, 'refs/tags/') && needs.run-build.result == 'cancelled' && needs.decide-refs.outputs.variant == 'release'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: 'Send cancelled alert'
         uses: ./.github/actions/simple-build-alert
         continue-on-error: true
