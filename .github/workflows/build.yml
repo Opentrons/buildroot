@@ -348,6 +348,10 @@ jobs:
         with:
           name: buildlog.txt
           path: ./buildroot/buildlog.txt
+      - name: Generate CycloneDX SBOM
+        run: |
+          cd buildroot
+          docker run ${{steps.docker-args.outputs.args}} cyclone
       - name: Prep artifacts for upload
         id: artifact-copy
         run: |
@@ -378,6 +382,9 @@ jobs:
           cp ${artifact_dir}/release-notes.md ${prepped_artifact_dir}/release-notes.md
           echo "release_notes=${prepped_artifact_dir}/release-notes.md" >> $GITHUB_OUTPUT
 
+          cp ${{ steps.cache-setup.outputs.output  }}/opentrons-ot2.cln.json ${prepped_artifact_dir}/opentrons-ot2.cln.json
+          echo "sbom=${prepped_artifact_dir}/opentrons-ot2.cln.json" >> $GITHUB_OUTPUT
+
           versioned_system_zip="ot2-system-${_vers_tag}.zip"
           cp ${artifact_dir}/ot2-system.zip "${versioned_artifact_dir}/${versioned_system_zip}"
           echo "ot2_system_versioned=${versioned_artifact_dir}/${versioned_system_zip}" >> $GITHUB_OUTPUT
@@ -389,6 +396,10 @@ jobs:
           versioned_version_json="VERSION-ot2-${_vers_tag}.json"
           cp ${artifact_dir}/VERSION.json ${versioned_artifact_dir}/${versioned_version_json}
           echo "version_json_versioned=${versioned_artifact_dir}/${versioned_version_json}" >> $GITHUB_OUTPUT
+
+          versioned_sbom="opentrons-ot2-${_vers_tag}.cln.json"
+          cp ${{ steps.cache-setup.outputs.output }}/opentrons-ot2.cln.json ${versioned_artifact_dir}/${versioned_sbom}
+          echo "sbom_versioned=${versioned_artifact_dir}/${versioned_sbom}" >> $GITHUB_OUTPUT
 
           echo "Prepared unversioned artifacts: $(find ${prepped_artifact_dir}/)"
           echo "Prepared versioned artifacts: $(find ${versioned_artifact_dir}/)"
@@ -439,6 +450,7 @@ jobs:
           echo "release_notes_file_url=$root_url/release-notes.md" >> $GITHUB_OUTPUT
           echo "system_url=$root_url/ot2-system.zip" >> $GITHUB_OUTPUT
           echo "fullimage_url=$root_url/ot2-fullimage.zip" >> $GITHUB_OUTPUT
+          echo "sbom_url=$root_url/opentrons-ot2.cln.json" >> $GITHUB_OUTPUT
           echo "arnslug=$artifact_host" >> $GITHUB_OUTPUT
           echo "root_uri=$root_uri" >> $GITHUB_OUTPUT
           echo "root_url=$root_url" >> $GITHUB_OUTPUT
@@ -452,6 +464,7 @@ jobs:
           SYSTEM_URL: ${{ steps.upload-results.outputs.system_url }}
           FULLIMAGE_URL: ${{ steps.upload-results.outputs.fullimage_url }}
           VERSION_URL: ${{ steps.upload-results.outputs.version_file_url }}
+          SBOM_URL: ${{ steps.upload-results.outputs.sbom_url }}
         run: |
           {
             echo '## OT2 public downloads (S3)'
@@ -461,6 +474,7 @@ jobs:
             echo "| ot2-system.zip | ${SYSTEM_URL} |"
             echo "| ot2-fullimage.zip | ${FULLIMAGE_URL} |"
             echo "| VERSION.json | ${VERSION_URL} |"
+            echo "| opentrons-ot2.cln.json | ${SBOM_URL} |"
           } >> "${GITHUB_STEP_SUMMARY}"
       - name: Handle release manifest
         if: ${{ needs.decide-refs.outputs.build-type == 'release' }}
@@ -545,6 +559,22 @@ jobs:
           commit: ${{ steps.monorepo-checkout.outputs.commit }}
           tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
           artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/VERSION-*.json"
+          artifactContentType: application/json
+          token: ${{ steps.ot2-app-token.outputs.token }}
+      - name: Upload SBOM to monorepo release
+        if: needs.decide-refs.outputs.build-type == 'release'
+        uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e # v1.12.0
+        with:
+          allowUpdates: true
+          omitBody: true
+          omitName: true
+          omitPrereleaseDuringUpdate: true
+          omitDraftDuringUpdate: true
+          owner: Opentrons
+          repo: ${{ needs.decide-refs.outputs.monorepo-repo }}
+          commit: ${{ steps.monorepo-checkout.outputs.commit }}
+          tag: ${{ steps.artifact-copy.outputs.monorepo_shorttag }}
+          artifacts: "${{steps.artifact-copy.outputs.versioned_artifact_dir_rel}}/opentrons-ot2-*.cln.json"
           artifactContentType: application/json
           token: ${{ steps.ot2-app-token.outputs.token }}
 
