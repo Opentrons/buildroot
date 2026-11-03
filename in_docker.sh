@@ -45,6 +45,9 @@ if [[ -n "${FILTER}" ]]; then
            "/bin/bash")
                term=1
                ;;
+           "cyclone")
+               cyclone=1
+               ;;
        esac
    done;
 fi
@@ -55,6 +58,16 @@ _EXT=BR2_EXTERNAL=/buildroot-overlays:/opentrons
 if [[ -n "${term}" ]]; then
     echo "term"
     /bin/bash -i
+elif [[ -n "${cyclone}" ]]; then
+    echo "SBOM generation"
+    "${_LOCALEVARS}" "${_EXT}" make -C /buildroot show-info > "${O:-/output}/projinfo.json"
+    /buildroot/utils/generate-cyclonedx \
+        -i "${O:-/output}/projinfo.json" \
+        -o "${O:-/output}/opentrons-ot2.cln.json" \
+        -n "Opentrons OT-2" \
+        --cdx-version=1.7.1 \
+
+
 elif [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
     "${_LOCALEVARS}" "${_EXT}" make -C /buildroot "$@"
