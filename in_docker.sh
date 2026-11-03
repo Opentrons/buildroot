@@ -49,13 +49,16 @@ if [[ -n "${FILTER}" ]]; then
    done;
 fi
 
+_LOCALEVARS="LC_CTYPE=\"en_US.UTF-8\" LANGUAGE=\"en_US.UTF-8\" LC_ALL=\"C\" LANG=\"en_US.UTF-8\""
+_EXT=BR2_EXTERNAL=/buildroot-overlays:/opentrons
+
 if [[ -n "${term}" ]]; then
     echo "term"
     /bin/bash -i
 elif [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
-    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot "$@"
+    "${_LOCALEVARS}" "${_EXT}" make -C /buildroot "$@"
 else
     echo "Filtered make"
-    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons KBUILD_VERBOSE=1 make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
+    "${_LOCALEVARS}" "${_EXT}" KBUILD_VERBOSE=1 make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
 fi
