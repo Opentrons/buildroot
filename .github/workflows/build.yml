@@ -326,6 +326,10 @@ jobs:
         run: |
           cd buildroot
           docker run ${{steps.docker-args.outputs.args}} source
+      - name: Generate CycloneDX SBOM
+        run: |
+          cd buildroot
+          docker run ${{steps.docker-args.outputs.args}} cyclone
       - name: Run build
         run: |
           cd buildroot
@@ -348,10 +352,6 @@ jobs:
         with:
           name: buildlog.txt
           path: ./buildroot/buildlog.txt
-      - name: Generate CycloneDX SBOM
-        run: |
-          cd buildroot
-          docker run ${{steps.docker-args.outputs.args}} cyclone
       - name: Prep artifacts for upload
         id: artifact-copy
         run: |
