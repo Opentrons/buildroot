@@ -57,8 +57,8 @@ if [[ -n "${term}" ]]; then
     /bin/bash -i
 elif [[ -n "${cyclone}" ]]; then
     echo "SBOM generation to ${O:-/output}/projinfo.json using ${O}/.config"
-    echo $(head ${O}/.config)
-    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot show-info > "${O:-/output}/projinfo.json"
+    echo $(head ${O:-/output}/.config)
+    O=${O:-/output} LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot show-info > "${O:-/output}/projinfo.json"
     /buildroot/utils/generate-cyclonedx \
         -i "${O:-/output}/projinfo.json" \
         -o "${O:-/output}/opentrons-ot2.cln.json" \
