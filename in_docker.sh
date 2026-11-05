@@ -45,6 +45,9 @@ if [[ -n "${FILTER}" ]]; then
            "/bin/bash")
                term=1
                ;;
+           "cyclone")
+               cyclone=1
+               ;;
        esac
    done;
 fi
@@ -52,6 +55,17 @@ fi
 if [[ -n "${term}" ]]; then
     echo "term"
     /bin/bash -i
+elif [[ -n "${cyclone}" ]]; then
+    echo "SBOM generation to ${O:-/output}/projinfo.json using ${O}/.config"
+    echo $(head ${O:-/output}/.config)
+    O=${O:-/output} LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot show-info > "${O:-/output}/projinfo.json"
+    /buildroot/utils/generate-cyclonedx \
+        -i "${O:-/output}/projinfo.json" \
+        -o "${O:-/output}/opentrons-ot2.cln.json" \
+        -n "Opentrons OT-2" \
+        --cdx-version=1.7.1 \
+
+
 elif [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
     LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot "$@"
