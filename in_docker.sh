@@ -52,15 +52,12 @@ if [[ -n "${FILTER}" ]]; then
    done;
 fi
 
-_LOCALEVARS="LC_CTYPE=\"en_US.UTF-8\" LANGUAGE=\"en_US.UTF-8\" LC_ALL=\"C\" LANG=\"en_US.UTF-8\""
-_EXT=BR2_EXTERNAL=/buildroot-overlays:/opentrons
-
 if [[ -n "${term}" ]]; then
     echo "term"
     /bin/bash -i
 elif [[ -n "${cyclone}" ]]; then
     echo "SBOM generation"
-    "${_LOCALEVARS}" "${_EXT}" make -C /buildroot show-info > "${O:-/output}/projinfo.json"
+    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot show-info > "${O:-/output}/projinfo.json"
     /buildroot/utils/generate-cyclonedx \
         -i "${O:-/output}/projinfo.json" \
         -o "${O:-/output}/opentrons-ot2.cln.json" \
@@ -70,8 +67,8 @@ elif [[ -n "${cyclone}" ]]; then
 
 elif [[ -z "${filter}" ]]; then
     echo "Unfiltered make"
-    "${_LOCALEVARS}" "${_EXT}" make -C /buildroot "$@"
+    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot "$@"
 else
     echo "Filtered make"
-    "${_LOCALEVARS}" "${_EXT}" KBUILD_VERBOSE=1 make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
+    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons KBUILD_VERBOSE=1 make -C /buildroot "$@" 2> >(tee -a ${filtered_build_log}) > ${filtered_build_log}
 fi
