@@ -56,14 +56,12 @@ if [[ -n "${term}" ]]; then
     echo "term"
     /bin/bash -i
 elif [[ -n "${cyclone}" ]]; then
-    echo "SBOM generation to ${O:-/output}/projinfo.json using ${O}/.config"
-    echo $(head ${O:-/output}/.config)
-    O=${O:-/output} LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make -C /buildroot show-info > "${O:-/output}/projinfo.json"
+    echo "SBOM generation to ${O}/projinfo.json using ${O}/.config"
+    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make --no-print-directory -s -C /buildroot show-info > "${O}/projinfo.json"
     /buildroot/utils/generate-cyclonedx \
-        -i "${O:-/output}/projinfo.json" \
-        -o "${O:-/output}/opentrons-ot2.cln.json" \
-        -n "Opentrons OT-2" \
-        --cdx-version=1.7.1 \
+        -i "${O}/projinfo.json" \
+        -o "${O}/opentrons-ot2.cln.json" \
+        --project-name "Opentrons OT-2" \
 
 
 elif [[ -z "${filter}" ]]; then
