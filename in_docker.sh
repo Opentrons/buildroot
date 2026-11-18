@@ -56,8 +56,18 @@ if [[ -n "${term}" ]]; then
     echo "term"
     /bin/bash -i
 elif [[ -n "${cyclone}" ]]; then
+    targetless=""
+    for w in $@; do
+        case "$w" in
+            "cyclone")
+                ;;
+            *)
+                targetless+="$w "
+                ;;
+        esac
+    done;
     echo "SBOM generation to ${O}/projinfo.json using ${O}/.config"
-    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make --no-print-directory -s -C /buildroot show-info > "${O}/projinfo.json"
+    LC_CTYPE="en_US.UTF-8" LANGUAGE="en_US.UTF-8" LC_ALL="C" LANG="en_US.UTF-8" BR2_EXTERNAL=/buildroot-overlays:/opentrons make --no-print-directory -s -C /buildroot "$targetless" show-info > "${O}/projinfo.json"
     /buildroot/utils/generate-cyclonedx \
         -i "${O}/projinfo.json" \
         -o "${O}/opentrons-ot2.cln.json" \
