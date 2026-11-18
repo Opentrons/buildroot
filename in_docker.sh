@@ -52,8 +52,6 @@ if [[ -n "${FILTER}" ]]; then
    done;
 fi
 
-env
-
 if [[ -n "${term}" ]]; then
     echo "term"
     /bin/bash -i

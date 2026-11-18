@@ -288,7 +288,7 @@ jobs:
           env="--env-file ${{steps.docker-env.outputs.envfile}}"
           echo "run-binds=${binds}" >> $GITHUB_OUTPUT
           echo "env=${env}" >> $GITHUB_OUTPUT
-          args="${binds} ${env} ${entry}  --env=O=/output --env=OPENTRONS_PROJECT=${_project} ${{steps.get-image.outputs.image-name}}"
+          args="${binds} ${env} ${entry} --env=O=/output ${{steps.get-image.outputs.image-name}} O=/output OPENTRONS_PROJECT=${_project}"
           echo "args=${args}" >> $GITHUB_OUTPUT
 
       - name: Configure

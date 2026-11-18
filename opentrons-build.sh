@@ -62,11 +62,11 @@ fi
 
 case $# in
     0)
-        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output --env=BR2_DL_DIR=/buildroot-overlays/dl ${imgname} ot2_defconfig
-        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output --env=BR2_DL_DIR=/buildroot-overlays/dl ${imgname} all
-        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output --env=BR2_DL_DIR=/buildroot-overlays/dl ${imgname} cyclone
+        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output ${imgname} ot2_defconfig BR2_DL_DIR=/buildroot-overlays/dl O=/buildroot-overlays/output
+        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output ${imgname} all BR2_DL_DIR=/buildroot-overlays/dl O=/buildroot-overlays/output
+        docker run --env-file ./.env ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output ${imgname} cyclone BR2_DL_DIR=/buildroot-overlays/dl O=/buildroot-overlays/output
         ;;
     *)
-        docker run --env-file ./.env ${heads} ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output --env=BR2_DL_DIR=/buildroot-overlays/dl ${imgname} ${tail}
+        docker run --env-file ./.env ${heads} ${DOCKER_BIND} --entrypoint=/buildroot-overlays/in_docker.sh --env=O=/buildroot-overlays/output ${imgname} BR2_DL_DIR=/buildroot-overlays/dl O=/buildroot-overlays/output ${tail}
         ;;
 esac
